@@ -55,16 +55,16 @@ export default function TasksPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.055]">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
         <div>
           <h1 className="font-outfit text-2xl font-semibold tracking-tight">Tasks</h1>
-          <p className="text-[11px] text-[#8888aa] mt-0.5">Auto-generisano iz emailova</p>
+          <p className="text-[11px] text-[var(--text-2)] mt-0.5">Auto-generisano iz emailova</p>
         </div>
 
         {/* Progress */}
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-[11px] text-[#8888aa]">Završeno</p>
+            <p className="text-[11px] text-[var(--text-2)]">Završeno</p>
             <p className="font-mono text-sm text-white">{completionPct}%</p>
           </div>
           <div className="w-16 h-16 relative">
@@ -96,7 +96,7 @@ export default function TasksPage() {
                 if (e.key === 'Escape') setAdding(false)
               }}
               placeholder="Naziv zadatka… (Enter za dodavanje)"
-              className="flex-1 bg-[#0d0d1a] border border-[#e8c97a]/30 rounded px-3 py-2 text-sm text-white placeholder:text-[#5a5a78] outline-none"
+              className="flex-1 bg-[var(--bg-card)] border border-[#e8c97a]/30 rounded px-3 py-2 text-sm text-white placeholder:text-[var(--text-3)] outline-none"
             />
             <button
               onClick={() => newTask.trim() && createMutation.mutate(newTask.trim())}
@@ -108,7 +108,7 @@ export default function TasksPage() {
         ) : (
           <button
             onClick={() => setAdding(true)}
-            className="flex items-center gap-2 text-[11px] text-[#5a5a78] hover:text-[#e8c97a] transition-colors"
+            className="flex items-center gap-2 text-[11px] text-[var(--text-3)] hover:text-[#e8c97a] transition-colors"
           >
             <Plus size={13} />
             Novi zadatak
@@ -158,8 +158,8 @@ export default function TasksPage() {
 function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[8px] uppercase tracking-[2px] text-[#8888aa] mb-2">
-        {title} <span className="text-[#5a5a78]">({count})</span>
+      <p className="text-[8px] uppercase tracking-[2px] text-[var(--text-2)] mb-2">
+        {title} <span className="text-[var(--text-3)]">({count})</span>
       </p>
       <div className="space-y-1.5">{children}</div>
     </div>
@@ -180,7 +180,7 @@ function TaskItem({ task, index, onToggle }: any) {
       initial={{ opacity: 0, x: -6 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="flex items-start gap-3 p-2.5 rounded bg-[#0d0d1a] hover:bg-[#121224] transition-colors cursor-pointer group"
+      className="flex items-start gap-3 p-2.5 rounded bg-[var(--bg-card)] hover:bg-[#121224] transition-colors cursor-pointer group"
       onClick={onToggle}
     >
       <div className={cn(
@@ -195,7 +195,7 @@ function TaskItem({ task, index, onToggle }: any) {
       <div className="flex-1 min-w-0">
         <p className={cn(
           'text-[11.5px] transition-all',
-          isDone && 'line-through text-[#5a5a78]'
+          isDone && 'line-through text-[var(--text-3)]'
         )}>
           {task.title}
         </p>
@@ -209,7 +209,7 @@ function TaskItem({ task, index, onToggle }: any) {
 
       <div className="flex items-center gap-2 shrink-0">
         {task.dueDate && (
-          <div className="flex items-center gap-1 text-[9px] text-[#8888aa]">
+          <div className="flex items-center gap-1 text-[9px] text-[var(--text-2)]">
             <Clock size={9} />
             {format(new Date(task.dueDate), 'd.M.')}
           </div>

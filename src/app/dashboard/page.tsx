@@ -136,7 +136,7 @@ export default function DashboardPage() {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
-            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#07070f]"
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[var(--bg-base)]"
           >
             <div className="relative">
               {/* Glow orb */}
@@ -146,7 +146,7 @@ export default function DashboardPage() {
               />
 
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] flex items-center justify-center glow-violet">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)' }}>
                   <Zap size={18} className="text-white" />
                 </div>
                 <span className="font-cormorant text-4xl font-light tracking-widest">ARIA</span>
@@ -158,7 +158,7 @@ export default function DashboardPage() {
                 {[0, 1, 2].map((i) => (
                   <div
                     key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] typing-dot"
+                    className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] typing-dot"
                   />
                 ))}
               </div>
@@ -175,7 +175,7 @@ export default function DashboardPage() {
         className="flex flex-col h-full"
       >
         {/* AI Command Strip */}
-        <div className="relative px-6 py-5 border-b border-white/[0.04] overflow-hidden">
+        <div className="relative px-6 py-5 border-b border-[var(--border)] overflow-hidden">
           <div
             className="absolute inset-0 pointer-events-none"
             style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, transparent 60%)' }}
@@ -183,18 +183,18 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between relative">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] pulse-violet" />
-                <span className="text-[9px] tracking-[2.5px] uppercase text-[#8b5cf6]">ARIA · Command</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] pulse-violet" />
+                <span className="text-[9px] tracking-[2.5px] uppercase text-[var(--accent-text)]">ARIA · Command</span>
               </div>
               <div className="flex items-start gap-1">
                 <p className="text-[15px] text-white/90 max-w-lg leading-snug">
                   {commandDisplayed}
                   {!commandDone && (
-                    <span className="inline-block w-0.5 h-4 bg-[#8b5cf6] ml-0.5 animate-pulse align-middle" />
+                    <span className="inline-block w-0.5 h-4 bg-[var(--accent)] ml-0.5 animate-pulse align-middle" />
                   )}
                 </p>
               </div>
-              <p className="text-[11px] text-[#4a4a6a] mt-1">{today}</p>
+              <p className="text-[11px] text-[var(--text-3)] mt-1">{today}</p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -203,7 +203,7 @@ export default function DashboardPage() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#8b5cf6] text-white text-[12px] font-medium glow-violet"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-[12px] font-medium"
                   >
                     Focus now
                     <ArrowRight size={13} />
@@ -214,12 +214,12 @@ export default function DashboardPage() {
               <button
                 onClick={() => briefingMutation.mutate()}
                 disabled={briefingMutation.isPending}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.08] text-[#8888aa] text-[11px] hover:border-[#8b5cf6]/40 hover:text-white transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] text-[var(--text-2)] text-[11px] hover:border-[var(--accent)] hover:text-white transition-all disabled:opacity-50"
               >
                 {briefingMutation.isPending ? (
-                  <Loader2 size={12} className="animate-spin text-[#8b5cf6]" />
+                  <Loader2 size={12} className="animate-spin text-[var(--accent-text)]" />
                 ) : (
-                  <Zap size={12} className="text-[#8b5cf6]" />
+                  <Zap size={12} className="text-[var(--accent-text)]" />
                 )}
                 AI Briefing
               </button>
@@ -244,11 +244,11 @@ export default function DashboardPage() {
               />
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <AlertCircle size={14} className="text-[#ef4444]" />
-                  <span className="text-[9px] tracking-[2px] uppercase text-[#ef4444]">Critical Now</span>
+                  <AlertCircle size={14} className="text-[var(--red)]" />
+                  <span className="text-[9px] tracking-[2px] uppercase text-[var(--red)]">Critical Now</span>
                 </div>
                 {critical > 0 && (
-                  <span className="text-[9px] bg-[#ef4444]/12 text-[#ef4444] px-2 py-0.5 rounded-full">
+                  <span className="text-[9px] text-[var(--red)] px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,0.12)' }}>
                     {critical} item{critical > 1 ? 's' : ''}
                   </span>
                 )}
@@ -256,8 +256,8 @@ export default function DashboardPage() {
 
               {critical === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-2">
-                  <CheckCircle2 size={28} className="text-[#10b981] opacity-60" />
-                  <p className="text-[12px] text-[#4a4a6a]">No critical items · You're on top of things</p>
+                  <CheckCircle2 size={28} className="text-[var(--green)] opacity-60" />
+                  <p className="text-[12px] text-[var(--text-3)]">No critical items · You're on top of things</p>
                 </div>
               ) : (
                 <div className="space-y-2.5">
@@ -267,24 +267,25 @@ export default function DashboardPage() {
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 + i * 0.06 }}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-[#ef4444]/[0.04] border border-[#ef4444]/15 group hover:border-[#ef4444]/30 transition-all cursor-pointer"
+                      className="flex items-center gap-3 p-3 rounded-lg transition-all cursor-pointer"
+                      style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.15)' }}
                     >
-                      <div className="w-1 h-8 rounded-full bg-[#ef4444] glow-red shrink-0" />
+                      <div className="w-1 h-8 rounded-full shrink-0" style={{ background: 'var(--red)' }} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[12.5px] font-medium text-white truncate">
+                        <p className="text-[12.5px] font-medium text-[var(--text-1)] truncate">
                           {email.fromName || email.fromEmail?.split('@')[0]}
                         </p>
-                        <p className="text-[11px] text-[#8888aa] truncate">
+                        <p className="text-[11px] text-[var(--text-2)] truncate">
                           {email.analysis?.summary || email.subject}
                         </p>
                       </div>
                       <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Link href="/dashboard/inbox">
-                          <button className="px-2.5 py-1 rounded bg-[#8b5cf6] text-white text-[10px] font-medium hover:bg-[#7c3aed] transition-colors">
+                          <button className="px-2.5 py-1 rounded bg-[var(--accent)] text-white text-[10px] font-medium hover:bg-[var(--accent)] transition-colors">
                             Reply
                           </button>
                         </Link>
-                        <button className="px-2.5 py-1 rounded border border-white/[0.08] text-[#8888aa] text-[10px] hover:border-white/20 transition-colors">
+                        <button className="px-2.5 py-1 rounded border border-[var(--border)] text-[var(--text-2)] text-[10px] hover:border-white/20 transition-colors">
                           Snooze
                         </button>
                       </div>
@@ -294,7 +295,7 @@ export default function DashboardPage() {
               )}
 
               {/* Stats row at bottom */}
-              <div className="flex items-center gap-5 mt-5 pt-4 border-t border-white/[0.04]">
+              <div className="flex items-center gap-5 mt-5 pt-4 border-t border-[var(--border)]">
                 {[
                   { n: statsData?.unread ?? 0, label: 'Unread', color: '#8b5cf6' },
                   { n: statsData?.tasks ?? 0, label: 'Tasks', color: '#10b981' },
@@ -302,7 +303,7 @@ export default function DashboardPage() {
                 ].map((s, i) => (
                   <div key={i} className="text-center">
                     <p className="font-cormorant text-3xl font-light" style={{ color: s.color }}>{s.n}</p>
-                    <p className="text-[9px] uppercase tracking-[0.8px] text-[#4a4a6a]">{s.label}</p>
+                    <p className="text-[9px] uppercase tracking-[0.8px] text-[var(--text-3)]">{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -320,18 +321,18 @@ export default function DashboardPage() {
                 style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.08), transparent 70%)' }}
               />
               <div className="flex items-center gap-2 mb-4">
-                <Zap size={13} className="text-[#8b5cf6]" />
-                <span className="text-[9px] tracking-[2px] uppercase text-[#8b5cf6]">Next Best Action</span>
+                <Zap size={13} className="text-[var(--accent-text)]" />
+                <span className="text-[9px] tracking-[2px] uppercase text-[var(--accent-text)]">Next Best Action</span>
               </div>
 
               <div className="flex-1">
                 {briefingData?.data?.content ? (
-                  <p className="text-[12px] text-[#eeeef5]/80 leading-relaxed line-clamp-6">
+                  <p className="text-[12px] text-[var(--text-1)] leading-relaxed line-clamp-6">
                     {briefingData.data.content.replace(/<[^>]*>/g, '').slice(0, 200)}
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-[12px] text-[#8888aa] leading-relaxed">
+                    <p className="text-[12px] text-[var(--text-2)] leading-relaxed">
                       {critical > 0
                         ? `Reply to ${statsData?.criticalEmails?.[0]?.fromName || 'critical sender'} — marked high priority.`
                         : 'Your inbox is under control. Review pending tasks or schedule tomorrow.'}
@@ -343,7 +344,7 @@ export default function DashboardPage() {
               <Link href={critical > 0 ? '/dashboard/inbox?filter=critical' : '/dashboard/tasks'}>
                 <motion.button
                   whileHover={{ x: 3 }}
-                  className="flex items-center gap-1.5 text-[11px] text-[#8b5cf6] mt-4 group"
+                  className="flex items-center gap-1.5 text-[11px] text-[var(--accent-text)] mt-4 group"
                 >
                   Open →
                 </motion.button>
@@ -358,8 +359,8 @@ export default function DashboardPage() {
               className="card p-5"
             >
               <div className="flex items-center gap-2 mb-4">
-                <Clock size={13} className="text-[#f59e0b]" />
-                <span className="text-[9px] tracking-[2px] uppercase text-[#f59e0b]">Today Timeline</span>
+                <Clock size={13} className="text-[var(--amber)]" />
+                <span className="text-[9px] tracking-[2px] uppercase text-[var(--amber)]">Today Timeline</span>
               </div>
 
               <div className="relative pl-4">
@@ -370,11 +371,11 @@ export default function DashboardPage() {
                     return (
                       <div key={i} className={cn('relative transition-opacity', isPast && 'opacity-35')}>
                         <div
-                          className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full border-2 border-[#07070f]"
+                          className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full border-2 border-[var(--bg-card)]"
                           style={{ background: ev.color }}
                         />
-                        <p className="text-[9px] font-mono text-[#4a4a6a] mb-0.5">{ev.time}</p>
-                        <p className="text-[12px] text-white">{ev.title}</p>
+                        <p className="text-[9px] font-mono text-[var(--text-3)] mb-0.5">{ev.time}</p>
+                        <p className="text-[12px] text-[var(--text-1)]">{ev.title}</p>
                         <p className="text-[10px]" style={{ color: ev.color }}>{ev.note}</p>
                       </div>
                     )
@@ -396,12 +397,12 @@ export default function DashboardPage() {
               />
 
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={13} className="text-[#8b5cf6]" />
-                <span className="text-[9px] tracking-[2px] uppercase text-[#8b5cf6]">AI Briefing</span>
+                <TrendingUp size={13} className="text-[var(--accent-text)]" />
+                <span className="text-[9px] tracking-[2px] uppercase text-[var(--accent-text)]">AI Briefing</span>
                 {briefingMutation.isPending && (
                   <div className="flex gap-1 ml-2">
                     {[0, 1, 2].map((i) => (
-                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] typing-dot" />
+                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] typing-dot" />
                     ))}
                   </div>
                 )}
@@ -413,10 +414,10 @@ export default function DashboardPage() {
               </div>
 
               <div
-                className="text-[12.5px] leading-[1.85] text-[#eeeef5]/75 max-h-[120px] overflow-hidden"
+                className="text-[12.5px] leading-[1.85] text-[var(--text-1)] max-h-[120px] overflow-hidden"
                 dangerouslySetInnerHTML={{
                   __html: briefingData?.data?.content ||
-                    '<span style="color:#4a4a6a">Click <b style="color:#8b5cf6">AI Briefing</b> to generate your morning analysis. ARIA will summarize all critical emails, pending tasks, and suggest actions for the day.</span>'
+                    '<span style="color:var(--text-3)">Click <b style="color:var(--accent-text)">AI Briefing</b> to generate your morning analysis. ARIA will summarize all critical emails, pending tasks, and suggest actions for the day.</span>'
                 }}
               />
             </motion.div>
@@ -430,10 +431,10 @@ export default function DashboardPage() {
 function WowTypewriter({ text }: { text: string }) {
   const { displayed } = useTypewriter(text, 35)
   return (
-    <p className="text-[15px] text-[#eeeef5]/80 text-center max-w-sm leading-relaxed">
+    <p className="text-[15px] text-[var(--text-1)] text-center max-w-sm leading-relaxed">
       {displayed}
       {displayed.length < text.length && (
-        <span className="inline-block w-0.5 h-4 bg-[#8b5cf6] ml-0.5 animate-pulse align-middle" />
+        <span className="inline-block w-0.5 h-4 bg-[var(--accent)] ml-0.5 animate-pulse align-middle" />
       )}
     </p>
   )

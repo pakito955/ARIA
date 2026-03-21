@@ -37,9 +37,9 @@ export default function WaitingPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-white/[0.055]">
+      <div className="px-6 py-4 border-b border-[var(--border)]">
         <h1 className="font-outfit text-2xl font-semibold tracking-tight">Čekam odgovor</h1>
-        <p className="text-[11px] text-[#8888aa] mt-0.5">Emailovi bez odgovora duže od 2 dana</p>
+        <p className="text-[11px] text-[var(--text-2)] mt-0.5">Emailovi bez odgovora duže od 2 dana</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -50,7 +50,7 @@ export default function WaitingPage() {
         ) : emails.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
             <span className="text-4xl opacity-10">✅</span>
-            <p className="text-[#5a5a78] text-sm">Svi emailovi su odgovoreni!</p>
+            <p className="text-[var(--text-3)] text-sm">Svi emailovi su odgovoreni!</p>
           </div>
         ) : (
           emails.map((email: any, i: number) => {
@@ -64,7 +64,7 @@ export default function WaitingPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="flex items-center gap-4 p-3.5 bg-[#0d0d1a] border border-white/[0.055] rounded"
+                className="flex items-center gap-4 p-3.5 bg-[var(--bg-card)] border border-[var(--border)] rounded"
               >
                 {/* Days badge */}
                 <div className="w-12 h-12 rounded-full shrink-0 flex flex-col items-center justify-center bg-[#f4a0b5]/[0.08] border border-[#f4a0b5]/18">
@@ -79,8 +79,8 @@ export default function WaitingPage() {
                   <p className="text-[12.5px] font-medium truncate">
                     → {email.fromName || email.fromEmail}
                   </p>
-                  <p className="text-[11px] text-[#8888aa] truncate mt-0.5">{email.subject}</p>
-                  <p className="text-[9px] text-[#5a5a78] mt-1 font-mono">
+                  <p className="text-[11px] text-[var(--text-2)] truncate mt-0.5">{email.subject}</p>
+                  <p className="text-[9px] text-[var(--text-3)] mt-1 font-mono">
                     Primljeno: {format(new Date(email.receivedAt), 'd. MMM, HH:mm')}
                   </p>
                 </div>

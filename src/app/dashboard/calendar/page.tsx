@@ -107,13 +107,13 @@ export default function CalendarPage() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-white/[0.055] shrink-0">
+      <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-[var(--border)] shrink-0">
         <div>
           <div className="flex items-center gap-2 mb-0.5">
-            <CalendarDays size={16} className="text-[#8b5cf6]" />
+            <CalendarDays size={16} className="text-[var(--accent-text)]" />
             <h1 className="font-outfit text-xl md:text-2xl font-semibold tracking-tight">Calendar</h1>
           </div>
-          <p className="text-xs text-[#8888aa]">
+          <p className="text-xs text-[var(--text-2)]">
             {format(currentDate, 'MMMM yyyy')} &middot; {activeTasks.length} active task{activeTasks.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -121,19 +121,19 @@ export default function CalendarPage() {
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-            className="p-2 rounded-xl text-[#8888aa] hover:text-white hover:bg-white/[0.06] transition-all touch-target"
+            className="p-2 rounded-xl text-[var(--text-2)] hover:text-white hover:bg-[var(--bg-hover)] transition-all touch-target"
           >
             <ChevronLeft size={16} />
           </button>
           <button
             onClick={() => { setCurrentDate(new Date()); setSelectedDay(new Date()) }}
-            className="px-3 py-1.5 rounded-xl text-[11px] font-medium border border-white/[0.08] text-[#8888aa] hover:text-white hover:border-[#8b5cf6]/40 transition-all"
+            className="px-3 py-1.5 rounded-xl text-[11px] font-medium border border-[var(--border)] text-[var(--text-2)] hover:text-white hover:border-[var(--accent)] transition-all"
           >
             Today
           </button>
           <button
             onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-            className="p-2 rounded-xl text-[#8888aa] hover:text-white hover:bg-white/[0.06] transition-all touch-target"
+            className="p-2 rounded-xl text-[var(--text-2)] hover:text-white hover:bg-[var(--bg-hover)] transition-all touch-target"
           >
             <ChevronRight size={16} />
           </button>
@@ -150,7 +150,7 @@ export default function CalendarPage() {
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
               <div
                 key={d}
-                className="text-center text-[9px] md:text-[10px] uppercase tracking-[1.5px] text-[#4a4a6a] py-2"
+                className="text-center text-[9px] md:text-[10px] uppercase tracking-[1.5px] text-[var(--text-3)] py-2"
               >
                 {d}
               </div>
@@ -176,10 +176,10 @@ export default function CalendarPage() {
                   className={cn(
                     'relative min-h-[52px] md:min-h-[76px] p-1 md:p-2 rounded-xl text-left transition-all flex flex-col',
                     isSelected
-                      ? 'bg-[#8b5cf6]/15 border border-[#8b5cf6]/50'
+                      ? 'bg-[var(--accent)]/15 border border-[var(--accent)]'
                       : isCurrent
-                      ? 'bg-white/[0.05] border border-white/[0.12]'
-                      : 'border border-transparent hover:bg-white/[0.03] hover:border-white/[0.06]',
+                      ? 'bg-white/[0.05] border border-[var(--border-medium)]'
+                      : 'border border-transparent hover:bg-[var(--bg-hover)] hover:border-[var(--border)]',
                     !isThisMonth && 'opacity-25'
                   )}
                 >
@@ -187,10 +187,10 @@ export default function CalendarPage() {
                   <span
                     className={cn(
                       'text-[11px] md:text-[13px] font-semibold w-5 h-5 md:w-6 md:h-6 flex items-center justify-center rounded-full shrink-0',
-                      isCurrent && 'bg-[#8b5cf6] text-white',
-                      !isCurrent && isSelected && 'text-[#a78bfa]',
-                      !isCurrent && !isSelected && isThisMonth && 'text-[#eeeef5]',
-                      hasOverdue && !isCurrent && 'text-[#ef4444]'
+                      isCurrent && 'bg-[var(--accent)] text-white',
+                      !isCurrent && isSelected && 'text-[var(--accent-text)]',
+                      !isCurrent && !isSelected && isThisMonth && 'text-[var(--text-1)]',
+                      hasOverdue && !isCurrent && 'text-[var(--red)]'
                     )}
                   >
                     {format(day, 'd')}
@@ -209,7 +209,7 @@ export default function CalendarPage() {
                         />
                       ))}
                       {dayTasks.length > 3 && (
-                        <span className="text-[7px] text-[#4a4a6a] leading-none">+{dayTasks.length - 3}</span>
+                        <span className="text-[7px] text-[var(--text-3)] leading-none">+{dayTasks.length - 3}</span>
                       )}
                     </div>
                   )}
@@ -221,7 +221,7 @@ export default function CalendarPage() {
                         key={t.id}
                         className={cn(
                           'text-[8px] truncate rounded-md px-1 py-0.5 block',
-                          t.status === 'DONE' ? 'text-[#4a4a6a] line-through' : 'text-[#eeeef5]/80'
+                          t.status === 'DONE' ? 'text-[var(--text-3)] line-through' : 'text-[var(--text-1)]'
                         )}
                         style={{ background: t.status === 'DONE' ? 'rgba(74,74,106,0.15)' : PRIORITY_BG[t.priority] }}
                       >
@@ -229,7 +229,7 @@ export default function CalendarPage() {
                       </span>
                     ))}
                     {dayTasks.length > 2 && (
-                      <span className="text-[8px] text-[#4a4a6a] pl-1">+{dayTasks.length - 2}</span>
+                      <span className="text-[8px] text-[var(--text-3)] pl-1">+{dayTasks.length - 2}</span>
                     )}
                   </div>
                 </motion.button>
@@ -239,8 +239,8 @@ export default function CalendarPage() {
 
           {/* Upcoming tasks strip — desktop */}
           {upcomingTasks.length > 0 && (
-            <div className="hidden md:block mt-4 pt-4 border-t border-white/[0.04]">
-              <p className="text-[9px] uppercase tracking-[2px] text-[#4a4a6a] mb-3">Upcoming</p>
+            <div className="hidden md:block mt-4 pt-4 border-t border-[var(--border)]">
+              <p className="text-[9px] uppercase tracking-[2px] text-[var(--text-3)] mb-3">Upcoming</p>
               <div className="grid grid-cols-2 xl:grid-cols-3 gap-2">
                 {upcomingTasks.map((task, i) => (
                   <motion.div
@@ -252,15 +252,15 @@ export default function CalendarPage() {
                       setSelectedDay(parseISO(task.dueDate))
                       setCurrentDate(parseISO(task.dueDate))
                     }}
-                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#0c0c1a] border border-white/[0.05] hover:border-white/[0.1] cursor-pointer group transition-all"
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] hover:border-[var(--border-medium)] cursor-pointer group transition-all"
                   >
                     <div
                       className="w-1 h-8 rounded-full shrink-0"
                       style={{ background: PRIORITY_COLOR[task.priority] || '#8b5cf6' }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11.5px] font-medium truncate text-[#eeeef5]">{task.title}</p>
-                      <p className="text-[9px] text-[#8888aa] font-mono mt-0.5">
+                      <p className="text-[11.5px] font-medium truncate text-[var(--text-1)]">{task.title}</p>
+                      <p className="text-[9px] text-[var(--text-2)] font-mono mt-0.5">
                         {format(parseISO(task.dueDate), 'EEE, d MMM')}
                       </p>
                     </div>
@@ -272,15 +272,15 @@ export default function CalendarPage() {
         </div>
 
         {/* Day Detail Panel */}
-        <div className="lg:w-[260px] xl:w-[280px] shrink-0 border-t lg:border-t-0 lg:border-l border-white/[0.055] flex flex-col max-h-[50vh] lg:max-h-none">
+        <div className="lg:w-[260px] xl:w-[280px] shrink-0 border-t lg:border-t-0 lg:border-l border-[var(--border)] flex flex-col max-h-[50vh] lg:max-h-none">
           {/* Panel header */}
-          <div className="px-4 py-3 border-b border-white/[0.04] shrink-0">
+          <div className="px-4 py-3 border-b border-[var(--border)] shrink-0">
             <div className="flex items-center justify-between mb-1">
               <div>
                 <p className="text-[13px] font-semibold text-white">
                   {isToday(selectedDay) ? 'Today' : format(selectedDay, 'EEE, d MMM')}
                 </p>
-                <p className="text-[10px] text-[#8888aa] mt-0.5">
+                <p className="text-[10px] text-[var(--text-2)] mt-0.5">
                   {selectedDayTasks.length} task{selectedDayTasks.length !== 1 ? 's' : ''}
                   {selectedDayTasks.filter((t) => t.status === 'DONE').length > 0 &&
                     ` · ${selectedDayTasks.filter((t) => t.status === 'DONE').length} done`}
@@ -288,7 +288,7 @@ export default function CalendarPage() {
               </div>
               <button
                 onClick={() => setAddingTask(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#8b5cf6]/12 border border-[#8b5cf6]/25 text-[#a78bfa] text-[10px] hover:bg-[#8b5cf6]/20 transition-all"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--accent)]/12 border border-[var(--accent)] text-[var(--accent-text)] text-[10px] hover:bg-[var(--accent)]/20 transition-all"
               >
                 <Plus size={11} />
                 Add
@@ -314,7 +314,7 @@ export default function CalendarPage() {
                         if (e.key === 'Escape') { setAddingTask(false); setNewTaskTitle('') }
                       }}
                       placeholder="Task name…"
-                      className="w-full bg-[#0d0d1a] border border-[#8b5cf6]/25 rounded-lg px-3 py-2 text-[12px] text-white placeholder:text-[#4a4a6a] outline-none focus:border-[#8b5cf6]/50 transition-colors"
+                      className="w-full bg-[var(--bg-card)] border border-[var(--accent)] rounded-lg px-3 py-2 text-[12px] text-white placeholder:text-[var(--text-3)] outline-none focus:border-[var(--accent)] transition-colors"
                     />
                     <div className="flex items-center gap-1.5">
                       {(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map((p) => (
@@ -325,7 +325,7 @@ export default function CalendarPage() {
                             'px-2 py-1 rounded-md text-[9px] font-medium transition-all',
                             newTaskPriority === p
                               ? 'text-white'
-                              : 'text-[#4a4a6a] hover:text-[#8888aa]'
+                              : 'text-[var(--text-3)] hover:text-[var(--text-2)]'
                           )}
                           style={
                             newTaskPriority === p
@@ -338,7 +338,7 @@ export default function CalendarPage() {
                       ))}
                       <button
                         onClick={() => { setAddingTask(false); setNewTaskTitle('') }}
-                        className="ml-auto p-1 text-[#4a4a6a] hover:text-[#8888aa] transition-colors"
+                        className="ml-auto p-1 text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors"
                       >
                         <X size={12} />
                       </button>
@@ -346,7 +346,7 @@ export default function CalendarPage() {
                     <button
                       onClick={handleAddTask}
                       disabled={!newTaskTitle.trim() || createMutation.isPending}
-                      className="w-full py-2 rounded-lg bg-[#8b5cf6] text-white text-[11px] font-medium hover:bg-[#7c3aed] transition-colors disabled:opacity-50"
+                      className="w-full py-2 rounded-lg bg-[var(--accent)] text-white text-[11px] font-medium hover:bg-[var(--accent)] transition-colors disabled:opacity-50"
                     >
                       {createMutation.isPending ? 'Adding…' : 'Add Task'}
                     </button>
@@ -361,10 +361,10 @@ export default function CalendarPage() {
             {selectedDayTasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 gap-2 text-center">
                 <CalendarDays size={24} className="text-[#2a2a40]" />
-                <p className="text-[11px] text-[#4a4a6a]">No tasks scheduled</p>
+                <p className="text-[11px] text-[var(--text-3)]">No tasks scheduled</p>
                 <button
                   onClick={() => setAddingTask(true)}
-                  className="text-[10px] text-[#8b5cf6] hover:text-[#a78bfa] transition-colors"
+                  className="text-[10px] text-[var(--accent-text)] hover:text-[var(--accent-text)] transition-colors"
                 >
                   + Schedule a task
                 </button>
@@ -383,7 +383,7 @@ export default function CalendarPage() {
                         status: task.status === 'DONE' ? 'TODO' : 'DONE',
                       })
                     }
-                    className="flex items-start gap-2.5 p-3 rounded-xl bg-[#0d0d1a] border border-white/[0.05] hover:border-white/[0.1] cursor-pointer group transition-all"
+                    className="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] hover:border-[var(--border-medium)] cursor-pointer group transition-all"
                   >
                     {/* Checkbox */}
                     <div
@@ -391,7 +391,7 @@ export default function CalendarPage() {
                         'w-4 h-4 rounded-md border shrink-0 flex items-center justify-center transition-all mt-0.5',
                         task.status === 'DONE'
                           ? 'bg-[#10b981] border-[#10b981]'
-                          : 'border-white/[0.2] group-hover:border-[#8b5cf6]/60'
+                          : 'border-white/[0.2] group-hover:border-[var(--accent)]'
                       )}
                     >
                       {task.status === 'DONE' && <Check size={10} className="text-white" />}
@@ -401,7 +401,7 @@ export default function CalendarPage() {
                       <p
                         className={cn(
                           'text-[12px] font-medium leading-tight',
-                          task.status === 'DONE' && 'line-through text-[#4a4a6a]'
+                          task.status === 'DONE' && 'line-through text-[var(--text-3)]'
                         )}
                       >
                         {task.title}
@@ -415,7 +415,7 @@ export default function CalendarPage() {
                         </p>
                       )}
                       {task.source === 'AI_GENERATED' && !task.email && (
-                        <p className="flex items-center gap-1 text-[9px] text-[#f59e0b] mt-1.5">
+                        <p className="flex items-center gap-1 text-[9px] text-[var(--amber)] mt-1.5">
                           <Zap size={8} />
                           ARIA generated
                         </p>
@@ -444,10 +444,10 @@ export default function CalendarPage() {
             )
             if (overdue.length === 0) return null
             return (
-              <div className="border-t border-white/[0.04] px-3 py-2.5 shrink-0">
+              <div className="border-t border-[var(--border)] px-3 py-2.5 shrink-0">
                 <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#ef4444]/08 border border-[#ef4444]/15">
-                  <AlertCircle size={12} className="text-[#ef4444] shrink-0" />
-                  <p className="text-[10px] text-[#ef4444]">
+                  <AlertCircle size={12} className="text-[var(--red)] shrink-0" />
+                  <p className="text-[10px] text-[var(--red)]">
                     {overdue.length} overdue task{overdue.length > 1 ? 's' : ''}
                   </p>
                 </div>

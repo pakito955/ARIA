@@ -129,13 +129,13 @@ export default function AnalyticsPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-white/[0.04]">
+      <div className="px-6 py-5 border-b border-[var(--border)]">
         <div className="flex items-center gap-2 mb-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] pulse-violet" />
-          <span className="text-[9px] tracking-[2.5px] uppercase text-[#8b5cf6]">ARIA · Insights</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] pulse-violet" />
+          <span className="text-[9px] tracking-[2.5px] uppercase text-[var(--accent-text)]">ARIA · Insights</span>
         </div>
         <h1 className="font-outfit text-3xl font-light tracking-tight">Intelligence Report</h1>
-        <p className="text-[11px] text-[#4a4a6a] mt-0.5">Your productivity amplified by AI</p>
+        <p className="text-[11px] text-[var(--text-3)] mt-0.5">Your productivity amplified by AI</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-5">
@@ -143,20 +143,20 @@ export default function AnalyticsPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl border border-[#8b5cf6]/20 p-6"
+          className="relative overflow-hidden rounded-2xl border border-[var(--accent)] p-6"
           style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(10,10,22,0.95) 60%)' }}
         >
           <div
             className="absolute top-0 right-0 w-48 h-48 pointer-events-none"
             style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%)' }}
           />
-          <p className="text-[9px] tracking-[2.5px] uppercase text-[#8b5cf6] mb-2">This month, ARIA saved you</p>
+          <p className="text-[9px] tracking-[2.5px] uppercase text-[var(--accent-text)] mb-2">This month, ARIA saved you</p>
           <p className="font-outfit text-6xl font-light text-white mb-1">
             <AnimatedNumber target={data?.timeSaved ? Math.round(data.timeSaved * 10) / 10 : 42} suffix="h" />
           </p>
-          <p className="text-[12px] text-[#8888aa]">of email processing time</p>
-          <p className="text-[10.5px] text-[#4a4a6a] mt-3">
-            At €50/h → <span className="text-[#10b981] font-medium">
+          <p className="text-[12px] text-[var(--text-2)]">of email processing time</p>
+          <p className="text-[10.5px] text-[var(--text-3)] mt-3">
+            At €50/h → <span className="text-[var(--green)] font-medium">
               €{Math.round((data?.timeSaved ?? 4.2) * 50)} saved this month
             </span>
           </p>
@@ -185,7 +185,7 @@ export default function AnalyticsPage() {
                 <AnimatedNumber target={m.value} suffix={m.suffix} />
               </p>
               <p className="text-[11px] text-white">{m.label}</p>
-              <p className="text-[9px] text-[#4a4a6a] mt-0.5">{m.unit}</p>
+              <p className="text-[9px] text-[var(--text-3)] mt-0.5">{m.unit}</p>
             </motion.div>
           ))}
         </div>
@@ -197,14 +197,14 @@ export default function AnalyticsPage() {
           transition={{ delay: 0.3 }}
           className="card p-5"
         >
-          <p className="text-[8px] tracking-[2px] uppercase text-[#4a4a6a] mb-5">Email Volume · This Week</p>
+          <p className="text-[8px] tracking-[2px] uppercase text-[var(--text-3)] mb-5">Email Volume · This Week</p>
           <div className="flex items-end gap-2">
             {(data?.weeklyVolume || [12, 8, 15, 7, 18, 9, 14]).map((v: number, i: number) => {
               const max = Math.max(...(data?.weeklyVolume || [18]))
               const isToday = i === new Date().getDay() - 1
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                  <span className="text-[9px] text-[#4a4a6a] font-mono">{v}</span>
+                  <span className="text-[9px] text-[var(--text-3)] font-mono">{v}</span>
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${Math.max((v / max) * 80, 4)}px` }}
@@ -217,7 +217,7 @@ export default function AnalyticsPage() {
                       boxShadow: isToday ? '0 0 12px rgba(139,92,246,0.3)' : 'none',
                     }}
                   />
-                  <span className={cn('text-[9px]', isToday ? 'text-[#a78bfa]' : 'text-[#4a4a6a]')}>
+                  <span className={cn('text-[9px]', isToday ? 'text-[var(--accent-text)]' : 'text-[var(--text-3)]')}>
                     {days[i]}
                   </span>
                 </div>
@@ -234,12 +234,12 @@ export default function AnalyticsPage() {
             transition={{ delay: 0.4 }}
             className="card p-5"
           >
-            <p className="text-[8px] tracking-[2px] uppercase text-[#4a4a6a] mb-4">Email Categories</p>
+            <p className="text-[8px] tracking-[2px] uppercase text-[var(--text-3)] mb-4">Email Categories</p>
             <div className="space-y-3">
               {data.categories.map((c: any) => (
                 <div key={c.label}>
                   <div className="flex justify-between text-[11px] mb-1.5">
-                    <span className="text-[#8888aa]">{c.label}</span>
+                    <span className="text-[var(--text-2)]">{c.label}</span>
                     <span className="text-white font-mono">{c.value}%</span>
                   </div>
                   <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
@@ -269,7 +269,7 @@ export default function AnalyticsPage() {
             className="absolute right-0 bottom-0 w-32 h-32 pointer-events-none"
             style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.08), transparent 70%)' }}
           />
-          <p className="text-[8px] tracking-[2.5px] uppercase text-[#10b981] mb-4">ROI Calculator</p>
+          <p className="text-[8px] tracking-[2.5px] uppercase text-[var(--green)] mb-4">ROI Calculator</p>
           <div className="space-y-2.5">
             {[
               { label: 'ARIA Pro subscription', value: '€29/mo' },
@@ -277,15 +277,15 @@ export default function AnalyticsPage() {
               { label: 'Value at €50/h', value: `€${Math.round((data?.timeSaved ?? 4.2) * 4 * 50)}/mo`, highlight: true },
             ].map((row, i) => (
               <div key={i} className="flex justify-between">
-                <span className="text-[11.5px] text-[#8888aa]">{row.label}</span>
-                <span className={cn('text-[11.5px] font-mono', row.highlight ? 'text-[#10b981] font-medium' : 'text-white')}>
+                <span className="text-[11.5px] text-[var(--text-2)]">{row.label}</span>
+                <span className={cn('text-[11.5px] font-mono', row.highlight ? 'text-[var(--green)] font-medium' : 'text-white')}>
                   {row.value}
                 </span>
               </div>
             ))}
             <div className="border-t border-[#10b981]/12 pt-2.5 flex justify-between">
               <span className="text-[12px] text-white font-medium">Net gain</span>
-              <span className="text-[14px] font-mono text-[#10b981] font-semibold">
+              <span className="text-[14px] font-mono text-[var(--green)] font-semibold">
                 €{Math.round((data?.timeSaved ?? 4.2) * 4 * 50 - 29)}/mo
               </span>
             </div>

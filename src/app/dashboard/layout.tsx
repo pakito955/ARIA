@@ -15,8 +15,8 @@ export default async function DashboardLayout({
   if (!session?.user) redirect('/login')
 
   return (
-    <div className="h-screen md:h-screen flex overflow-hidden bg-[#07070f]">
-      {/* Desktop sidebar — hidden on mobile */}
+    <div className="h-screen flex overflow-hidden" style={{ background: 'var(--bg-base)' }}>
+      {/* Desktop sidebar */}
       <div className="hidden md:block shrink-0">
         <Sidebar />
       </div>
@@ -26,15 +26,15 @@ export default async function DashboardLayout({
         {children}
       </main>
 
-      {/* Right panel — hidden on mobile and small screens */}
-      <div className="hidden lg:block w-[300px] xl:w-[320px] shrink-0">
+      {/* Right AI panel — desktop only */}
+      <div className="hidden lg:block w-[280px] xl:w-[300px] shrink-0">
         <AnalysisPanel />
       </div>
 
       <CommandPalette />
       <NotificationManager />
 
-      {/* Mobile bottom navigation */}
+      {/* Mobile bottom nav */}
       <MobileNav />
     </div>
   )

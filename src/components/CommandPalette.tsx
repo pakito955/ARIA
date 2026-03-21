@@ -129,27 +129,27 @@ export function CommandPalette() {
           >
             <div className="glass rounded-2xl shadow-[0_32px_64px_rgba(0,0,0,0.5),0_0_0_1px_rgba(139,92,246,0.15)] overflow-hidden">
               {/* Input */}
-              <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.04]">
-                <Search size={15} className="text-[#8b5cf6] shrink-0" />
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border)]">
+                <Search size={15} className="text-[var(--accent-text)] shrink-0" />
                 <input
                   ref={inputRef}
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setSelected(0) }}
                   placeholder="What do you want to do?"
-                  className="flex-1 bg-transparent text-[14px] text-white placeholder:text-[#4a4a6a] outline-none"
+                  className="flex-1 bg-transparent text-[14px] text-white placeholder:text-[var(--text-3)] outline-none"
                 />
-                <kbd className="text-[9px] bg-white/[0.05] text-[#4a4a6a] px-2 py-1 rounded-md font-mono">ESC</kbd>
+                <kbd className="text-[9px] bg-white/[0.05] text-[var(--text-3)] px-2 py-1 rounded-md font-mono">ESC</kbd>
               </div>
 
               {/* Recent (when no query) */}
               {!query && (
                 <div className="px-5 py-3 border-b border-white/[0.03]">
-                  <p className="text-[8px] tracking-[2px] uppercase text-[#4a4a6a] mb-2">Recent</p>
+                  <p className="text-[8px] tracking-[2px] uppercase text-[var(--text-3)] mb-2">Recent</p>
                   <div className="flex flex-wrap gap-1.5">
                     {RECENTS.map((r, i) => (
                       <button
                         key={i}
-                        className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] text-[#8888aa] hover:text-white hover:border-[#8b5cf6]/30 transition-all"
+                        className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] border border-[var(--border)] text-[var(--text-2)] hover:text-white hover:border-[var(--accent)] transition-all"
                       >
                         {r}
                       </button>
@@ -161,7 +161,7 @@ export function CommandPalette() {
               {/* Results */}
               <div className="max-h-[340px] overflow-y-auto py-2">
                 {filtered.length === 0 ? (
-                  <div className="py-10 text-center text-[12px] text-[#4a4a6a]">
+                  <div className="py-10 text-center text-[12px] text-[var(--text-3)]">
                     No results for "{query}"
                   </div>
                 ) : (
@@ -176,7 +176,7 @@ export function CommandPalette() {
 
                     return (
                       <div key={group.group} className="mb-1">
-                        <p className="text-[8px] tracking-[2px] uppercase text-[#4a4a6a] px-5 py-2">
+                        <p className="text-[8px] tracking-[2px] uppercase text-[var(--text-3)] px-5 py-2">
                           {group.group}
                         </p>
                         {groupItems.map((item: any) => {
@@ -191,24 +191,24 @@ export function CommandPalette() {
                               className={cn(
                                 'w-full flex items-center gap-3 px-5 py-2.5 text-left transition-all',
                                 isSelected
-                                  ? 'bg-[#8b5cf6]/10 text-white'
-                                  : 'text-[#8888aa] hover:text-white'
+                                  ? 'bg-[var(--accent)]/10 text-white'
+                                  : 'text-[var(--text-2)] hover:text-white'
                               )}
                             >
                               <div className={cn(
                                 'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors',
-                                isSelected ? 'bg-[#8b5cf6]/20' : 'bg-white/[0.03]'
+                                isSelected ? 'bg-[var(--accent)]/20' : 'bg-white/[0.03]'
                               )}>
-                                <item.icon size={13} className={isSelected ? 'text-[#a78bfa]' : 'text-[#4a4a6a]'} />
+                                <item.icon size={13} className={isSelected ? 'text-[var(--accent-text)]' : 'text-[var(--text-3)]'} />
                               </div>
                               <div className="flex-1">
                                 <span className="text-[12.5px]">{item.label}</span>
                                 {item.hint && (
-                                  <span className="text-[10px] text-[#4a4a6a] ml-2">{item.hint}</span>
+                                  <span className="text-[10px] text-[var(--text-3)] ml-2">{item.hint}</span>
                                 )}
                               </div>
                               {isSelected && (
-                                <ArrowRight size={12} className="text-[#8b5cf6] shrink-0" />
+                                <ArrowRight size={12} className="text-[var(--accent-text)] shrink-0" />
                               )}
                             </button>
                           )
@@ -220,13 +220,13 @@ export function CommandPalette() {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-5 py-2.5 border-t border-white/[0.04] text-[9px] text-[#4a4a6a]">
+              <div className="flex items-center justify-between px-5 py-2.5 border-t border-[var(--border)] text-[9px] text-[var(--text-3)]">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1"><kbd className="bg-white/[0.04] px-1.5 py-0.5 rounded font-mono">↑↓</kbd> navigate</span>
                   <span className="flex items-center gap-1"><kbd className="bg-white/[0.04] px-1.5 py-0.5 rounded font-mono">↵</kbd> select</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--green)' }} />
                   <span>ARIA active</span>
                 </div>
               </div>
