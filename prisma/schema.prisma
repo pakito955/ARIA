@@ -1,0 +1,275 @@
+// ARIA - AI Executive Assistant
+// Prisma Schema — SQLite (dev), PostgreSQL (prod)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── AUTH ────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts     Account[]
+  sessions     Session[]
+  integrations Integration[]
+  emails       Email[]
+  threads      Thread[]
+  tasks        Task[]
+  analyses     AIAnalysis[]
+  calendarEvents CalendarEvent[]
+  briefings    Briefing[]
+  settings     UserSettings?
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── INTEGRATIONS ────────────────────────────────────────────────────
+
+model Integration {
+  id           String   @id @default(cuid())
+  userId       String
+  provider     String   // GMAIL | OUTLOOK
+  email        String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  scope        String?
+  isActive     Boolean  @default(true)
+  lastSyncAt   DateTime?
+  syncCursor   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, email])
+  @@map("integrations")
+}
+
+// ─── EMAILS ──────────────────────────────────────────────────────────
+
+model Thread {
+  id           String   @id @default(cuid())
+  userId       String
+  provider     String
+  externalId   String
+  subject      String
+  participants String   // JSON array
+  messageCount Int      @default(0)
+  hasUnread    Boolean  @default(false)
+  lastEmailAt  DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emails       Email[]
+
+  @@unique([userId, provider, externalId])
+  @@map("threads")
+}
+
+model Email {
+  id             String   @id @default(cuid())
+  userId         String
+  threadId       String?
+  provider       String
+  externalId     String
+  subject        String
+  bodyText       String
+  bodyHtml       String?
+  fromEmail      String
+  fromName       String?
+  toEmails       String   // JSON array
+  ccEmails       String   @default("[]")
+  labels         String   @default("[]") // JSON array
+  isRead         Boolean  @default(false)
+  isStarred      Boolean  @default(false)
+  isSnoozed      Boolean  @default(false)
+  snoozeUntil    DateTime?
+  hasAttachments Boolean  @default(false)
+  receivedAt     DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread         Thread?    @relation(fields: [threadId], references: [id])
+  analysis       AIAnalysis?
+  tasks          Task[]
+
+  @@unique([userId, provider, externalId])
+  @@index([userId, receivedAt])
+  @@index([userId, isRead])
+  @@map("emails")
+}
+
+// ─── AI ANALYSIS ─────────────────────────────────────────────────────
+
+model AIAnalysis {
+  id                  String   @id @default(cuid())
+  emailId             String   @unique
+  userId              String
+  priority            String   // CRITICAL|HIGH|MEDIUM|LOW
+  category            String   // MEETING|TASK|CRITICAL|INFO|SPAM|NEWSLETTER|INVOICE
+  intent              String
+  summary             String
+  deadline            DateTime?
+  deadlineText        String?
+  amount              String?
+  sentiment           String   // POSITIVE|NEUTRAL|NEGATIVE|URGENT
+  urgencyScore        Int
+  suggestedAction     String
+  meetingDetected     Boolean  @default(false)
+  meetingTime         String?
+  meetingParticipants String   @default("[]") // JSON array
+  taskExtracted       Boolean  @default(false)
+  taskText            String?
+  confidenceScore     Float
+  replyShort          String?
+  replyProfessional   String?
+  replyFriendly       String?
+  tokensUsed          Int?
+  processingMs        Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  email               Email    @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_analyses")
+}
+
+// ─── TASKS ───────────────────────────────────────────────────────────
+
+model Task {
+  id          String   @id @default(cuid())
+  userId      String
+  emailId     String?
+  title       String
+  description String?
+  dueDate     DateTime?
+  priority    String   @default("MEDIUM")
+  status      String   @default("TODO")
+  source      String   @default("AI_GENERATED")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email       Email?   @relation(fields: [emailId], references: [id])
+
+  @@map("tasks")
+}
+
+// ─── CALENDAR ────────────────────────────────────────────────────────
+
+model CalendarEvent {
+  id           String   @id @default(cuid())
+  userId       String
+  externalId   String?
+  provider     String?
+  title        String
+  description  String?
+  startTime    DateTime
+  endTime      DateTime
+  location     String?
+  meetingUrl   String?
+  participants String   @default("[]") // JSON array
+  isConflict   Boolean  @default(false)
+  ariaCreated  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("calendar_events")
+}
+
+// ─── BRIEFINGS ───────────────────────────────────────────────────────
+
+model Briefing {
+  id           String   @id @default(cuid())
+  userId       String
+  date         DateTime
+  content      String
+  emailCount   Int
+  criticalCount Int
+  tasksCount   Int
+  waitingCount Int
+  tokensUsed   Int?
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("briefings")
+}
+
+// ─── SETTINGS ────────────────────────────────────────────────────────
+
+model UserSettings {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  aiModel              String   @default("claude-sonnet-4-6")
+  language             String   @default("bs")
+  briefingTime         String   @default("07:45")
+  syncInterval         Int      @default(5)
+  autoAnalyze          Boolean  @default(true)
+  autoCreateTasks      Boolean  @default(true)
+  notificationsEnabled Boolean  @default(true)
+  timezone             String   @default("Europe/Sarajevo")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
