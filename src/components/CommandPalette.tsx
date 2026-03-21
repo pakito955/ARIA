@@ -1,45 +1,53 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Inbox, CheckSquare, Clock, BarChart3, Zap,
-  Mail, RefreshCw, Settings, Search,
+  RefreshCw, Settings, Search, ArrowRight,
 } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
+import { cn } from '@/lib/utils'
 
 const COMMANDS = [
   {
-    group: 'Navigacija',
+    group: 'Navigate',
     items: [
-      { label: 'Daily Briefing', icon: Zap, href: '/dashboard' },
-      { label: 'Inbox', icon: Inbox, href: '/dashboard/inbox' },
-      { label: 'Tasks', icon: CheckSquare, href: '/dashboard/tasks' },
-      { label: 'Čekam odgovor', icon: Clock, href: '/dashboard/waiting' },
-      { label: 'Analitika', icon: BarChart3, href: '/dashboard/analytics' },
+      { label: 'Command Center', icon: Zap, href: '/dashboard', hint: 'Dashboard' },
+      { label: 'Inbox', icon: Inbox, href: '/dashboard/inbox', hint: 'View emails' },
+      { label: 'Tasks', icon: CheckSquare, href: '/dashboard/tasks', hint: 'Manage tasks' },
+      { label: 'Waiting for reply', icon: Clock, href: '/dashboard/waiting', hint: 'Pending responses' },
+      { label: 'Insights', icon: BarChart3, href: '/dashboard/analytics', hint: 'Analytics' },
     ],
   },
   {
-    group: 'Akcije',
+    group: 'AI Actions',
     items: [
-      { label: 'Generiši jutarnji briefing', icon: Zap, action: 'briefing' },
-      { label: 'Sinkronizuj emailove', icon: RefreshCw, action: 'sync' },
-      { label: 'Novi email', icon: Mail, action: 'compose' },
+      { label: 'Generate morning briefing', icon: Zap, action: 'briefing', hint: 'AI summary of inbox' },
+      { label: 'Sync emails', icon: RefreshCw, action: 'sync', hint: 'Fetch latest messages' },
     ],
   },
   {
-    group: 'Podešavanja',
+    group: 'Settings',
     items: [
-      { label: 'Podešavanja', icon: Settings, href: '/dashboard/settings' },
+      { label: 'Settings', icon: Settings, href: '/dashboard/settings', hint: 'Configure ARIA' },
     ],
   },
+]
+
+const RECENTS = [
+  'Reply to critical email',
+  'View today\'s briefing',
+  'Check waiting replies',
 ]
 
 export function CommandPalette() {
   const { commandOpen, setCommandOpen } = useAppStore()
   const [query, setQuery] = useState('')
+  const [selected, setSelected] = useState(0)
   const router = useRouter()
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -52,92 +60,175 @@ export function CommandPalette() {
     return () => window.removeEventListener('keydown', handler)
   }, [setCommandOpen])
 
-  const allItems = COMMANDS.flatMap((g) =>
-    g.items.map((item) => ({ ...item, group: g.group }))
-  )
+  useEffect(() => {
+    if (commandOpen) {
+      setTimeout(() => inputRef.current?.focus(), 50)
+      setSelected(0)
+    }
+  }, [commandOpen])
+
+  const allItems = COMMANDS.flatMap((g) => g.items.map((item) => ({ ...item, group: g.group })))
 
   const filtered = query
     ? allItems.filter((i) => i.label.toLowerCase().includes(query.toLowerCase()))
     : allItems
 
-  const grouped = COMMANDS.map((g) => ({
-    ...g,
-    items: g.items.filter((item) =>
-      !query || item.label.toLowerCase().includes(query.toLowerCase())
-    ),
-  })).filter((g) => g.items.length > 0)
+  const grouped = query
+    ? [{ group: 'Results', items: filtered }]
+    : COMMANDS
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!commandOpen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelected((s) => Math.min(s + 1, filtered.length - 1))
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelected((s) => Math.max(s - 1, 0))
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        if (filtered[selected]) handleSelect(filtered[selected])
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [commandOpen, filtered, selected])
 
   const handleSelect = (item: { href?: string; action?: string }) => {
     setCommandOpen(false)
     setQuery('')
     if (item.href) router.push(item.href)
-    if (item.action === 'briefing') {
-      fetch('/api/ai/briefing', { method: 'POST' })
-    }
+    if (item.action === 'briefing') fetch('/api/ai/briefing', { method: 'POST' })
+    if (item.action === 'sync') fetch('/api/emails')
   }
+
+  let itemIndex = 0
 
   return (
     <AnimatePresence>
       {commandOpen && (
         <>
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => { setCommandOpen(false); setQuery('') }}
-            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm"
           />
 
+          {/* Palette */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: -8 }}
+            initial={{ opacity: 0, scale: 0.95, y: -16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: -8 }}
-            transition={{ duration: 0.15 }}
-            className="fixed left-1/2 top-[20vh] z-[101] -translate-x-1/2 w-full max-w-[520px] px-4"
+            exit={{ opacity: 0, scale: 0.95, y: -16 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="fixed left-1/2 top-[18vh] z-[101] -translate-x-1/2 w-full max-w-[540px] px-4"
           >
-            <div className="bg-[#121224] border border-white/[0.11] rounded-lg shadow-2xl overflow-hidden">
-              {/* Search input */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-white/[0.07]">
-                <Search size={14} className="text-[#5a5a78] shrink-0" />
+            <div className="glass rounded-2xl shadow-[0_32px_64px_rgba(0,0,0,0.5),0_0_0_1px_rgba(139,92,246,0.15)] overflow-hidden">
+              {/* Input */}
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.04]">
+                <Search size={15} className="text-[#8b5cf6] shrink-0" />
                 <input
-                  autoFocus
+                  ref={inputRef}
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Pretraži ili unesi komandu…"
-                  className="flex-1 bg-transparent text-sm text-white placeholder:text-[#5a5a78] outline-none"
+                  onChange={(e) => { setQuery(e.target.value); setSelected(0) }}
+                  placeholder="What do you want to do?"
+                  className="flex-1 bg-transparent text-[14px] text-white placeholder:text-[#4a4a6a] outline-none"
                 />
-                <kbd className="text-[9px] bg-white/[0.05] text-[#5a5a78] px-1.5 py-0.5 rounded font-mono">ESC</kbd>
+                <kbd className="text-[9px] bg-white/[0.05] text-[#4a4a6a] px-2 py-1 rounded-md font-mono">ESC</kbd>
               </div>
 
+              {/* Recent (when no query) */}
+              {!query && (
+                <div className="px-5 py-3 border-b border-white/[0.03]">
+                  <p className="text-[8px] tracking-[2px] uppercase text-[#4a4a6a] mb-2">Recent</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {RECENTS.map((r, i) => (
+                      <button
+                        key={i}
+                        className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] text-[#8888aa] hover:text-white hover:border-[#8b5cf6]/30 transition-all"
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Results */}
-              <div className="max-h-[360px] overflow-y-auto p-2">
-                {grouped.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-[#5a5a78]">Nema rezultata.</div>
+              <div className="max-h-[340px] overflow-y-auto py-2">
+                {filtered.length === 0 ? (
+                  <div className="py-10 text-center text-[12px] text-[#4a4a6a]">
+                    No results for "{query}"
+                  </div>
                 ) : (
-                  grouped.map((group) => (
-                    <div key={group.group} className="mb-2">
-                      <p className="text-[8px] tracking-[2px] uppercase text-[#5a5a78] px-2 py-1.5">
-                        {group.group}
-                      </p>
-                      {group.items.map((item) => (
-                        <button
-                          key={item.label}
-                          onClick={() => handleSelect(item)}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded text-sm text-[#8888aa] cursor-pointer hover:bg-[#e8c97a]/[0.06] hover:text-white transition-colors text-left"
-                        >
-                          <item.icon size={14} className="shrink-0 text-[#5a5a78]" />
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
-                  ))
+                  (query ? grouped : COMMANDS).map((group) => {
+                    const groupItems = query
+                      ? (group as any).items
+                      : group.items.filter((item) =>
+                          !query || item.label.toLowerCase().includes(query.toLowerCase())
+                        )
+
+                    if (groupItems.length === 0) return null
+
+                    return (
+                      <div key={group.group} className="mb-1">
+                        <p className="text-[8px] tracking-[2px] uppercase text-[#4a4a6a] px-5 py-2">
+                          {group.group}
+                        </p>
+                        {groupItems.map((item: any) => {
+                          const isSelected = itemIndex === selected
+                          const currentIndex = itemIndex++
+
+                          return (
+                            <button
+                              key={item.label}
+                              onMouseEnter={() => setSelected(currentIndex)}
+                              onClick={() => handleSelect(item)}
+                              className={cn(
+                                'w-full flex items-center gap-3 px-5 py-2.5 text-left transition-all',
+                                isSelected
+                                  ? 'bg-[#8b5cf6]/10 text-white'
+                                  : 'text-[#8888aa] hover:text-white'
+                              )}
+                            >
+                              <div className={cn(
+                                'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors',
+                                isSelected ? 'bg-[#8b5cf6]/20' : 'bg-white/[0.03]'
+                              )}>
+                                <item.icon size={13} className={isSelected ? 'text-[#a78bfa]' : 'text-[#4a4a6a]'} />
+                              </div>
+                              <div className="flex-1">
+                                <span className="text-[12.5px]">{item.label}</span>
+                                {item.hint && (
+                                  <span className="text-[10px] text-[#4a4a6a] ml-2">{item.hint}</span>
+                                )}
+                              </div>
+                              {isSelected && (
+                                <ArrowRight size={12} className="text-[#8b5cf6] shrink-0" />
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )
+                  })
                 )}
               </div>
 
-              <div className="flex items-center justify-between px-4 py-2 border-t border-white/[0.07] text-[9px] text-[#5a5a78]">
-                <span>↑↓ kretanje</span>
-                <span>↵ odabir</span>
-                <span>ESC zatvori</span>
+              {/* Footer */}
+              <div className="flex items-center justify-between px-5 py-2.5 border-t border-white/[0.04] text-[9px] text-[#4a4a6a]">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1"><kbd className="bg-white/[0.04] px-1.5 py-0.5 rounded font-mono">↑↓</kbd> navigate</span>
+                  <span className="flex items-center gap-1"><kbd className="bg-white/[0.04] px-1.5 py-0.5 rounded font-mono">↵</kbd> select</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+                  <span>ARIA active</span>
+                </div>
               </div>
             </div>
           </motion.div>

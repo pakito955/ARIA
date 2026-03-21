@@ -1,19 +1,47 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { Loader2, Zap, RefreshCw } from 'lucide-react'
+import { ArrowRight, Zap, AlertCircle, CheckCircle2, Clock, TrendingUp, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { cn } from '@/lib/utils'
+
+// Typewriter hook
+function useTypewriter(text: string, speed = 28) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    if (!text) return
+    setDisplayed('')
+    setDone(false)
+    let i = 0
+    const id = setInterval(() => {
+      setDisplayed(text.slice(0, i + 1))
+      i++
+      if (i >= text.length) {
+        clearInterval(id)
+        setDone(true)
+      }
+    }, speed)
+    return () => clearInterval(id)
+  }, [text, speed])
+
+  return { displayed, done }
+}
 
 export default function DashboardPage() {
-  const [streamedText, setStreamedText] = useState('')
+  const [wowDone, setWowDone] = useState(false)
+  const [wowText, setWowText] = useState('')
+  const wowRef = useRef(false)
 
   const { data: statsData } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const [emailsRes, tasksRes] = await Promise.all([
-        fetch('/api/emails?limit=5&filter=all'),
+        fetch('/api/emails?limit=10&filter=all'),
         fetch('/api/tasks?status=TODO'),
       ])
       const emails = await emailsRes.json()
@@ -23,6 +51,8 @@ export default function DashboardPage() {
         total: emails.total ?? 0,
         critical: emails.data?.filter((e: any) => e.analysis?.priority === 'CRITICAL').length ?? 0,
         tasks: tasks.data?.length ?? 0,
+        criticalEmails: emails.data?.filter((e: any) => e.analysis?.priority === 'CRITICAL').slice(0, 3) ?? [],
+        recentEmails: emails.data?.slice(0, 3) ?? [],
       }
     },
   })
@@ -43,120 +73,362 @@ export default function DashboardPage() {
     onSuccess: () => refetchBriefing(),
   })
 
-  const stats = [
-    { n: statsData?.unread ?? 0, label: 'Novih emailova', color: '#f4a0b5' },
-    { n: statsData?.tasks ?? 0, label: 'Zadataka', color: '#86efac' },
-    { n: statsData?.critical ?? 0, label: 'Kritičnih', color: '#f4a0b5' },
-    { n: 0, label: 'Čeka odgovor', color: '#e8c97a' },
+  // WOW moment: show intro on first load
+  useEffect(() => {
+    if (wowRef.current) return
+    wowRef.current = true
+    const shown = sessionStorage.getItem('aria-wow-shown')
+    if (shown) {
+      setWowDone(true)
+      return
+    }
+
+    const critical = statsData?.critical ?? 0
+    const unread = statsData?.unread ?? 0
+    const tasks = statsData?.tasks ?? 0
+
+    const msg = critical > 0
+      ? `Analyzing your inbox… ${critical} critical item${critical > 1 ? 's' : ''} need${critical === 1 ? 's' : ''} your attention today.`
+      : unread > 0
+      ? `Analyzing your inbox… ${unread} unread message${unread > 1 ? 's' : ''}. Everything looks manageable.`
+      : `Your inbox is clear. ${tasks} task${tasks > 1 ? 's' : ''} pending. Good morning.`
+
+    setWowText(msg)
+
+    const timer = setTimeout(() => {
+      setWowDone(true)
+      sessionStorage.setItem('aria-wow-shown', '1')
+    }, 3200)
+
+    return () => clearTimeout(timer)
+  }, [statsData])
+
+  // AI command strip message
+  const critical = statsData?.critical ?? 0
+  const unread = statsData?.unread ?? 0
+  const commandMsg = critical > 0
+    ? `You have ${critical} critical item${critical > 1 ? 's' : ''} requiring action today.`
+    : unread > 0
+    ? `${unread} unread messages. Your inbox is under control.`
+    : `Inbox clear. ARIA is monitoring everything for you.`
+
+  const { displayed: commandDisplayed, done: commandDone } = useTypewriter(
+    wowDone ? commandMsg : '',
+    30
+  )
+
+  const today = format(new Date(), "EEEE, d. MMMM")
+
+  const CALENDAR_EVENTS = [
+    { time: '10:30', title: 'Team Standup', color: '#8b5cf6', note: 'In 45 min' },
+    { time: '14:00', title: 'Investor Call', color: '#f59e0b', note: 'Zoom · 45 min' },
+    { time: '15:00', title: 'Board Meeting', color: '#ef4444', note: 'Reply needed' },
+    { time: '17:00', title: 'Weekly Review', color: '#10b981', note: 'ARIA scheduled' },
   ]
 
-  const today = format(new Date(), "EEEE, d. MMMM yyyy")
-
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-start justify-between px-6 py-5 border-b border-white/[0.055]">
-        <div>
-          <h1 className="font-cormorant text-3xl font-light tracking-tight">
-            Dobro jutro.
-          </h1>
-          <p className="text-[11px] text-[#8888aa] mt-1">{today}</p>
-        </div>
-        <button
-          onClick={() => briefingMutation.mutate()}
-          disabled={briefingMutation.isPending}
-          className="flex items-center gap-2 px-4 py-2 border border-[#e8c97a]/30 text-[#e8c97a] text-[11px] tracking-[1.5px] uppercase rounded hover:bg-[#e8c97a]/[0.06] transition-all disabled:opacity-50"
-        >
-          {briefingMutation.isPending ? (
-            <Loader2 size={12} className="animate-spin" />
-          ) : (
-            <Zap size={12} />
-          )}
-          AI Briefing
-        </button>
-      </div>
+    <>
+      {/* WOW Moment Overlay */}
+      <AnimatePresence>
+        {!wowDone && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#07070f]"
+          >
+            <div className="relative">
+              {/* Glow orb */}
+              <div
+                className="absolute inset-0 rounded-full blur-[80px] orb-float"
+                style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%)', width: 400, height: 400, top: -180, left: -190 }}
+              />
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-5">
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-2">
-          {stats.map((s, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-              className="bg-[#0d0d1a] border border-white/[0.055] rounded p-3.5 hover:border-white/[0.11] transition-colors"
-            >
-              <p className="font-cormorant text-4xl font-light" style={{ color: s.color }}>
-                {s.n}
-              </p>
-              <p className="text-[9px] uppercase tracking-[0.8px] text-[#8888aa] mt-1">{s.label}</p>
-            </motion.div>
-          ))}
-        </div>
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] flex items-center justify-center glow-violet">
+                  <Zap size={18} className="text-white" />
+                </div>
+                <span className="font-cormorant text-4xl font-light tracking-widest">ARIA</span>
+              </div>
 
-        {/* ARIA Briefing card */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-[#0d0d1a] border border-white/[0.055] border-l-2 border-l-[#e8c97a] rounded p-5 relative overflow-hidden"
-        >
-          <div
-            className="absolute top-0 right-0 w-40 h-full pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at right, rgba(232,201,122,.04), transparent 70%)' }}
-          />
+              <WowTypewriter text={wowText} />
 
-          <div className="flex items-center gap-2 mb-4">
-            {briefingMutation.isPending ? (
-              <div className="flex gap-1">
+              <div className="mt-8 flex gap-2 justify-center">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className={`w-1.5 h-1.5 rounded-full bg-[#e8c97a] typing-dot`} />
+                  <div
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] typing-dot"
+                  />
                 ))}
               </div>
-            ) : (
-              <span className="text-[#e8c97a] text-sm">⚡</span>
-            )}
-            <span className="text-[8px] tracking-[2.5px] uppercase text-[#e8c97a]">
-              ARIA · Morning Analysis
-            </span>
-          </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      {/* Main Dashboard */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: wowDone ? 1 : 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="flex flex-col h-full"
+      >
+        {/* AI Command Strip */}
+        <div className="relative px-6 py-5 border-b border-white/[0.04] overflow-hidden">
           <div
-            className="text-[13px] leading-[1.8] text-[#eeeef5]/80"
-            dangerouslySetInnerHTML={{
-              __html: briefingData?.data?.content ||
-                'Klikni <b>AI Briefing</b> gore da ARIA analizira tvoje emailove i generiše jutarnji pregled.'
-            }}
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, transparent 60%)' }}
           />
-        </motion.div>
-
-        {/* Calendar preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-[#0d0d1a] border border-white/[0.055] border-l-2 border-l-[#4fd1c5] rounded p-5"
-        >
-          <p className="text-[8px] tracking-[2.5px] uppercase text-[#4fd1c5] mb-4">
-            📅 Kalendar · Danas
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { time: '10:30', title: 'Team Standup', note: '⚠ Konflikt', noteColor: '#f4a0b5' },
-              { time: '14:00', title: 'Investor Call', note: 'Zoom · 45 min', noteColor: '#e8c97a' },
-              { time: '15:00', title: 'Board Meeting', note: '⚠ Reply needed', noteColor: '#f4a0b5' },
-              { time: '17:00', title: 'Weekly Review', note: 'ARIA scheduled', noteColor: '#4fd1c5' },
-            ].map((ev, i) => (
-              <div key={i} className="bg-[#121224] rounded p-2.5 border-l-2" style={{ borderLeftColor: i % 2 === 0 ? '#4fd1c5' : '#7eb8f7' }}>
-                <p className="text-[9px] text-[#8888aa] mb-0.5 font-mono">{ev.time}</p>
-                <p className="text-[11.5px]">{ev.title}</p>
-                <p className="text-[9px] mt-1" style={{ color: ev.noteColor }}>{ev.note}</p>
+          <div className="flex items-center justify-between relative">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] pulse-violet" />
+                <span className="text-[9px] tracking-[2.5px] uppercase text-[#8b5cf6]">ARIA · Command</span>
               </div>
-            ))}
+              <div className="flex items-start gap-1">
+                <p className="text-[15px] text-white/90 max-w-lg leading-snug">
+                  {commandDisplayed}
+                  {!commandDone && (
+                    <span className="inline-block w-0.5 h-4 bg-[#8b5cf6] ml-0.5 animate-pulse align-middle" />
+                  )}
+                </p>
+              </div>
+              <p className="text-[11px] text-[#4a4a6a] mt-1">{today}</p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {critical > 0 && (
+                <Link href="/dashboard/inbox?filter=critical">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#8b5cf6] text-white text-[12px] font-medium glow-violet"
+                  >
+                    Focus now
+                    <ArrowRight size={13} />
+                  </motion.button>
+                </Link>
+              )}
+
+              <button
+                onClick={() => briefingMutation.mutate()}
+                disabled={briefingMutation.isPending}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.08] text-[#8888aa] text-[11px] hover:border-[#8b5cf6]/40 hover:text-white transition-all disabled:opacity-50"
+              >
+                {briefingMutation.isPending ? (
+                  <Loader2 size={12} className="animate-spin text-[#8b5cf6]" />
+                ) : (
+                  <Zap size={12} className="text-[#8b5cf6]" />
+                )}
+                AI Briefing
+              </button>
+            </div>
           </div>
-        </motion.div>
-      </div>
-    </div>
+        </div>
+
+        {/* Bento Grid */}
+        <div className="flex-1 overflow-y-auto p-5">
+          <div className="grid grid-cols-3 gap-4 h-full" style={{ gridTemplateRows: '1fr 1fr' }}>
+
+            {/* Critical Now — spans 2/3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="col-span-2 card p-5 relative overflow-hidden"
+            >
+              <div
+                className="absolute top-0 right-0 w-48 h-full pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse at top right, rgba(239,68,68,0.05), transparent 70%)' }}
+              />
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={14} className="text-[#ef4444]" />
+                  <span className="text-[9px] tracking-[2px] uppercase text-[#ef4444]">Critical Now</span>
+                </div>
+                {critical > 0 && (
+                  <span className="text-[9px] bg-[#ef4444]/12 text-[#ef4444] px-2 py-0.5 rounded-full">
+                    {critical} item{critical > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+
+              {critical === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-2">
+                  <CheckCircle2 size={28} className="text-[#10b981] opacity-60" />
+                  <p className="text-[12px] text-[#4a4a6a]">No critical items · You're on top of things</p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {(statsData?.criticalEmails ?? []).map((email: any, i: number) => (
+                    <motion.div
+                      key={email.id}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 + i * 0.06 }}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-[#ef4444]/[0.04] border border-[#ef4444]/15 group hover:border-[#ef4444]/30 transition-all cursor-pointer"
+                    >
+                      <div className="w-1 h-8 rounded-full bg-[#ef4444] glow-red shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12.5px] font-medium text-white truncate">
+                          {email.fromName || email.fromEmail?.split('@')[0]}
+                        </p>
+                        <p className="text-[11px] text-[#8888aa] truncate">
+                          {email.analysis?.summary || email.subject}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link href="/dashboard/inbox">
+                          <button className="px-2.5 py-1 rounded bg-[#8b5cf6] text-white text-[10px] font-medium hover:bg-[#7c3aed] transition-colors">
+                            Reply
+                          </button>
+                        </Link>
+                        <button className="px-2.5 py-1 rounded border border-white/[0.08] text-[#8888aa] text-[10px] hover:border-white/20 transition-colors">
+                          Snooze
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              {/* Stats row at bottom */}
+              <div className="flex items-center gap-5 mt-5 pt-4 border-t border-white/[0.04]">
+                {[
+                  { n: statsData?.unread ?? 0, label: 'Unread', color: '#8b5cf6' },
+                  { n: statsData?.tasks ?? 0, label: 'Tasks', color: '#10b981' },
+                  { n: statsData?.critical ?? 0, label: 'Critical', color: '#ef4444' },
+                ].map((s, i) => (
+                  <div key={i} className="text-center">
+                    <p className="font-cormorant text-3xl font-light" style={{ color: s.color }}>{s.n}</p>
+                    <p className="text-[9px] uppercase tracking-[0.8px] text-[#4a4a6a]">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Next Best Action — 1/3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="card p-5 relative overflow-hidden flex flex-col"
+            >
+              <div
+                className="absolute bottom-0 right-0 w-32 h-32 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.08), transparent 70%)' }}
+              />
+              <div className="flex items-center gap-2 mb-4">
+                <Zap size={13} className="text-[#8b5cf6]" />
+                <span className="text-[9px] tracking-[2px] uppercase text-[#8b5cf6]">Next Best Action</span>
+              </div>
+
+              <div className="flex-1">
+                {briefingData?.data?.content ? (
+                  <p className="text-[12px] text-[#eeeef5]/80 leading-relaxed line-clamp-6">
+                    {briefingData.data.content.replace(/<[^>]*>/g, '').slice(0, 200)}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-[12px] text-[#8888aa] leading-relaxed">
+                      {critical > 0
+                        ? `Reply to ${statsData?.criticalEmails?.[0]?.fromName || 'critical sender'} — marked high priority.`
+                        : 'Your inbox is under control. Review pending tasks or schedule tomorrow.'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <Link href={critical > 0 ? '/dashboard/inbox?filter=critical' : '/dashboard/tasks'}>
+                <motion.button
+                  whileHover={{ x: 3 }}
+                  className="flex items-center gap-1.5 text-[11px] text-[#8b5cf6] mt-4 group"
+                >
+                  Open →
+                </motion.button>
+              </Link>
+            </motion.div>
+
+            {/* Today Timeline — 1/3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="card p-5"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Clock size={13} className="text-[#f59e0b]" />
+                <span className="text-[9px] tracking-[2px] uppercase text-[#f59e0b]">Today Timeline</span>
+              </div>
+
+              <div className="relative pl-4">
+                <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-white/[0.06]" />
+                <div className="space-y-3.5">
+                  {CALENDAR_EVENTS.map((ev, i) => {
+                    const isPast = parseInt(ev.time) < new Date().getHours()
+                    return (
+                      <div key={i} className={cn('relative transition-opacity', isPast && 'opacity-35')}>
+                        <div
+                          className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full border-2 border-[#07070f]"
+                          style={{ background: ev.color }}
+                        />
+                        <p className="text-[9px] font-mono text-[#4a4a6a] mb-0.5">{ev.time}</p>
+                        <p className="text-[12px] text-white">{ev.title}</p>
+                        <p className="text-[10px]" style={{ color: ev.color }}>{ev.note}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* AI Insight — 2/3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="col-span-2 card p-5 relative overflow-hidden"
+            >
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.04) 0%, transparent 50%)' }}
+              />
+
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp size={13} className="text-[#8b5cf6]" />
+                <span className="text-[9px] tracking-[2px] uppercase text-[#8b5cf6]">AI Briefing</span>
+                {briefingMutation.isPending && (
+                  <div className="flex gap-1 ml-2">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] typing-dot" />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div
+                className="text-[12.5px] leading-[1.85] text-[#eeeef5]/75 max-h-[120px] overflow-hidden"
+                dangerouslySetInnerHTML={{
+                  __html: briefingData?.data?.content ||
+                    '<span style="color:#4a4a6a">Click <b style="color:#8b5cf6">AI Briefing</b> to generate your morning analysis. ARIA will summarize all critical emails, pending tasks, and suggest actions for the day.</span>'
+                }}
+              />
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+    </>
+  )
+}
+
+function WowTypewriter({ text }: { text: string }) {
+  const { displayed } = useTypewriter(text, 35)
+  return (
+    <p className="text-[15px] text-[#eeeef5]/80 text-center max-w-sm leading-relaxed">
+      {displayed}
+      {displayed.length < text.length && (
+        <span className="inline-block w-0.5 h-4 bg-[#8b5cf6] ml-0.5 animate-pulse align-middle" />
+      )}
+    </p>
   )
 }
