@@ -13,49 +13,43 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#080810] relative overflow-hidden">
-      {/* Grid bg */}
-      <div className="absolute inset-0 grid-bg opacity-60" />
-
-      {/* Ambient orbs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute w-96 h-96 rounded-full orb-float"
-          style={{
-            top: '-10%', left: '50%', transform: 'translateX(-50%)',
-            background: 'radial-gradient(circle, rgba(232,201,122,0.07) 0%, transparent 70%)',
-          }}
-        />
-        <div
-          className="absolute w-72 h-72 rounded-full"
-          style={{
-            bottom: '10%', right: '10%',
-            background: 'radial-gradient(circle, rgba(79,209,197,0.05) 0%, transparent 70%)',
-            animation: 'float-orb 8s ease-in-out infinite reverse',
-          }}
-        />
-      </div>
+    <div
+      className="min-h-screen flex items-center justify-center relative overflow-hidden"
+      style={{ background: 'var(--bg-base)' }}
+    >
+      {/* Subtle grid */}
+      <div className="absolute inset-0 grid-bg opacity-40" />
 
       {/* Card */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="relative z-10 w-full max-w-sm mx-4 text-center"
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="relative z-10 w-full max-w-[360px] mx-4 text-center"
       >
         {/* Logo */}
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.1 }}
+          className="mb-10"
         >
-          <p className="text-[10px] tracking-[4px] uppercase text-[#e8c97a] mb-6">
+          <p
+            className="text-[10px] tracking-[3px] uppercase mb-5 font-medium"
+            style={{ color: 'var(--text-3)' }}
+          >
             AI Executive Assistant
           </p>
-          <h1 className="font-cormorant text-7xl font-light italic text-gradient-gold mb-2">
+          <h1
+            className="text-6xl font-bold tracking-tight mb-3"
+            style={{ color: 'var(--text-1)', fontFamily: 'var(--font-outfit)' }}
+          >
             ARIA
           </h1>
-          <p className="text-[14px] text-[#8888aa] leading-relaxed mb-10">
+          <p
+            className="text-[14px] leading-relaxed"
+            style={{ color: 'var(--text-2)' }}
+          >
             Čita tvoje emailove. Razumije kontekst.<br />
             Organizuje sve — automatski.
           </p>
@@ -63,30 +57,44 @@ export default function LoginPage() {
 
         {/* Login buttons */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-3"
+          transition={{ delay: 0.2 }}
+          className="space-y-2.5"
         >
           <button
             onClick={() => handleLogin('google')}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3.5 bg-white/[0.04] border border-white/[0.11] rounded text-sm text-white hover:bg-white/[0.07] hover:border-white/20 transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[13px] font-medium transition-all disabled:opacity-40"
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-medium)',
+              color: 'var(--text-1)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--border-focus)')}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-medium)')}
           >
             <GoogleIcon />
             Nastavi sa Google
           </button>
 
-          <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-px bg-white/[0.06]" />
-            <span className="text-[10px] text-[#5a5a78] tracking-widest">ILI</span>
-            <div className="flex-1 h-px bg-white/[0.06]" />
+          <div className="flex items-center gap-3 py-1">
+            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+            <span className="text-[10px] tracking-widest" style={{ color: 'var(--text-3)' }}>ILI</span>
+            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
           </div>
 
           <button
             onClick={() => handleLogin('azure-ad')}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3.5 bg-white/[0.04] border border-white/[0.11] rounded text-sm text-white hover:bg-white/[0.07] hover:border-white/20 transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[13px] font-medium transition-all disabled:opacity-40"
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-medium)',
+              color: 'var(--text-1)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--border-focus)')}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-medium)')}
           >
             <MicrosoftIcon />
             Nastavi sa Microsoft
@@ -97,26 +105,30 @@ export default function LoginPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-10 grid grid-cols-3 gap-3"
+          transition={{ delay: 0.35 }}
+          className="mt-10 grid grid-cols-3 gap-2"
         >
           {[
             { icon: '⚡', label: 'AI analiza' },
             { icon: '✉', label: 'Gmail + Outlook' },
             { icon: '📅', label: 'Auto schedule' },
           ].map((f) => (
-            <div key={f.label} className="text-center">
-              <div className="text-lg mb-1 opacity-40">{f.icon}</div>
-              <p className="text-[9px] text-[#5a5a78] tracking-wide">{f.label}</p>
+            <div
+              key={f.label}
+              className="py-3 rounded-xl text-center"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+            >
+              <div className="text-base mb-1">{f.icon}</div>
+              <p className="text-[10px] font-medium" style={{ color: 'var(--text-3)' }}>{f.label}</p>
             </div>
           ))}
         </motion.div>
 
-        <p className="text-[9px] text-[#5a5a78] mt-8">
+        <p className="text-[10px] mt-8" style={{ color: 'var(--text-3)' }}>
           Prijavom prihvatate{' '}
-          <a href="#" className="text-[#e8c97a] hover:underline">Terms of Service</a>
-          {' '}i{' '}
-          <a href="#" className="text-[#e8c97a] hover:underline">Privacy Policy</a>
+          <a href="#" style={{ color: 'var(--accent-text)' }} className="hover:underline">Terms of Service</a>
+          {' '}|{' '}
+          <a href="#" style={{ color: 'var(--accent-text)' }} className="hover:underline">Privacy Policy</a>
         </p>
       </motion.div>
     </div>
