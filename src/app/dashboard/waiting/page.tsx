@@ -8,13 +8,14 @@ import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 export default function WaitingPage() {
-  // Emails that have been sent (outbox) without reply for 2+ days
+  // Emails waiting for a reply: unread, older than 2 days, not spam/newsletter
   const { data, isLoading } = useQuery({
     queryKey: ['waiting'],
     queryFn: async () => {
-      const res = await fetch('/api/emails?filter=unread&sort=oldest&limit=20')
+      const res = await fetch('/api/emails?filter=waiting&sort=oldest&limit=20')
       return res.json()
     },
+    refetchInterval: 5 * 60_000, // refresh every 5 min
   })
 
   const [followingUp, setFollowingUp] = useState<string | null>(null)

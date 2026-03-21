@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, SlidersHorizontal, RefreshCw, ChevronDown, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip } from 'lucide-react'
+import { Search, SlidersHorizontal, RefreshCw, ChevronDown, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip, Inbox } from 'lucide-react'
 import { EmailCard } from '@/components/inbox/EmailCard'
+import { TriageMode } from '@/components/TriageMode'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -25,7 +26,22 @@ export default function InboxPage() {
   const [originalExpanded, setOriginalExpanded] = useState(false)
   const [replyStyle, setReplyStyle] = useState<'short' | 'professional' | 'friendly'>('professional')
   const [sent, setSent] = useState(false)
+  const [triageMode, setTriageMode] = useState(false)
   const qc = useQueryClient()
+
+  // Real-time sync via SSE
+  useEffect(() => {
+    const es = new EventSource('/api/emails/stream')
+    es.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data)
+        if (msg.type === 'update' && msg.newEmails?.length > 0) {
+          qc.invalidateQueries({ queryKey: ['emails'] })
+        }
+      } catch {}
+    }
+    return () => es.close()
+  }, [qc])
 
   const debouncedSearch = useDebounce(searchQuery, 300)
 
@@ -96,7 +112,50 @@ export default function InboxPage() {
 
   const currentReply = replies[replyStyle]
 
+  const handleArchive = useCallback((id: string) => {
+    fetch(`/api/emails/${id}/archive`, { method: 'POST' }).then(() =>
+      qc.invalidateQueries({ queryKey: ['emails'] })
+    )
+  }, [qc])
+
+  const handleReply = useCallback((id: string) => {
+    setSelectedEmail(id)
+    setTriageMode(false)
+  }, [setSelectedEmail])
+
+  const handleTask = useCallback((id: string) => {
+    fetch('/api/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emailId: id }),
+    })
+  }, [])
+
+  const handleSnooze = useCallback((id: string) => {
+    // snooze for 24h — mark as read temporarily
+    fetch(`/api/emails/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isRead: true }),
+    }).then(() => qc.invalidateQueries({ queryKey: ['emails'] }))
+  }, [qc])
+
   return (
+    <>
+      {/* Triage Mode Overlay */}
+      <AnimatePresence>
+        {triageMode && emails.length > 0 && (
+          <TriageMode
+            emails={emails}
+            onArchive={handleArchive}
+            onReply={handleReply}
+            onTask={handleTask}
+            onSnooze={handleSnooze}
+            onClose={() => setTriageMode(false)}
+          />
+        )}
+      </AnimatePresence>
+
     <div className="flex h-full">
       {/* Left: Email List (380px) */}
       <div className="w-[380px] shrink-0 flex flex-col border-r border-white/[0.05] h-full">
@@ -106,12 +165,22 @@ export default function InboxPage() {
             <h1 className="font-cormorant text-2xl font-light tracking-tight">Inbox</h1>
             <p className="text-[10px] text-[#4a4a6a] mt-0.5">{total} messages · AI sorted</p>
           </div>
-          <button
-            onClick={() => refetch()}
-            className="p-1.5 rounded-lg text-[#4a4a6a] hover:text-[#8888aa] hover:bg-white/[0.04] transition-all"
-          >
-            <RefreshCw size={13} />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setTriageMode(true)}
+              disabled={emails.length === 0}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 text-[#a78bfa] text-[10px] hover:bg-[#8b5cf6]/18 transition-all disabled:opacity-30"
+            >
+              <Inbox size={11} />
+              Triage
+            </button>
+            <button
+              onClick={() => refetch()}
+              className="p-1.5 rounded-lg text-[#4a4a6a] hover:text-[#8888aa] hover:bg-white/[0.04] transition-all"
+            >
+              <RefreshCw size={13} />
+            </button>
+          </div>
         </div>
 
         {/* Search */}
@@ -422,6 +491,7 @@ export default function InboxPage() {
         </AnimatePresence>
       </div>
     </div>
+    </>
   )
 }
 

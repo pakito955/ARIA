@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { ArrowRight, Zap, AlertCircle, CheckCircle2, Clock, TrendingUp, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { VoiceBriefing } from '@/components/VoiceBriefing'
 
 // Typewriter hook
 function useTypewriter(text: string, speed = 28) {
@@ -402,6 +403,11 @@ export default function DashboardPage() {
                     {[0, 1, 2].map((i) => (
                       <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] typing-dot" />
                     ))}
+                  </div>
+                )}
+                {briefingData?.data?.content && (
+                  <div className="ml-auto">
+                    <VoiceBriefing text={briefingData.data.content} />
                   </div>
                 )}
               </div>

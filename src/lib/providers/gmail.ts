@@ -14,7 +14,13 @@ export class GmailProvider implements EmailProviderInterface {
   readonly provider = 'GMAIL' as const
   private auth: OAuth2Client
 
-  constructor(accessToken: string, refreshToken?: string) {
+  public newAccessToken: string | null = null
+
+  constructor(
+    accessToken: string,
+    refreshToken?: string,
+    onTokenRefresh?: (newToken: string) => void
+  ) {
     this.auth = new OAuth2Client(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET
@@ -22,6 +28,20 @@ export class GmailProvider implements EmailProviderInterface {
     this.auth.setCredentials({
       access_token: accessToken,
       refresh_token: refreshToken,
+    })
+    this.auth.on('tokens', (tokens) => {
+      if (tokens.access_token) {
+        this.newAccessToken = tokens.access_token
+        onTokenRefresh?.(tokens.access_token)
+      }
+    })
+  }
+
+  async archiveEmail(externalId: string): Promise<void> {
+    await this.gmail().users.messages.modify({
+      userId: 'me',
+      id: externalId,
+      requestBody: { removeLabelIds: ['INBOX'] },
     })
   }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { decrypt } from '@/lib/encryption'
+import { decrypt, encrypt } from '@/lib/encryption'
 import { GmailProvider } from '@/lib/providers/gmail'
 
 export async function GET(req: NextRequest) {
@@ -30,7 +30,16 @@ export async function GET(req: NextRequest) {
         ? decrypt(integration.refreshToken)
         : undefined
 
-      const gmail = new GmailProvider(accessToken, refreshToken)
+      let savedNewToken = false
+      const gmail = new GmailProvider(accessToken, refreshToken, async (newToken) => {
+        if (!savedNewToken) {
+          savedNewToken = true
+          await prisma.integration.update({
+            where: { id: integration.id },
+            data: { accessToken: encrypt(newToken) },
+          })
+        }
+      })
 
       // Fetch latest 30 emails from Gmail
       const freshEmails = await gmail.fetchEmails({
@@ -88,10 +97,19 @@ export async function GET(req: NextRequest) {
 
   if (filter === 'unread') where.isRead = false
   else if (filter === 'starred') where.isStarred = true
-  else if (filter === 'critical') where.analysis = { priority: 'CRITICAL' }
-  else if (filter === 'meeting') where.analysis = { category: 'MEETING' }
-  else if (filter === 'task') where.analysis = { category: 'TASK' }
-  else if (filter === 'spam') where.analysis = { category: 'SPAM' }
+  else if (filter === 'critical') where.analysis = { is: { priority: 'CRITICAL' } }
+  else if (filter === 'meeting') where.analysis = { is: { category: 'MEETING' } }
+  else if (filter === 'task') where.analysis = { is: { category: 'TASK' } }
+  else if (filter === 'spam') where.analysis = { is: { category: 'SPAM' } }
+  else if (filter === 'waiting') {
+    // Emails waiting for reply: unread, received 2+ days ago, not spam
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+    where.isRead = false
+    where.receivedAt = { lt: twoDaysAgo }
+    where.analysis = {
+      isNot: { category: 'SPAM' },
+    }
+  }
 
   if (search) {
     where.OR = [

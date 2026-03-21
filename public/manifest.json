@@ -1,0 +1,38 @@
+{
+  "name": "ARIA — AI Executive Assistant",
+  "short_name": "ARIA",
+  "description": "AI layer above your email. ARIA reads, understands, and organizes your communication.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#07070f",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Inbox",
+      "url": "/dashboard/inbox",
+      "description": "Open AI-sorted inbox"
+    },
+    {
+      "name": "Command Center",
+      "url": "/dashboard",
+      "description": "Open daily briefing"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "screenshots": []
+}

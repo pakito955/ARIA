@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { AnalysisPanel } from '@/components/analysis/AnalysisPanel'
 import { CommandPalette } from '@/components/CommandPalette'
+import { NotificationManager } from '@/components/NotificationManager'
 
 export default async function DashboardLayout({
   children,
@@ -22,6 +23,7 @@ export default async function DashboardLayout({
         <AnalysisPanel />
       </div>
       <CommandPalette />
+      <NotificationManager />
     </div>
   )
 }

@@ -26,6 +26,7 @@ export const metadata: Metadata = {
   title: 'ARIA · AI Executive Assistant',
   description: 'AI layer above your email. ARIA reads, understands, and organizes your communication.',
   keywords: ['AI', 'email', 'executive assistant', 'Gmail', 'Outlook'],
+  manifest: '/manifest.json',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
