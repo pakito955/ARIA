@@ -72,7 +72,7 @@ export function Sidebar() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -8 }}
               transition={{ duration: 0.15 }}
-              className="font-cormorant text-xl font-light tracking-widest text-white"
+              className="font-outfit text-lg font-semibold tracking-[0.15em] text-white"
             >
               ARIA
             </motion.span>

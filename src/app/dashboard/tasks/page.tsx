@@ -57,7 +57,7 @@ export default function TasksPage() {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.055]">
         <div>
-          <h1 className="font-cormorant text-3xl font-light">Tasks</h1>
+          <h1 className="font-outfit text-2xl font-semibold tracking-tight">Tasks</h1>
           <p className="text-[11px] text-[#8888aa] mt-0.5">Auto-generisano iz emailova</p>
         </div>
 

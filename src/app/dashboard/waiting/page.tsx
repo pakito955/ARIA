@@ -38,7 +38,7 @@ export default function WaitingPage() {
   return (
     <div className="flex flex-col h-full">
       <div className="px-6 py-4 border-b border-white/[0.055]">
-        <h1 className="font-cormorant text-3xl font-light">Čekam odgovor</h1>
+        <h1 className="font-outfit text-2xl font-semibold tracking-tight">Čekam odgovor</h1>
         <p className="text-[11px] text-[#8888aa] mt-0.5">Emailovi bez odgovora duže od 2 dana</p>
       </div>
 

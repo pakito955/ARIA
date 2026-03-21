@@ -1,25 +1,27 @@
-import type { Metadata } from 'next'
-import { Cormorant_Garamond, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Outfit, Inter, JetBrains_Mono } from 'next/font/google'
 import { Providers } from '@/components/Providers'
 import './globals.css'
 
-const cormorant = Cormorant_Garamond({
+const outfit = Outfit({
   subsets: ['latin'],
-  weight: ['300', '400', '600'],
-  style: ['normal', 'italic'],
-  variable: '--font-cormorant',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-outfit',
+  display: 'swap',
 })
 
-const spaceGrotesk = Space_Grotesk({
+const inter = Inter({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600'],
-  variable: '--font-space',
+  variable: '--font-inter',
+  display: 'swap',
 })
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   weight: ['300', '400'],
   variable: '--font-mono',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -27,12 +29,27 @@ export const metadata: Metadata = {
   description: 'AI layer above your email. ARIA reads, understands, and organizes your communication.',
   keywords: ['AI', 'email', 'executive assistant', 'Gmail', 'Outlook'],
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'ARIA',
+  },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#07070f',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${cormorant.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-space bg-[#080810] text-[#eeeef5] antialiased`}>
+      <body
+        className={`${outfit.variable} ${inter.variable} ${jetbrainsMono.variable} font-inter bg-[#080810] text-[#eeeef5] antialiased`}
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

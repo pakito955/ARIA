@@ -9,9 +9,12 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        cormorant: ['var(--font-cormorant)', 'Georgia', 'serif'],
-        space: ['var(--font-space)', 'system-ui', 'sans-serif'],
+        outfit: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        inter: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'Consolas', 'monospace'],
+        // Backwards compatibility aliases
+        cormorant: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        space: ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: 'rgba(255,255,255,0.055)',
@@ -23,6 +26,9 @@ module.exports = {
       animation: {
         'fade-in-up': 'fade-in-up 0.4s ease both',
         'spin-slow': 'spin 2s linear infinite',
+      },
+      screens: {
+        xs: '390px',
       },
     },
   },

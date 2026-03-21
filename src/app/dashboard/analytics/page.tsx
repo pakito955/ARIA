@@ -134,7 +134,7 @@ export default function AnalyticsPage() {
           <span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6] pulse-violet" />
           <span className="text-[9px] tracking-[2.5px] uppercase text-[#8b5cf6]">ARIA · Insights</span>
         </div>
-        <h1 className="font-cormorant text-3xl font-light tracking-tight">Intelligence Report</h1>
+        <h1 className="font-outfit text-3xl font-light tracking-tight">Intelligence Report</h1>
         <p className="text-[11px] text-[#4a4a6a] mt-0.5">Your productivity amplified by AI</p>
       </div>
 
@@ -151,7 +151,7 @@ export default function AnalyticsPage() {
             style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%)' }}
           />
           <p className="text-[9px] tracking-[2.5px] uppercase text-[#8b5cf6] mb-2">This month, ARIA saved you</p>
-          <p className="font-cormorant text-6xl font-light text-white mb-1">
+          <p className="font-outfit text-6xl font-light text-white mb-1">
             <AnimatedNumber target={data?.timeSaved ? Math.round(data.timeSaved * 10) / 10 : 42} suffix="h" />
           </p>
           <p className="text-[12px] text-[#8888aa]">of email processing time</p>
@@ -181,7 +181,7 @@ export default function AnalyticsPage() {
                 </div>
                 <Sparkline data={m.sparkData} color={m.color} />
               </div>
-              <p className="font-cormorant text-4xl font-light mb-0.5" style={{ color: m.color }}>
+              <p className="font-outfit text-4xl font-light mb-0.5" style={{ color: m.color }}>
                 <AnimatedNumber target={m.value} suffix={m.suffix} />
               </p>
               <p className="text-[11px] text-white">{m.label}</p>

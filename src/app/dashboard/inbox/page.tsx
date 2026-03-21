@@ -157,26 +157,32 @@ export default function InboxPage() {
       </AnimatePresence>
 
     <div className="flex h-full">
-      {/* Left: Email List (380px) */}
-      <div className="w-[380px] shrink-0 flex flex-col border-r border-white/[0.05] h-full">
+      {/* Left: Email List — full on mobile, 380px on desktop */}
+      <div
+        className={cn(
+          'shrink-0 flex flex-col border-r border-white/[0.05] h-full',
+          'w-full md:w-[360px] lg:w-[380px]',
+          selectedEmailId ? 'hidden md:flex' : 'flex'
+        )}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-white/[0.04]">
           <div>
-            <h1 className="font-cormorant text-2xl font-light tracking-tight">Inbox</h1>
+            <h1 className="font-outfit text-xl md:text-2xl font-semibold tracking-tight">Inbox</h1>
             <p className="text-[10px] text-[#4a4a6a] mt-0.5">{total} messages · AI sorted</p>
           </div>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setTriageMode(true)}
               disabled={emails.length === 0}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 text-[#a78bfa] text-[10px] hover:bg-[#8b5cf6]/18 transition-all disabled:opacity-30"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 text-[#a78bfa] text-[10px] font-medium hover:bg-[#8b5cf6]/18 transition-all disabled:opacity-30"
             >
               <Inbox size={11} />
               Triage
             </button>
             <button
               onClick={() => refetch()}
-              className="p-1.5 rounded-lg text-[#4a4a6a] hover:text-[#8888aa] hover:bg-white/[0.04] transition-all"
+              className="p-2 rounded-xl text-[#4a4a6a] hover:text-[#8888aa] hover:bg-white/[0.04] transition-all"
             >
               <RefreshCw size={13} />
             </button>
@@ -250,8 +256,26 @@ export default function InboxPage() {
         </div>
       </div>
 
-      {/* Right: Email Detail */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Right: Email Detail — full on mobile when email selected */}
+      <div
+        className={cn(
+          'flex-1 flex flex-col overflow-hidden',
+          !selectedEmailId ? 'hidden md:flex' : 'flex'
+        )}
+      >
+        {/* Mobile back button */}
+        {selectedEmailId && (
+          <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b border-white/[0.04] shrink-0">
+            <button
+              onClick={() => setSelectedEmail(null)}
+              className="flex items-center gap-1.5 text-[13px] text-[#8888aa] hover:text-white transition-colors touch-target"
+            >
+              <ArrowLeft size={16} />
+              Back
+            </button>
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           {!selectedEmailId ? (
             <motion.div

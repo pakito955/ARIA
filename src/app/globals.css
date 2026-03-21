@@ -20,17 +20,29 @@
   --green: #10b981;
   --muted: #4a4a6a;
   --muted2: #8888aa;
+
+  /* Safe area insets for iOS */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
   }
 
   html, body {
     height: 100%;
-    overflow: hidden;
     background: var(--bg);
+  }
+
+  /* Desktop: prevent scroll */
+  @media (min-width: 768px) {
+    html, body {
+      overflow: hidden;
+    }
   }
 
   ::-webkit-scrollbar {
@@ -50,21 +62,38 @@
 }
 
 @layer utilities {
+  .font-outfit {
+    font-family: var(--font-outfit);
+  }
+  .font-inter {
+    font-family: var(--font-inter);
+  }
+  /* Backwards compat — these now use Outfit/Inter */
   .font-cormorant {
-    font-family: var(--font-cormorant);
+    font-family: var(--font-outfit);
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
   .font-space {
-    font-family: var(--font-space);
+    font-family: var(--font-inter);
   }
   .font-mono {
     font-family: var(--font-mono);
   }
 
+  /* iOS safe area padding */
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
   /* Subtle grid background */
   .grid-bg {
     background-image:
-      linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px);
+      linear-gradient(rgba(139,92,246,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139,92,246,0.025) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 
@@ -90,37 +119,30 @@
     background-clip: text;
   }
 
-  .text-gradient-gold {
-    background: linear-gradient(135deg, var(--gold), var(--gold2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
   /* Glow effects */
   .glow-violet {
-    box-shadow: 0 0 24px rgba(139, 92, 246, 0.2), 0 0 48px rgba(139, 92, 246, 0.06);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.25), 0 0 40px rgba(139, 92, 246, 0.08);
   }
   .glow-gold {
     box-shadow: 0 0 20px rgba(232, 201, 122, 0.15);
   }
   .glow-red {
-    box-shadow: 0 0 16px rgba(239, 68, 68, 0.25);
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.3);
   }
   .glow-green {
     box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
   }
 
-  /* Card depth */
+  /* Card — modern rounded style */
   .card {
     background: var(--s1);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    border-radius: 16px;
+    transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
   }
   .card:hover {
-    border-color: rgba(255,255,255,0.09);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    border-color: rgba(255,255,255,0.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(139,92,246,0.06);
     transform: translateY(-1px);
   }
 
@@ -129,6 +151,29 @@
     background: rgba(139, 92, 246, 0.1);
     border-left: 2px solid #8b5cf6;
     box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.05);
+  }
+
+  /* AI glow border */
+  .ai-border {
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.05), inset 0 0 20px rgba(139, 92, 246, 0.03);
+  }
+
+  /* Priority indicator bar */
+  .priority-bar {
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 2px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* Touch targets for mobile */
+  .touch-target {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
 }
 
@@ -146,34 +191,26 @@
   0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
   50% { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
 }
-.pulse-critical {
-  animation: pulse-critical 1.8s infinite;
-}
+.pulse-critical { animation: pulse-critical 1.8s infinite; }
 
 @keyframes pulse-violet {
   0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
   50% { box-shadow: 0 0 0 4px rgba(139, 92, 246, 0); }
 }
-.pulse-violet {
-  animation: pulse-violet 2s infinite;
-}
+.pulse-violet { animation: pulse-violet 2s infinite; }
 
 @keyframes pulse-amber {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
-.pulse-amber {
-  animation: pulse-amber 2s infinite;
-}
+.pulse-amber { animation: pulse-amber 2s infinite; }
 
 /* Float orb */
 @keyframes float-orb {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-20px) scale(1.05); }
 }
-.orb-float {
-  animation: float-orb 6s ease-in-out infinite;
-}
+.orb-float { animation: float-orb 6s ease-in-out infinite; }
 
 /* Skeleton shimmer */
 @keyframes shimmer {
@@ -189,6 +226,7 @@
   );
   background-size: 200% 100%;
   animation: shimmer 1.8s infinite;
+  border-radius: 8px;
 }
 
 /* Count up animation */
@@ -196,29 +234,23 @@
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.count-up {
-  animation: count-up 0.6s ease both;
-}
+.count-up { animation: count-up 0.6s ease both; }
 
 /* Fade in up */
 @keyframes fade-in-up {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.fade-in-up {
-  animation: fade-in-up 0.4s ease both;
-}
+.fade-in-up { animation: fade-in-up 0.4s ease both; }
 
 /* Slide in right */
 @keyframes slide-in-right {
   from { opacity: 0; transform: translateX(12px); }
   to { opacity: 1; transform: translateX(0); }
 }
-.slide-in-right {
-  animation: slide-in-right 0.25s ease both;
-}
+.slide-in-right { animation: slide-in-right 0.25s ease both; }
 
-/* AI streaming cursor */
+/* AI cursor blink */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -230,40 +262,7 @@
   font-size: 0.8em;
 }
 
-/* Button hover fill animation */
-.btn-fill {
-  position: relative;
-  overflow: hidden;
-}
-.btn-fill::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(139, 92, 246, 0.12);
-  transform: translateX(-100%);
-  transition: transform 0.2s ease;
-}
-.btn-fill:hover::before {
-  transform: translateX(0);
-}
-
-/* Priority indicator bar */
-.priority-bar {
-  position: absolute;
-  left: 0;
-  top: 20%;
-  bottom: 20%;
-  width: 2px;
-  border-radius: 0 2px 2px 0;
-}
-
-/* AI glow border */
-.ai-border {
-  border: 1px solid rgba(139, 92, 246, 0.25);
-  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.05), inset 0 0 20px rgba(139, 92, 246, 0.03);
-}
-
-/* WOW moment overlay */
+/* WOW moment */
 @keyframes wow-fade-out {
   from { opacity: 1; }
   to { opacity: 0; pointer-events: none; }

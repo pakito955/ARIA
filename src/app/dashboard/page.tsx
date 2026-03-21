@@ -228,15 +228,15 @@ export default function DashboardPage() {
         </div>
 
         {/* Bento Grid */}
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="grid grid-cols-3 gap-4 h-full" style={{ gridTemplateRows: '1fr 1fr' }}>
+        <div className="flex-1 overflow-y-auto p-3 md:p-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4" style={{ gridTemplateRows: 'auto' }}>
 
             {/* Critical Now — spans 2/3 */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="col-span-2 card p-5 relative overflow-hidden"
+              className="md:col-span-2 card p-5 relative overflow-hidden"
             >
               <div
                 className="absolute top-0 right-0 w-48 h-full pointer-events-none"
@@ -388,7 +388,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="col-span-2 card p-5 relative overflow-hidden"
+              className="md:col-span-2 card p-5 relative overflow-hidden"
             >
               <div
                 className="absolute inset-0 pointer-events-none"
