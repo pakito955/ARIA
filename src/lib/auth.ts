@@ -7,7 +7,6 @@ import { encrypt } from './encryption'
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
-  redirectProxyUrl: process.env.AUTH_URL,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
