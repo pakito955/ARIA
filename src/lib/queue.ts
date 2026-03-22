@@ -1,3 +1,4 @@
+import { Queue } from 'bullmq'
 import type { EmailSyncJob, EmailAnalysisJob, BriefingJob } from '@/types'
 
 const hasRedis = !!process.env.REDIS_URL && process.env.REDIS_URL !== 'redis://localhost:6379'
@@ -17,39 +18,37 @@ function parseRedisUrl(url: string) {
   }
 }
 
-// Only create queues if Redis is available
-let emailSyncQueue: any = null
-let emailAnalysisQueue: any = null
-let briefingQueue: any = null
-
-if (hasRedis) {
-  const { Queue } = require('bullmq')
-  const connection = parseRedisUrl(process.env.REDIS_URL!)
-  const queueDefaults = {
-    connection,
-    defaultJobOptions: {
-      attempts: 3,
-      backoff: { type: 'exponential' as const, delay: 5000 },
-      removeOnComplete: 100,
-      removeOnFail: 200,
-    },
-  }
-  emailSyncQueue = new Queue<EmailSyncJob>('email-sync', queueDefaults)
-  emailAnalysisQueue = new Queue<EmailAnalysisJob>('email-analysis', {
-    ...queueDefaults,
-    defaultJobOptions: { ...queueDefaults.defaultJobOptions, attempts: 2 },
-  })
-  briefingQueue = new Queue<BriefingJob>('briefing', {
-    ...queueDefaults,
-    defaultJobOptions: { ...queueDefaults.defaultJobOptions, attempts: 2 },
-  })
-}
-
-export { emailSyncQueue, emailAnalysisQueue, briefingQueue }
-
 export const connection = hasRedis
   ? parseRedisUrl(process.env.REDIS_URL!)
   : { host: 'localhost', port: 6379, maxRetriesPerRequest: null as null }
+
+const queueDefaults = {
+  connection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential' as const, delay: 5000 },
+    removeOnComplete: 100,
+    removeOnFail: 200,
+  },
+}
+
+export const emailSyncQueue: Queue<EmailSyncJob> | null = hasRedis
+  ? new Queue<EmailSyncJob>('email-sync', queueDefaults)
+  : null
+
+export const emailAnalysisQueue: Queue<EmailAnalysisJob> | null = hasRedis
+  ? new Queue<EmailAnalysisJob>('email-analysis', {
+      ...queueDefaults,
+      defaultJobOptions: { ...queueDefaults.defaultJobOptions, attempts: 2 },
+    })
+  : null
+
+export const briefingQueue: Queue<BriefingJob> | null = hasRedis
+  ? new Queue<BriefingJob>('briefing', {
+      ...queueDefaults,
+      defaultJobOptions: { ...queueDefaults.defaultJobOptions, attempts: 2 },
+    })
+  : null
 
 export async function scheduleEmailSync(
   userId: string,
