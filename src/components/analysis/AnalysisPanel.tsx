@@ -118,21 +118,27 @@ export function AnalysisPanel() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center h-full gap-4 text-center py-12">
-      <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center"
-        style={{ background: 'var(--bg-hover)' }}
-      >
-        <Zap size={18} style={{ color: 'var(--text-3)' }} strokeWidth={1.5} />
+    <div className="flex flex-col items-center justify-center h-full gap-5 text-center py-12">
+      <div className="relative">
+        <div
+          className="absolute inset-0 rounded-2xl blur-xl opacity-30"
+          style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.5), transparent 70%)' }}
+        />
+        <div className="empty-state-icon relative">
+          <Zap size={20} style={{ color: 'var(--accent-text)' }} strokeWidth={1.5} />
+        </div>
       </div>
       <div>
-        <p className="text-[13px] font-medium" style={{ color: 'var(--text-1)' }}>ARIA is ready</p>
-        <p
-          className="text-[12px] mt-1 leading-relaxed max-w-[180px] mx-auto"
-          style={{ color: 'var(--text-3)' }}
-        >
-          Select an email to see AI analysis
+        <p className="text-[13px] font-semibold gradient-text">ARIA is ready</p>
+        <p className="text-[11.5px] mt-1.5 leading-relaxed max-w-[160px] mx-auto" style={{ color: 'var(--text-3)' }}>
+          Select an email to unlock AI analysis
         </p>
+      </div>
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'var(--accent-subtle)', border: '1px solid rgba(124,58,237,0.2)' }}>
+        <span className="pulse-ring shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)', display: 'block' }} />
+        </span>
+        <span className="text-[10px]" style={{ color: 'var(--accent-text)' }}>AI Layer active</span>
       </div>
     </div>
   )

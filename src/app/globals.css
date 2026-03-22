@@ -45,6 +45,13 @@
   --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg:  0 12px 40px rgba(0, 0, 0, 0.5);
 
+  /* Glow shadows */
+  --glow-violet: 0 0 0 1px rgba(124, 58, 237, 0.25), 0 4px 24px rgba(124, 58, 237, 0.14);
+  --glow-violet-strong: 0 0 0 1px rgba(124, 58, 237, 0.4), 0 8px 32px rgba(124, 58, 237, 0.22);
+  --glow-red:    0 0 0 1px rgba(239, 68,  68,  0.2),  0 4px 16px rgba(239, 68,  68,  0.1);
+  --glow-amber:  0 0 0 1px rgba(245, 158, 11,  0.2),  0 4px 16px rgba(245, 158, 11,  0.1);
+  --glow-green:  0 0 0 1px rgba(34,  197, 94,  0.2),  0 4px 16px rgba(34,  197, 94,  0.1);
+
   /* Grid BG */
   --grid-color: rgba(255, 255, 255, 0.025);
 }
@@ -167,20 +174,42 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 14px;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
     box-shadow: var(--shadow-sm);
+    position: relative;
   }
   .card:hover {
     border-color: var(--border-medium);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-md), 0 0 0 1px rgba(124, 58, 237, 0.06);
   }
 
-  /* Glass — only for panels */
+  /* Premium card — with inner glow */
+  .card-premium {
+    background: linear-gradient(145deg, var(--bg-card), color-mix(in srgb, var(--bg-card) 90%, #7c3aed));
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    transition: border-color 0.2s, box-shadow 0.25s;
+    box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .card-premium:hover {
+    border-color: rgba(124, 58, 237, 0.25);
+    box-shadow: var(--glow-violet);
+  }
+
+  /* Glass — panels and overlays */
   .glass {
-    background: color-mix(in srgb, var(--bg-card) 80%, transparent);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-color: var(--border);
+    background: color-mix(in srgb, var(--bg-card) 75%, transparent);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  /* Email card selected glow */
+  .email-selected {
+    background: rgba(124, 58, 237, 0.07) !important;
+    box-shadow: var(--glow-violet) !important;
+    border-left: 2px solid var(--accent) !important;
   }
 
   /* Button variants */
@@ -221,8 +250,73 @@
 
   /* Nav active */
   .nav-active {
-    background: var(--accent-subtle);
+    background: linear-gradient(90deg, rgba(124,58,237,0.14), rgba(124,58,237,0.06));
     color: var(--accent-text);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  /* Gradient mesh background */
+  .mesh-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .mesh-bg::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(124,58,237,0.06) 0%, transparent 65%);
+    animation: float-orb 8s ease-in-out infinite;
+  }
+  .mesh-bg::after {
+    content: '';
+    position: absolute;
+    bottom: -10%;
+    left: -5%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(ellipse, rgba(59,130,246,0.04) 0%, transparent 65%);
+    animation: float-orb 11s ease-in-out infinite reverse;
+  }
+
+  /* Empty state */
+  .empty-state-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, var(--bg-hover), var(--bg-surface));
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  /* Active monitoring pulse ring */
+  .pulse-ring {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pulse-ring::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1.5px solid rgba(34, 197, 94, 0.4);
+    animation: pulse-ring-anim 2s ease-out infinite;
+  }
+  @keyframes pulse-ring-anim {
+    0%   { opacity: 1; transform: scale(1); }
+    70%  { opacity: 0; transform: scale(1.8); }
+    100% { opacity: 0; transform: scale(1.8); }
   }
 
   /* Priority colors */
@@ -317,4 +411,63 @@
 /* AI glow border (subtle) */
 .ai-border {
   border-color: rgba(124, 58, 237, 0.2);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PREMIUM EFFECTS
+───────────────────────────────────────────────────────────── */
+
+/* Noise texture overlay — gives depth/film grain feel */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.018;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* Shimmer highlight — for premium sections */
+@keyframes shimmer-move {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.shimmer-highlight {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-highlight::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%);
+  animation: shimmer-move 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Email card — hover glow */
+.email-card-hover:hover {
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.1), 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #c4b5fd, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Status dot — live */
+.status-live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+  animation: pulse-dot 2s ease-in-out infinite;
 }

@@ -170,7 +170,7 @@ export default function AnalyticsPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 + i * 0.07 }}
-              className="card p-4 relative overflow-hidden"
+              className="card-premium p-4 relative overflow-hidden"
             >
               <div className="flex items-start justify-between mb-3">
                 <div

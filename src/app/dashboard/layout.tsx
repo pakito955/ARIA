@@ -16,18 +16,23 @@ export default async function DashboardLayout({
 
   return (
     <div className="h-screen flex overflow-hidden" style={{ background: 'var(--bg-base)' }}>
+      {/* Ambient gradient orbs */}
+      <div className="mesh-bg" />
+      {/* Film grain noise overlay */}
+      <div className="noise-overlay" />
+
       {/* Desktop sidebar */}
-      <div className="hidden md:block shrink-0">
+      <div className="hidden md:block shrink-0 relative z-10">
         <Sidebar />
       </div>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto grid-bg pb-16 md:pb-0 min-w-0">
+      <main className="flex-1 overflow-y-auto grid-bg pb-16 md:pb-0 min-w-0 relative z-10">
         {children}
       </main>
 
       {/* Right AI panel — desktop only */}
-      <div className="hidden lg:block w-[280px] xl:w-[300px] shrink-0">
+      <div className="hidden lg:block w-[280px] xl:w-[300px] shrink-0 relative z-10">
         <AnalysisPanel />
       </div>
 

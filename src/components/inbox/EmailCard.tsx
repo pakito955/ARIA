@@ -71,20 +71,37 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: index * 0.02, duration: 0.2 }}
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.02, duration: 0.25, ease: 'easeOut' }}
       onClick={() => setSelectedEmail(email.id)}
-      className="group relative flex gap-3 px-3 py-3 cursor-pointer rounded-xl transition-all duration-150 mb-0.5"
+      className="group relative flex gap-3 px-3 py-3 cursor-pointer rounded-xl transition-all duration-200 mb-0.5"
       style={{
-        background: selected ? 'var(--accent-subtle)' : isSelected ? 'var(--accent-subtle)' : 'transparent',
-        outline: selected ? '1px solid var(--accent)' : 'none',
+        background: isSelected
+          ? 'rgba(124,58,237,0.07)'
+          : selected
+          ? 'var(--accent-subtle)'
+          : 'transparent',
+        boxShadow: isSelected
+          ? '0 0 0 1px rgba(124,58,237,0.25), 0 4px 20px rgba(124,58,237,0.12)'
+          : selected
+          ? '0 0 0 1px rgba(124,58,237,0.2)'
+          : 'none',
+        borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
       }}
       onMouseEnter={(e) => {
-        if (!isSelected && !selected) (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'
+        if (!isSelected && !selected) {
+          const el = e.currentTarget as HTMLElement
+          el.style.background = 'var(--bg-hover)'
+          el.style.boxShadow = '0 0 0 1px rgba(124,58,237,0.08), 0 2px 12px rgba(0,0,0,0.2)'
+        }
       }}
       onMouseLeave={(e) => {
-        if (!isSelected && !selected) (e.currentTarget as HTMLElement).style.background = 'transparent'
+        if (!isSelected && !selected) {
+          const el = e.currentTarget as HTMLElement
+          el.style.background = 'transparent'
+          el.style.boxShadow = 'none'
+        }
       }}
     >
       {/* Unread stripe */}

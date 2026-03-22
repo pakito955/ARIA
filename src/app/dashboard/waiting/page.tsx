@@ -85,15 +85,23 @@ export default function WaitingPage() {
             <div key={i} className="h-20 rounded skeleton" />
           ))
         ) : emails.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ background: 'color-mix(in srgb, var(--green) 12%, transparent)' }}
-            >
-              <Mail size={20} style={{ color: 'var(--green)', opacity: 0.7 }} strokeWidth={1.5} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center py-24 gap-4 text-center"
+          >
+            <div className="empty-state-icon">
+              <Mail size={22} style={{ color: 'var(--green)' }} strokeWidth={1.5} />
             </div>
-            <p className="text-[var(--text-3)] text-sm">All caught up — no pending replies!</p>
-          </div>
+            <div>
+              <p className="text-[14px] font-medium" style={{ color: 'var(--text-1)' }}>All caught up</p>
+              <p className="text-[12px] mt-1" style={{ color: 'var(--text-3)' }}>No emails awaiting a reply · ARIA is watching</p>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'var(--green-subtle)', border: '1px solid rgba(34,197,94,0.2)' }}>
+              <span className="status-live" style={{ width: '5px', height: '5px' }} />
+              <span className="text-[10px]" style={{ color: 'var(--green)' }}>Monitoring inbox</span>
+            </div>
+          </motion.div>
         ) : (
           emails.map((email: any, i: number) => {
             const daysAgo = Math.floor(

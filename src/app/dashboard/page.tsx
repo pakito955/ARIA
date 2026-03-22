@@ -234,7 +234,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="md:col-span-2 card p-5 relative overflow-hidden"
+              className="md:col-span-2 card-premium shimmer-highlight p-5 relative overflow-hidden"
             >
               <div
                 className="absolute top-0 right-0 w-48 h-full pointer-events-none"
@@ -300,8 +300,14 @@ export default function DashboardPage() {
                   { n: statsData?.critical ?? 0, label: 'Critical', color: '#ef4444' },
                 ].map((s, i) => (
                   <div key={i} className="text-center">
-                    <p className="font-cormorant text-3xl font-light" style={{ color: s.color }}>{s.n}</p>
-                    <p className="text-[9px] uppercase tracking-[0.8px] text-[var(--text-3)]">{s.label}</p>
+                    <p
+                      className="font-outfit text-4xl font-light tabular-nums"
+                      style={{
+                        color: s.color,
+                        textShadow: `0 0 20px ${s.color}40`,
+                      }}
+                    >{s.n}</p>
+                    <p className="text-[9px] uppercase tracking-[1.5px] mt-0.5" style={{ color: 'var(--text-3)' }}>{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -312,7 +318,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="card p-5 relative overflow-hidden flex flex-col"
+              className="card-premium p-5 relative overflow-hidden flex flex-col"
             >
               <div
                 className="absolute bottom-0 right-0 w-32 h-32 pointer-events-none"
@@ -354,7 +360,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="card p-5"
+              className="card-premium p-5"
             >
               <div className="flex items-center gap-2 mb-4">
                 <Clock size={13} className="text-[var(--amber)]" />
@@ -387,7 +393,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="md:col-span-2 card p-5 relative overflow-hidden"
+              className="md:col-span-2 card-premium shimmer-highlight p-5 relative overflow-hidden"
             >
               <div
                 className="absolute inset-0 pointer-events-none"

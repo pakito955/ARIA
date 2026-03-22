@@ -71,8 +71,11 @@ export function Sidebar() {
         style={{ borderBottom: '1px solid var(--border)' }}
       >
         <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-          style={{ background: 'var(--accent)' }}
+          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 relative"
+          style={{
+            background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
+            boxShadow: '0 0 12px rgba(124,58,237,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
+          }}
         >
           <Zap size={14} className="text-white" strokeWidth={2.5} />
         </div>
@@ -83,8 +86,7 @@ export function Sidebar() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -6 }}
               transition={{ duration: 0.15 }}
-              className="font-outfit text-[15px] font-semibold tracking-[0.1em] whitespace-nowrap overflow-hidden"
-              style={{ color: 'var(--text-1)' }}
+              className="font-outfit text-[15px] font-semibold tracking-[0.12em] whitespace-nowrap overflow-hidden gradient-text"
             >
               ARIA
             </motion.span>
@@ -277,9 +279,11 @@ export function Sidebar() {
                   <p className="text-[13px] font-medium truncate" style={{ color: 'var(--text-1)' }}>
                     {session?.user?.name?.split(' ')[0] || 'User'}
                   </p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-                    <span className="text-[11px]" style={{ color: 'var(--text-3)' }}>Active</span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="pulse-ring shrink-0">
+                      <span className="status-live" style={{ width: '6px', height: '6px' }} />
+                    </span>
+                    <span className="text-[10px]" style={{ color: 'var(--green)' }}>Monitoring</span>
                   </div>
                 </div>
                 <button
