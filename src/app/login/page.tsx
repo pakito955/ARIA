@@ -1,14 +1,23 @@
 'use client'
 
 import { signIn } from 'next-auth/react'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 
-export default function LoginPage() {
-  const [loading, setLoading] = useState(false)
+function ErrorBanner() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
+  if (!error) return null
+  return (
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-lg text-xs font-mono" style={{ background: 'var(--red-subtle)', color: 'var(--red)', border: '1px solid var(--red)' }}>
+      Auth error: {error}
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = async (provider: string) => {
     setLoading(true)
@@ -24,11 +33,7 @@ export default function LoginPage() {
       <div className="absolute inset-0 grid-bg opacity-40" />
 
       {/* Error banner */}
-      {error && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-lg text-xs font-mono" style={{ background: 'var(--red-subtle)', color: 'var(--red)', border: '1px solid var(--red)' }}>
-          Auth error: {error}
-        </div>
-      )}
+      <Suspense><ErrorBanner /></Suspense>
 
       {/* Card */}
       <motion.div
