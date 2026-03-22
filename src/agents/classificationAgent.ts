@@ -1,68 +1,68 @@
 import { completeJSON } from '@/lib/anthropic'
 import type { ClassificationInput, ClassificationOutput } from '@/types'
 
-const SYSTEM_PROMPT = `Ti si ARIA, AI executive assistant. Analiziraš emailove sa preciznošću i brzinom.
+const SYSTEM_PROMPT = `You are ARIA, an AI executive assistant. You analyze emails with precision and speed.
 
-INSTRUKCIJE:
-- Vrati ISKLJUČIVO validan JSON, bez ikakvog teksta prije ili poslije
-- Jezik odgovora: uvijek engleski za polja (priority, category, sentiment su enum vrijednosti)
-- intent i summary pišeš na jeziku emaila (bosanski/srpski/engleski)
-- urgencyScore: 1 (nevažno) do 10 (hitno odmah)
-- confidenceScore: 0.0 do 1.0 (koliko si siguran u analizu)
+INSTRUCTIONS:
+- Return ONLY valid JSON, with no text before or after
+- Response language: always English for enum fields (priority, category, sentiment are enum values)
+- Write intent and summary in the language of the email
+- urgencyScore: 1 (not important) to 10 (urgent, immediate action required)
+- confidenceScore: 0.0 to 1.0 (confidence level in the analysis)
 
-PRIORITETI:
-- CRITICAL: zahtijeva akciju danas, finansijski rizik, rokovi unutar 4h
-- HIGH: zahtijeva akciju ovu sedmicu, važan pošiljalac
-- MEDIUM: normalna komunikacija, akcija potrebna ali ne hitna
-- LOW: informativno, newsletter, spam
+PRIORITIES:
+- CRITICAL: requires action today, financial risk, deadlines within 4 hours
+- HIGH: requires action this week, important sender
+- MEDIUM: normal communication, action needed but not urgent
+- LOW: informational, newsletter, spam
 
-KATEGORIJE:
-- MEETING: prijedlog ili potvrda sastanka
-- TASK: zahtijeva neku akciju/zadatak
-- CRITICAL: hitno, risk, deadline
-- INFO: informativno
-- SPAM: neželjeno
-- NEWSLETTER: automatski newsletter
-- INVOICE: faktura/plaćanje`
+CATEGORIES:
+- MEETING: meeting proposal or confirmation
+- TASK: requires an action or task
+- CRITICAL: urgent, risk, deadline
+- INFO: informational
+- SPAM: unwanted
+- NEWSLETTER: automated newsletter
+- INVOICE: invoice/payment`
 
 const ANALYSIS_SCHEMA = `{
   "priority": "CRITICAL|HIGH|MEDIUM|LOW",
   "category": "MEETING|TASK|CRITICAL|INFO|SPAM|NEWSLETTER|INVOICE",
-  "intent": "max 12 rijeci na jeziku emaila",
-  "summary": "2-3 recenice na jeziku emaila",
-  "deadlineText": "string ili null",
-  "amount": "string sa valutom ili null",
+  "intent": "max 12 words in the email's language",
+  "summary": "2-3 sentences in the email's language",
+  "deadlineText": "string or null",
+  "amount": "string with currency or null",
   "sentiment": "POSITIVE|NEUTRAL|NEGATIVE|URGENT",
   "urgencyScore": 7,
-  "suggestedAction": "konkretna akcija max 12 rijeci",
+  "suggestedAction": "concrete action max 12 words",
   "meetingDetected": false,
-  "meetingTime": "string ili null",
+  "meetingTime": "string or null",
   "meetingParticipants": [],
-  "taskText": "string ili null",
+  "taskText": "string or null",
   "confidenceScore": 0.92
 }`
 
 export async function classifyEmail(
   input: ClassificationInput
 ): Promise<ClassificationOutput> {
-  const userMessage = `Email za analizu:
+  const userMessage = `Email to analyze:
 
-OD: ${input.fromName ? `${input.fromName} <${input.fromEmail}>` : input.fromEmail}
-NASLOV: ${input.subject}
-SADRŽAJ:
+FROM: ${input.fromName ? `${input.fromName} <${input.fromEmail}>` : input.fromEmail}
+SUBJECT: ${input.subject}
+BODY:
 ${input.bodyText.substring(0, 2000)}
 
-Vrati JSON sa ovom strukturom:
+Return JSON with this structure:
 ${ANALYSIS_SCHEMA}`
 
   const fallback: ClassificationOutput = {
     priority: 'MEDIUM',
     category: 'INFO',
-    intent: 'Pogledati email',
-    summary: 'Email je primljen i čeka pregled.',
+    intent: 'Review email',
+    summary: 'Email received and awaiting review.',
     sentiment: 'NEUTRAL',
     urgencyScore: 5,
-    suggestedAction: 'Pročitati i odgovoriti',
+    suggestedAction: 'Read and reply',
     meetingDetected: false,
     meetingParticipants: [],
     taskExtracted: false,

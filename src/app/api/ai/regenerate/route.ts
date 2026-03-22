@@ -11,9 +11,9 @@ const schema = z.object({
 })
 
 const STYLE_PROMPTS: Record<string, string> = {
-  short: 'STIL: Kratak i direktan. Maksimalno 3 kratke rečenice.',
-  professional: 'STIL: Profesionalan i formalan. Pun pozdrav, jasan odgovor. 3-5 rečenica.',
-  friendly: 'STIL: Prijateljski i topao. Osobniji ton, ali profesionalan. 3-4 rečenice.',
+  short: 'STYLE: Short and direct. Maximum 3 brief sentences.',
+  professional: 'STYLE: Professional and formal. Full greeting, clear response. 3-5 sentences.',
+  friendly: 'STYLE: Friendly and warm. More personal tone, yet professional. 3-4 sentences.',
 }
 
 export async function POST(req: NextRequest) {
@@ -38,19 +38,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email not found' }, { status: 404 })
   }
 
-  const BASE_SYSTEM = `Ti si ARIA, AI assistant koji pomaže korisniku pisati emailove.
-Pišeš SAMO tekst odgovora — bez "Subject:", bez uvoda, bez "ARIA predlaže:".
-Koristiš ISTI JEZIK kao original email.
-Potpisuješ se kao korisnik (bez ARIA potpisa).`
+  const BASE_SYSTEM = `You are ARIA, an AI assistant that helps the user write emails.
+Write ONLY the reply body — no "Subject:", no preamble, no "ARIA suggests:".
+Use the SAME LANGUAGE as the original email.
+Sign as the user (no ARIA signature).`
 
   const stylePrompt = STYLE_PROMPTS[style]
-  const customNote = instructions ? `\n\nDODATNA UPUTSTVA: ${instructions}` : ''
+  const customNote = instructions ? `\n\nADDITIONAL INSTRUCTIONS: ${instructions}` : ''
   const systemPrompt = `${BASE_SYSTEM}\n\n${stylePrompt}${customNote}`
 
-  const context = `Odgovaramo na email:
-OD: ${email.fromName || email.fromEmail}
-NASLOV: ${email.subject}
-PORUKA: ${email.bodyText.substring(0, 1500)}`
+  const context = `Replying to email:
+FROM: ${email.fromName || email.fromEmail}
+SUBJECT: ${email.subject}
+MESSAGE: ${email.bodyText.substring(0, 1500)}`
 
   const result = await complete(systemPrompt, context, 400)
 

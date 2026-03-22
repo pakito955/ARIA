@@ -65,8 +65,8 @@ export default function LoginPage() {
             className="text-[14px] leading-relaxed"
             style={{ color: 'var(--text-2)' }}
           >
-            Čita tvoje emailove. Razumije kontekst.<br />
-            Organizuje sve — automatski.
+            Reads your emails. Understands context.<br />
+            Organizes everything — automatically.
           </p>
         </motion.div>
 
@@ -90,12 +90,12 @@ export default function LoginPage() {
             onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-medium)')}
           >
             <GoogleIcon />
-            Nastavi sa Google
+            Continue with Google
           </button>
 
           <div className="flex items-center gap-3 py-1">
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-            <span className="text-[10px] tracking-widest" style={{ color: 'var(--text-3)' }}>ILI</span>
+            <span className="text-[10px] tracking-widest" style={{ color: 'var(--text-3)' }}>OR</span>
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
           </div>
 
@@ -112,7 +112,7 @@ export default function LoginPage() {
             onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-medium)')}
           >
             <MicrosoftIcon />
-            Nastavi sa Microsoft
+            Continue with Microsoft
           </button>
         </motion.div>
 
@@ -124,7 +124,7 @@ export default function LoginPage() {
           className="mt-10 grid grid-cols-3 gap-2"
         >
           {[
-            { icon: '⚡', label: 'AI analiza' },
+            { icon: '⚡', label: 'AI Analysis' },
             { icon: '✉', label: 'Gmail + Outlook' },
             { icon: '📅', label: 'Auto schedule' },
           ].map((f) => (
@@ -140,7 +140,7 @@ export default function LoginPage() {
         </motion.div>
 
         <p className="text-[10px] mt-8" style={{ color: 'var(--text-3)' }}>
-          Prijavom prihvatate{' '}
+          By signing in, you agree to our{' '}
           <a href="#" style={{ color: 'var(--accent-text)' }} className="hover:underline">Terms of Service</a>
           {' '}|{' '}
           <a href="#" style={{ color: 'var(--accent-text)' }} className="hover:underline">Privacy Policy</a>

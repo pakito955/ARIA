@@ -5,16 +5,16 @@ export async function generateFollowUp(
   originalSubject: string,
   daysSince: number
 ): Promise<string> {
-  const system = `Ti si ARIA. Pišeš kratke, profesionalne follow-up emailove.
-Cilj: podsjetiti primatelja na prethodni email, bez agresivnosti.
-Jezik: isti kao originalni naslov emaila. Max 3-4 rečenice.
-Samo tekst emaila, bez "Subject:" ili potpisa.`
+  const system = `You are ARIA. You write short, professional follow-up emails.
+Goal: remind the recipient of the previous email, without being aggressive.
+Language: same as the original email subject. Max 3-4 sentences.
+Email body only — no "Subject:" or signature.`
 
   const { text } = await complete(
     system,
-    `Piši follow-up za: ${recipientName}
-Originalni predmet: "${originalSubject}"
-Prošlo dana bez odgovora: ${daysSince}`,
+    `Write a follow-up for: ${recipientName}
+Original subject: "${originalSubject}"
+Days elapsed without a reply: ${daysSince}`,
     250
   )
 

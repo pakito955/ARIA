@@ -38,8 +38,8 @@ export default function WaitingPage() {
   return (
     <div className="flex flex-col h-full">
       <div className="px-6 py-4 border-b border-[var(--border)]">
-        <h1 className="font-outfit text-2xl font-semibold tracking-tight">Čekam odgovor</h1>
-        <p className="text-[11px] text-[var(--text-2)] mt-0.5">Emailovi bez odgovora duže od 2 dana</p>
+        <h1 className="font-outfit text-2xl font-semibold tracking-tight">Awaiting Reply</h1>
+        <p className="text-[11px] text-[var(--text-2)] mt-0.5">Emails without a reply for more than 2 days</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -50,7 +50,7 @@ export default function WaitingPage() {
         ) : emails.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
             <span className="text-4xl opacity-10">✅</span>
-            <p className="text-[var(--text-3)] text-sm">Svi emailovi su odgovoreni!</p>
+            <p className="text-[var(--text-3)] text-sm">All emails have been replied to!</p>
           </div>
         ) : (
           emails.map((email: any, i: number) => {
@@ -71,7 +71,7 @@ export default function WaitingPage() {
                   <span className="font-cormorant text-xl font-light text-[#f4a0b5] leading-none">
                     {daysAgo}
                   </span>
-                  <span className="text-[7px] text-[#f4a0b5] uppercase tracking-[0.5px]">dana</span>
+                  <span className="text-[7px] text-[#f4a0b5] uppercase tracking-[0.5px]">days</span>
                 </div>
 
                 {/* Info */}
@@ -81,7 +81,7 @@ export default function WaitingPage() {
                   </p>
                   <p className="text-[11px] text-[var(--text-2)] truncate mt-0.5">{email.subject}</p>
                   <p className="text-[9px] text-[var(--text-3)] mt-1 font-mono">
-                    Primljeno: {format(new Date(email.receivedAt), 'd. MMM, HH:mm')}
+                    Received: {format(new Date(email.receivedAt), 'd. MMM, HH:mm')}
                   </p>
                 </div>
 
@@ -96,7 +96,7 @@ export default function WaitingPage() {
                   ) : (
                     '↑'
                   )}
-                  Podsjetnik
+                  Follow Up
                 </button>
               </motion.div>
             )

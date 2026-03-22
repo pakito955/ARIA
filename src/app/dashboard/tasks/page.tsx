@@ -58,13 +58,13 @@ export default function TasksPage() {
       <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
         <div>
           <h1 className="font-outfit text-2xl font-semibold tracking-tight">Tasks</h1>
-          <p className="text-[11px] text-[var(--text-2)] mt-0.5">Auto-generisano iz emailova</p>
+          <p className="text-[11px] text-[var(--text-2)] mt-0.5">Auto-generated from emails</p>
         </div>
 
         {/* Progress */}
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-[11px] text-[var(--text-2)]">Završeno</p>
+            <p className="text-[11px] text-[var(--text-2)]">Completed</p>
             <p className="font-mono text-sm text-white">{completionPct}%</p>
           </div>
           <div className="w-16 h-16 relative">
@@ -95,14 +95,14 @@ export default function TasksPage() {
                 if (e.key === 'Enter' && newTask.trim()) createMutation.mutate(newTask.trim())
                 if (e.key === 'Escape') setAdding(false)
               }}
-              placeholder="Naziv zadatka… (Enter za dodavanje)"
+              placeholder="Task name… (Press Enter to add)"
               className="flex-1 bg-[var(--bg-card)] border border-[#e8c97a]/30 rounded px-3 py-2 text-sm text-white placeholder:text-[var(--text-3)] outline-none"
             />
             <button
               onClick={() => newTask.trim() && createMutation.mutate(newTask.trim())}
               className="px-3 py-2 bg-[#e8c97a] text-[#080810] rounded text-xs font-semibold"
             >
-              Dodaj
+              Add
             </button>
           </div>
         ) : (
@@ -111,12 +111,12 @@ export default function TasksPage() {
             className="flex items-center gap-2 text-[11px] text-[var(--text-3)] hover:text-[#e8c97a] transition-colors"
           >
             <Plus size={13} />
-            Novi zadatak
+            New Task
           </button>
         )}
 
         {/* Active tasks */}
-        <Section title="Aktivni" count={today.length}>
+        <Section title="Active" count={today.length}>
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-12 rounded skeleton" />
@@ -137,7 +137,7 @@ export default function TasksPage() {
 
         {/* Done tasks */}
         {done.length > 0 && (
-          <Section title="Završeno" count={done.length}>
+          <Section title="Completed" count={done.length}>
             {done.map((task: any, i: number) => (
               <TaskItem
                 key={task.id}
@@ -203,7 +203,7 @@ function TaskItem({ task, index, onToggle }: any) {
           <p className="text-[9px] text-[#4fd1c5] mt-0.5">{task.email.fromName || task.email.fromEmail}</p>
         )}
         {task.source === 'AI_GENERATED' && !task.email && (
-          <p className="text-[9px] text-[#e8c97a] mt-0.5">ARIA auto-kreiran</p>
+          <p className="text-[9px] text-[#e8c97a] mt-0.5">ARIA auto-generated</p>
         )}
       </div>
 

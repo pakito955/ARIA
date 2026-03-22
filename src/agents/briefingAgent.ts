@@ -2,15 +2,15 @@ import { complete } from '@/lib/anthropic'
 import { format } from 'date-fns'
 import type { BriefingInput } from '@/types'
 
-const SYSTEM = `Ti si ARIA. Generišeš jutarnji operativni briefing za izvršnog direktora.
+const SYSTEM = `You are ARIA. You generate a morning operational briefing for an executive.
 
-PRAVILA:
-- Pišeš u prvom licu (ARIA govori korisniku)
-- Koristiš bosanski/srpski jezik
-- Formatiraš sa HTML tagovima: <b> za naglašeno, <br> za novi red
-- Max 5-6 rečenica, fokus na akcije
-- Počni sa najhitnijim
-- Završi sa jednim motivacionim akcentom`
+RULES:
+- Write in first person (ARIA speaks to the user)
+- Use English
+- Format with HTML tags: <b> for emphasis, <br> for new lines
+- Max 5-6 sentences, focused on actions
+- Start with the most urgent item
+- End with one motivational note`
 
 export async function generateBriefing(input: BriefingInput): Promise<string> {
   const today = format(new Date(), 'EEEE, d. MMMM yyyy')
@@ -25,23 +25,23 @@ export async function generateBriefing(input: BriefingInput): Promise<string> {
 
   const taskSummary = input.pendingTasks
     .slice(0, 5)
-    .map((t) => `• ${t.title}${t.dueDate ? ` (rok: ${format(t.dueDate, 'd.M.')})` : ''}`)
+    .map((t) => `• ${t.title}${t.dueDate ? ` (due: ${format(t.dueDate, 'd.M.')})` : ''}`)
     .join('\n')
 
-  const userMessage = `Datum: ${today}
+  const userMessage = `Date: ${today}
 
-EMAILOVI (${input.emails.length} novih):
-${emailSummary || 'Nema novih emailova'}
+EMAILS (${input.emails.length} new):
+${emailSummary || 'No new emails'}
 
-DANAŠNJI KALENDAR:
-${calendarSummary || 'Nema događaja danas'}
+TODAY'S CALENDAR:
+${calendarSummary || 'No events today'}
 
-OTVORENI ZADACI (${input.pendingTasks.length}):
-${taskSummary || 'Nema zadataka'}
+OPEN TASKS (${input.pendingTasks.length}):
+${taskSummary || 'No tasks'}
 
-ČEKA ODGOVOR: ${input.waitingReplies} emailova
+AWAITING REPLY: ${input.waitingReplies} emails
 
-Generiši jutarnji briefing.`
+Generate the morning briefing.`
 
   const { text } = await complete(SYSTEM, userMessage, 500)
   return text.trim()
