@@ -74,34 +74,32 @@ export default function DashboardPage() {
     onSuccess: () => refetchBriefing(),
   })
 
-  // WOW moment: show intro on first load
+  // WOW moment: timer runs once on mount (not tied to statsData changes)
   useEffect(() => {
-    if (wowRef.current) return
-    wowRef.current = true
     const shown = sessionStorage.getItem('aria-wow-shown')
     if (shown) {
       setWowDone(true)
       return
     }
+    const timer = setTimeout(() => {
+      setWowDone(true)
+      sessionStorage.setItem('aria-wow-shown', '1')
+    }, 3200)
+    return () => clearTimeout(timer)
+  }, [])
 
+  // Update splash text when data arrives
+  useEffect(() => {
+    if (sessionStorage.getItem('aria-wow-shown')) return
     const critical = statsData?.critical ?? 0
     const unread = statsData?.unread ?? 0
     const tasks = statsData?.tasks ?? 0
-
     const msg = critical > 0
       ? `Analyzing your inbox… ${critical} critical item${critical > 1 ? 's' : ''} need${critical === 1 ? 's' : ''} your attention today.`
       : unread > 0
       ? `Analyzing your inbox… ${unread} unread message${unread > 1 ? 's' : ''}. Everything looks manageable.`
       : `Your inbox is clear. ${tasks} task${tasks > 1 ? 's' : ''} pending. Good morning.`
-
     setWowText(msg)
-
-    const timer = setTimeout(() => {
-      setWowDone(true)
-      sessionStorage.setItem('aria-wow-shown', '1')
-    }, 3200)
-
-    return () => clearTimeout(timer)
   }, [statsData])
 
   // AI command strip message
