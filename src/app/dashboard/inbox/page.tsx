@@ -3,14 +3,17 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, SlidersHorizontal, RefreshCw, ChevronDown, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip, Inbox, RefreshCcw } from 'lucide-react'
+import { Search, SlidersHorizontal, RefreshCw, ChevronDown, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip, Inbox, RefreshCcw, Maximize2, Minimize2, AlertTriangle, User } from 'lucide-react'
 import { EmailCard } from '@/components/inbox/EmailCard'
 import { TriageMode } from '@/components/TriageMode'
 import { SnoozePickerModal } from '@/components/inbox/SnoozePickerModal'
 import { BulkActionBar } from '@/components/inbox/BulkActionBar'
+import { ThreadView } from '@/components/inbox/ThreadView'
+import { ContactPanel } from '@/components/inbox/ContactPanel'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useInboxKeyboard } from '@/hooks/useInboxKeyboard'
 import { format, formatDistanceToNow } from 'date-fns'
 
 const FILTERS = [
@@ -23,7 +26,7 @@ const FILTERS = [
 ] as const
 
 export default function InboxPage() {
-  const { emailFilter, setEmailFilter, searchQuery, setSearchQuery, selectedEmailId, setSelectedEmail } = useAppStore()
+  const { emailFilter, setEmailFilter, searchQuery, setSearchQuery, selectedEmailId, setSelectedEmail, focusMode, setFocusMode, setContactPanelEmail, newEmailsCount, setNewEmailsCount } = useAppStore()
   const [sort, setSort] = useState<'newest' | 'priority'>('newest')
   const [originalExpanded, setOriginalExpanded] = useState(false)
   const [replyStyle, setReplyStyle] = useState<'short' | 'professional' | 'friendly'>('professional')
@@ -40,17 +43,19 @@ export default function InboxPage() {
     es.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data)
-        if (msg.type === 'update' && msg.newEmails?.length > 0) {
+        if (msg.type === 'update' && msg.newEmails > 0) {
           qc.invalidateQueries({ queryKey: ['emails'] })
+          setNewEmailsCount(msg.newEmails)
+          setTimeout(() => setNewEmailsCount(0), 4000)
         }
       } catch {}
     }
     return () => es.close()
-  }, [qc])
+  }, [qc, setNewEmailsCount])
 
   const debouncedSearch = useDebounce(searchQuery, 300)
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data: emailsData, isLoading, refetch } = useQuery({
     queryKey: ['emails', emailFilter, debouncedSearch, sort],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -103,8 +108,11 @@ export default function InboxPage() {
     onSuccess: () => setSent(true),
   })
 
-  const emails = data?.data || []
-  const total = data?.total || 0
+  const emails = emailsData?.data || []
+  const total = emailsData?.total || 0
+
+  // Keyboard shortcuts (needs emails list)
+  useInboxKeyboard(emails)
 
   const selectedEmail = emailDetail?.data
   const analysis = selectedEmail?.analysis
@@ -158,7 +166,7 @@ export default function InboxPage() {
     })
   }, [snoozeEmailId, qc])
 
-  const handleBulkAction = useCallback((action: 'archive' | 'read' | 'delete') => {
+  const handleBulkAction = useCallback((action: 'archive' | 'read' | 'delete' | 'analyze') => {
     if (selectedIds.size === 0) return
     fetch('/api/emails/bulk', {
       method: 'POST',
@@ -166,7 +174,7 @@ export default function InboxPage() {
       body: JSON.stringify({ emailIds: Array.from(selectedIds), action }),
     }).then(() => {
       qc.invalidateQueries({ queryKey: ['emails'] })
-      setSelectedIds(new Set())
+      if (action !== 'analyze') setSelectedIds(new Set())
     })
   }, [selectedIds, qc])
 
@@ -181,6 +189,24 @@ export default function InboxPage() {
 
   return (
     <>
+      {/* Contact Panel */}
+      <ContactPanel />
+
+      {/* New emails notification */}
+      <AnimatePresence>
+        {newEmailsCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -40 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-medium text-white shadow-2xl"
+            style={{ background: 'var(--accent)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}
+          >
+            ↑ {newEmailsCount} new email{newEmailsCount > 1 ? 's' : ''}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Triage Mode Overlay */}
       <AnimatePresence>
         {triageMode && emails.length > 0 && (
@@ -239,6 +265,14 @@ export default function InboxPage() {
             >
               <Inbox size={11} />
               Triage
+            </button>
+            <button
+              onClick={() => setFocusMode(!focusMode)}
+              title={focusMode ? 'Exit focus mode (F)' : 'Focus mode (F)'}
+              className="p-2 rounded-xl text-[var(--text-3)] hover:text-[var(--text-2)] hover:bg-[var(--bg-hover)] transition-all"
+              style={{ color: focusMode ? 'var(--accent-text)' : undefined }}
+            >
+              {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
             </button>
             <button
               onClick={() => refetch()}
@@ -376,9 +410,14 @@ export default function InboxPage() {
                       {selectedEmail.subject}
                     </h2>
                     <div className="flex items-center gap-3">
-                      <span className="text-[11px] text-[var(--text-2)]">
+                      <button
+                        onClick={() => setContactPanelEmail(selectedEmail.fromEmail)}
+                        className="flex items-center gap-1 text-[11px] text-[var(--text-2)] hover:text-[var(--accent-text)] transition-colors group"
+                        title="View contact intelligence"
+                      >
+                        <User size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                         {selectedEmail.fromName || selectedEmail.fromEmail}
-                      </span>
+                      </button>
                       <span className="text-[10px] text-[var(--text-3)]">
                         {selectedEmail.fromEmail !== selectedEmail.fromName && `<${selectedEmail.fromEmail}>`}
                       </span>
@@ -481,6 +520,7 @@ export default function InboxPage() {
                           </motion.div>
                         ) : (
                           <>
+                            <ToneChecker draft={editedReply} subject={selectedEmail.subject} />
                             <textarea
                               value={editedReply}
                               onChange={(e) => setEditedReply(e.target.value)}
@@ -563,6 +603,9 @@ export default function InboxPage() {
                   </div>
                 )}
 
+                {/* Thread view */}
+                <ThreadView emailId={selectedEmail.id} />
+
                 {/* Original email — collapsed by default */}
                 <div className="mx-6 mt-4 mb-6">
                   <button
@@ -615,5 +658,47 @@ function EmailListSkeleton() {
         <div key={i} className="h-[88px] rounded-xl skeleton" />
       ))}
     </div>
+  )
+}
+
+// Tone detector for reply textarea
+function ToneChecker({ draft, subject }: { draft: string; subject: string }) {
+  const [tone, setTone] = useState<{ tone: string; warning: string | null } | null>(null)
+  const [checking, setChecking] = useState(false)
+  const debouncedDraft = useDebounce(draft, 1200)
+
+  useEffect(() => {
+    if (!debouncedDraft || debouncedDraft.length < 30) { setTone(null); return }
+    setChecking(true)
+    fetch('/api/ai/tone', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draftText: debouncedDraft, contextSubject: subject }),
+    })
+      .then((r) => r.json())
+      .then((d) => setTone(d))
+      .finally(() => setChecking(false))
+  }, [debouncedDraft, subject])
+
+  if (!tone || tone.tone === 'ok' || !tone.warning) return null
+
+  const color = tone.tone === 'aggressive' ? 'var(--red)' : 'var(--amber)'
+  const bg = tone.tone === 'aggressive'
+    ? 'color-mix(in srgb, var(--red) 8%, transparent)'
+    : 'color-mix(in srgb, var(--amber) 8%, transparent)'
+  const border = tone.tone === 'aggressive'
+    ? 'color-mix(in srgb, var(--red) 20%, transparent)'
+    : 'color-mix(in srgb, var(--amber) 20%, transparent)'
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-start gap-2 px-3 py-2 rounded-lg mb-2 text-[11px]"
+      style={{ background: bg, border: `1px solid ${border}` }}
+    >
+      <AlertTriangle size={12} className="shrink-0 mt-0.5" style={{ color }} />
+      <span style={{ color }}>{tone.warning}</span>
+    </motion.div>
   )
 }

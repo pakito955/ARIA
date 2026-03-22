@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { ArrowRight, Zap, AlertCircle, CheckCircle2, Clock, TrendingUp, Loader2 } from 'lucide-react'
+import { ArrowRight, Zap, AlertCircle, CheckCircle2, Clock, TrendingUp, Loader2, Flame, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { VoiceBriefing } from '@/components/VoiceBriefing'
@@ -37,6 +37,15 @@ export default function DashboardPage() {
   const [wowDone, setWowDone] = useState(false)
   const [wowText, setWowText] = useState('')
   const wowRef = useRef(false)
+
+  const { data: scoreData } = useQuery({
+    queryKey: ['score'],
+    queryFn: async () => {
+      const res = await fetch('/api/score')
+      if (!res.ok) return { score: 0, streak: 0 }
+      return res.json()
+    },
+  })
 
   const { data: statsData } = useQuery({
     queryKey: ['dashboard-stats'],
@@ -386,6 +395,47 @@ export default function DashboardPage() {
                   })}
                 </div>
               </div>
+            </motion.div>
+
+            {/* AI Score — 1/3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18 }}
+              className="card-premium p-5 flex flex-col items-center justify-center gap-2"
+            >
+              <p className="text-[9px] tracking-[2px] uppercase text-[var(--text-3)] self-start w-full">Daily Score</p>
+              {(() => {
+                const score = scoreData?.score ?? 0
+                const r = 28, circ = 2 * Math.PI * r
+                const offset = circ - (score / 100) * circ
+                const color = score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444'
+                return (
+                  <div className="relative flex items-center justify-center">
+                    <svg width="72" height="72" className="rotate-[-90deg]">
+                      <circle cx="36" cy="36" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+                      <circle cx="36" cy="36" r={r} fill="none" stroke={color} strokeWidth="6"
+                        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+                        style={{ transition: 'stroke-dashoffset 1s ease' }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="font-outfit text-2xl font-light text-white">{score}</span>
+                    </div>
+                  </div>
+                )
+              })()}
+              {scoreData?.streak > 0 && (
+                <div className="flex items-center gap-1 text-[10px]" style={{ color: 'var(--amber)' }}>
+                  <Flame size={10} />
+                  {scoreData.streak}d streak
+                </div>
+              )}
+              <Link href="/dashboard/report" className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>
+                <span className="flex items-center gap-1 hover:text-[var(--accent-text)] transition-colors">
+                  <FileText size={9} /> Weekly report
+                </span>
+              </Link>
             </motion.div>
 
             {/* AI Insight — 2/3 */}

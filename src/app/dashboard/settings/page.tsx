@@ -98,6 +98,17 @@ interface Preferences {
   soundEnabled: boolean
   language: string
   followUpDays: string
+  // Integrations
+  slackWebhookUrl: string
+  notionToken: string
+  notionDatabaseId: string
+  linearApiKey: string
+  zapierWebhookUrl: string
+  // OOO
+  oooEnabled: boolean
+  oooMessage: string
+  oooStartDate: string
+  oooEndDate: string
 }
 
 const DEFAULT_PREFS: Preferences = {
@@ -115,6 +126,15 @@ const DEFAULT_PREFS: Preferences = {
   soundEnabled: false,
   language: 'en',
   followUpDays: '2',
+  slackWebhookUrl: '',
+  notionToken: '',
+  notionDatabaseId: '',
+  linearApiKey: '',
+  zapierWebhookUrl: '',
+  oooEnabled: false,
+  oooMessage: '',
+  oooStartDate: '',
+  oooEndDate: '',
 }
 
 export default function SettingsPage() {
@@ -449,12 +469,153 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* ── 7. VIP Contacts ── */}
+      {/* ── 7. Integrations (Slack, Notion, Linear, Zapier) ── */}
+      <section className={card} style={cardStyle}>
+        <SectionHeader
+          icon={Globe}
+          title="Integrations"
+          description="Connect ARIA to your tools — Slack, Notion, Linear, Zapier"
+          color="#10b981"
+          bg="rgba(16,185,129,0.1)"
+        />
+        <div className="space-y-4">
+          {/* Slack */}
+          <div>
+            <p className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Slack Webhook URL</p>
+            <div className="flex gap-2">
+              <input
+                value={prefs.slackWebhookUrl || ''}
+                onChange={(e) => setPref('slackWebhookUrl', e.target.value)}
+                placeholder="https://hooks.slack.com/services/…"
+                className="flex-1 rounded-lg px-3 py-2 text-[12px] outline-none"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+              />
+              <button
+                onClick={async () => {
+                  const url = prefs.slackWebhookUrl
+                  if (!url) return
+                  await fetch(url, { method: 'POST', body: JSON.stringify({ text: '✅ ARIA Slack integration test — connected!' }) })
+                  alert('Test message sent to Slack!')
+                }}
+                className="px-3 py-2 rounded-lg text-[11px] font-medium transition-colors"
+                style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-2)' }}
+              >
+                Test
+              </button>
+            </div>
+            <p className="text-[10.5px] mt-1.5" style={{ color: 'var(--text-3)' }}>ARIA sends your daily briefing to this Slack channel</p>
+          </div>
+
+          {/* Notion */}
+          <div>
+            <p className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Notion Integration Token</p>
+            <input
+              value={prefs.notionToken || ''}
+              onChange={(e) => setPref('notionToken', e.target.value)}
+              placeholder="secret_…"
+              type="password"
+              className="w-full rounded-lg px-3 py-2 text-[12px] outline-none"
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+            />
+            <p className="text-[11px] font-medium mt-3 mb-1.5" style={{ color: 'var(--text-2)' }}>Notion Database ID</p>
+            <input
+              value={prefs.notionDatabaseId || ''}
+              onChange={(e) => setPref('notionDatabaseId', e.target.value)}
+              placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              className="w-full rounded-lg px-3 py-2 text-[12px] outline-none"
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+            />
+            <p className="text-[10.5px] mt-1.5" style={{ color: 'var(--text-3)' }}>Detected tasks are automatically created as Notion pages</p>
+          </div>
+
+          {/* Linear */}
+          <div>
+            <p className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Linear API Key</p>
+            <input
+              value={prefs.linearApiKey || ''}
+              onChange={(e) => setPref('linearApiKey', e.target.value)}
+              placeholder="lin_api_…"
+              type="password"
+              className="w-full rounded-lg px-3 py-2 text-[12px] outline-none"
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+            />
+            <p className="text-[10.5px] mt-1.5" style={{ color: 'var(--text-3)' }}>Critical tasks are synced to Linear automatically</p>
+          </div>
+
+          {/* Zapier */}
+          <div>
+            <p className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Zapier Webhook URL</p>
+            <input
+              value={prefs.zapierWebhookUrl || ''}
+              onChange={(e) => setPref('zapierWebhookUrl', e.target.value)}
+              placeholder="https://hooks.zapier.com/hooks/catch/…"
+              className="w-full rounded-lg px-3 py-2 text-[12px] outline-none"
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+            />
+            <p className="text-[10.5px] mt-1.5" style={{ color: 'var(--text-3)' }}>ARIA fires this URL on every critical email — connect any app via Zapier</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 8. Vacation / OOO ── */}
+      <section className={card} style={cardStyle}>
+        <SectionHeader
+          icon={Bell}
+          title="Vacation Responder"
+          description="Auto-reply when you're away from email"
+          color="var(--amber)"
+          bg="color-mix(in srgb, var(--amber) 12%, transparent)"
+        />
+        <div>
+          <SettingRow label="Enable vacation responder" description="ARIA auto-replies to incoming emails while you're away">
+            <Toggle enabled={!!prefs.oooEnabled} onToggle={() => setPref('oooEnabled', !prefs.oooEnabled)} />
+          </SettingRow>
+          {prefs.oooEnabled && (
+            <div className="mt-3 space-y-3">
+              <div>
+                <p className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Out of office message</p>
+                <textarea
+                  value={prefs.oooMessage || ''}
+                  onChange={(e) => setPref('oooMessage', e.target.value)}
+                  rows={3}
+                  placeholder="Hi, I'm currently away and will be back on [date]. I'll respond to your email as soon as possible."
+                  className="w-full rounded-lg px-3 py-2 text-[12px] outline-none resize-none"
+                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>From</p>
+                  <input
+                    type="date"
+                    value={prefs.oooStartDate || ''}
+                    onChange={(e) => setPref('oooStartDate', e.target.value)}
+                    className="w-full rounded-lg px-2 py-1.5 text-[11px] outline-none"
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>Until</p>
+                  <input
+                    type="date"
+                    value={prefs.oooEndDate || ''}
+                    onChange={(e) => setPref('oooEndDate', e.target.value)}
+                    className="w-full rounded-lg px-2 py-1.5 text-[11px] outline-none"
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── 9. VIP Contacts ── */}
       <section className={card} style={cardStyle}>
         <VipContactManager />
       </section>
 
-      {/* ── 8. Account info ── */}
+      {/* ── 10. Account info ── */}
       <section className={card} style={cardStyle}>
         <SectionHeader
           icon={Eye}

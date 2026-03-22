@@ -251,4 +251,13 @@ export interface AppStore {
 
   emailFilter: string
   setEmailFilter: (f: string) => void
+
+  focusMode: boolean
+  setFocusMode: (v: boolean) => void
+
+  contactPanelEmail: string | null
+  setContactPanelEmail: (email: string | null) => void
+
+  newEmailsCount: number
+  setNewEmailsCount: (n: number) => void
 }

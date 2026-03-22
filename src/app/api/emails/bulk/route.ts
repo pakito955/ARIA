@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 const schema = z.object({
   emailIds: z.array(z.string()).min(1).max(100),
-  action: z.enum(['archive', 'read', 'delete']),
+  action: z.enum(['archive', 'read', 'delete', 'analyze']),
 })
 
 export async function POST(req: NextRequest) {
@@ -54,6 +54,20 @@ export async function POST(req: NextRequest) {
       where: { id: { in: emailIds }, userId },
     })
     affected = result.count
+  } else if (action === 'analyze') {
+    // Queue analysis for each email (fire-and-forget, cap at 10)
+    const toAnalyze = emailIds.slice(0, 10)
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.AUTH_URL || 'http://localhost:3000'
+    await Promise.allSettled(
+      toAnalyze.map((emailId) =>
+        fetch(`${baseUrl}/api/ai/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ emailId }),
+        })
+      )
+    )
+    affected = toAnalyze.length
   }
 
   return NextResponse.json({ success: true, affected, action })

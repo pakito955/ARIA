@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Inbox, CheckSquare, Clock, BarChart3, Zap,
   ChevronLeft, Settings, LogOut, Command, CalendarDays,
-  Sun, Moon,
+  Sun, Moon, FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { label: 'Calendar', href: '/dashboard/calendar',  icon: CalendarDays, exact: false, badge: null },
   { label: 'Waiting',  href: '/dashboard/waiting',   icon: Clock,        exact: false, badge: 'waiting' },
   { label: 'Insights', href: '/dashboard/analytics', icon: BarChart3,    exact: false, badge: null },
+  { label: 'Report',   href: '/dashboard/report',    icon: FileText,     exact: false, badge: null },
 ]
 
 export function Sidebar() {

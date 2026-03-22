@@ -19,4 +19,13 @@ export const useAppStore = create<AppStore>((set) => ({
 
   emailFilter: 'all',
   setEmailFilter: (f) => set({ emailFilter: f }),
+
+  focusMode: false,
+  setFocusMode: (v) => set({ focusMode: v }),
+
+  contactPanelEmail: null,
+  setContactPanelEmail: (email) => set({ contactPanelEmail: email }),
+
+  newEmailsCount: 0,
+  setNewEmailsCount: (n) => set({ newEmailsCount: n }),
 }))

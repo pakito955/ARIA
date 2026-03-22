@@ -1,11 +1,11 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Archive, CheckCheck, Trash2, X } from 'lucide-react'
+import { Archive, CheckCheck, Trash2, X, Zap } from 'lucide-react'
 
 interface Props {
   count: number
-  onAction: (action: 'archive' | 'read' | 'delete') => void
+  onAction: (action: 'archive' | 'read' | 'delete' | 'analyze') => void
   onClear: () => void
 }
 
@@ -41,6 +41,16 @@ export function BulkActionBar({ count, onAction, onClear }: Props) {
       </div>
 
       {/* Actions */}
+      <button
+        onClick={() => onAction('analyze')}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium transition-all"
+        style={{ color: 'var(--accent-text)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', background: 'var(--accent-subtle)' }}
+        title="AI Analyze selected"
+      >
+        <Zap size={13} />
+        Analyze
+      </button>
+
       <button
         onClick={() => onAction('read')}
         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium transition-all"
