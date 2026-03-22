@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { CheckCircle, Send, Calendar, Copy, RefreshCw, Loader2, Zap, BookOpen } from 'lucide-react'
@@ -529,10 +529,32 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
   )
 }
 
+// Parse a meeting time string like "26.03.2026", "March 26 2026", "2026-03-26" into a Date
+function parseMeetingTime(raw: string | undefined | null): Date | null {
+  if (!raw) return null
+  // DD.MM.YYYY  or  DD.MM.YYYY HH:MM
+  const ddmmyyyy = raw.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[^\d](\d{1,2}):(\d{2}))?/)
+  if (ddmmyyyy) {
+    const [, d, m, y, h = '9', min = '0'] = ddmmyyyy
+    return new Date(+y, +m - 1, +d, +h, +min)
+  }
+  // YYYY-MM-DD
+  const isoDate = raw.match(/(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/)
+  if (isoDate) {
+    const [, y, m, d, h = '9', min = '0'] = isoDate
+    return new Date(+y, +m - 1, +d, +h, +min)
+  }
+  // Try native parse as last resort
+  const ts = Date.parse(raw)
+  if (!isNaN(ts)) return new Date(ts)
+  return null
+}
+
 function MeetingTab({ analysis, email }: any) {
   const [scheduled, setScheduled] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [needsReconnect, setNeedsReconnect] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [prepText, setPrepText] = useState<string | null>(null)
   const [prepLoading, setPrepLoading] = useState(false)
@@ -555,23 +577,42 @@ function MeetingTab({ analysis, email }: any) {
     }
   }
 
-  // Pre-fill sensible defaults from detected meeting time
-  const tomorrow9am = new Date()
-  tomorrow9am.setDate(tomorrow9am.getDate() + 1)
-  tomorrow9am.setHours(9, 0, 0, 0)
-  const tomorrow10am = new Date(tomorrow9am)
-  tomorrow10am.setHours(10, 0, 0, 0)
-
   const toLocalInput = (d: Date) =>
     new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
 
-  const [title, setTitle] = useState(email?.subject || 'Meeting')
-  const [startTime, setStartTime] = useState(toLocalInput(tomorrow9am))
-  const [endTime, setEndTime] = useState(toLocalInput(tomorrow10am))
+  // Compute initial dates from analysis.meetingTime if available, else tomorrow 9am
+  const getInitialTimes = () => {
+    const detected = parseMeetingTime(analysis?.meetingTime)
+    const base = detected ?? (() => {
+      const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); return d
+    })()
+    if (!detected) base.setHours(9, 0, 0, 0)
+    const end = new Date(base); end.setHours(base.getHours() + 1, base.getMinutes(), 0, 0)
+    return { start: toLocalInput(base), end: toLocalInput(end) }
+  }
+
+  const [title, setTitle] = useState(() => email?.subject || 'Meeting')
+  const [startTime, setStartTime] = useState(() => getInitialTimes().start)
+  const [endTime, setEndTime] = useState(() => getInitialTimes().end)
+
+  // Re-sync when analysis loads (async after first render)
+  useEffect(() => {
+    if (analysis?.meetingTime) {
+      const { start, end } = getInitialTimes()
+      setStartTime(start)
+      setEndTime(end)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analysis?.meetingTime])
+
+  useEffect(() => {
+    if (email?.subject) setTitle(email.subject)
+  }, [email?.subject])
 
   const handleSchedule = async () => {
     setLoading(true)
     setError(null)
+    setNeedsReconnect(false)
     try {
       const participants = Array.isArray(analysis.meetingParticipants)
         ? analysis.meetingParticipants
@@ -590,7 +631,12 @@ function MeetingTab({ analysis, email }: any) {
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Failed to create event')
+        const msg: string = data.error || 'Failed to create event'
+        // Detect missing Calendar scope — user must re-authorize
+        if (msg.toLowerCase().includes('insufficient') || msg.toLowerCase().includes('forbidden') || res.status === 401 || res.status === 403) {
+          setNeedsReconnect(true)
+        }
+        throw new Error(msg)
       }
       setScheduled(true)
     } catch (e: any) {
@@ -671,7 +717,20 @@ function MeetingTab({ analysis, email }: any) {
         </motion.div>
       )}
 
-      {error && <p className="text-[11px]" style={{ color: 'var(--red)' }}>{error}</p>}
+      {error && (
+        <div className="p-3 rounded-lg" style={{ background: 'color-mix(in srgb, var(--red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--red) 20%, transparent)' }}>
+          <p className="text-[11px] mb-1" style={{ color: 'var(--red)' }}>{error}</p>
+          {needsReconnect && (
+            <a
+              href="/api/auth/signin"
+              className="text-[11px] underline underline-offset-2 font-medium"
+              style={{ color: 'var(--amber)' }}
+            >
+              Reconnect Google account to grant Calendar access →
+            </a>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-2">
         <button

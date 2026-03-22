@@ -34,13 +34,23 @@ export async function POST(req: NextRequest) {
     }
   )
 
-  const event = await gmail.createCalendarEvent({
-    title,
-    description: description || '',
-    startTime: new Date(startTime),
-    endTime: new Date(endTime),
-    participants,
-  })
-
-  return NextResponse.json({ success: true, event })
+  try {
+    const event = await gmail.createCalendarEvent({
+      title,
+      description: description || '',
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
+      participants,
+    })
+    return NextResponse.json({ success: true, event })
+  } catch (err: any) {
+    // Surface the Google API error message clearly
+    const googleMsg: string =
+      err?.response?.data?.error?.message ||
+      err?.errors?.[0]?.message ||
+      err?.message ||
+      'Failed to create calendar event'
+    const status: number = err?.response?.status || err?.code || 500
+    return NextResponse.json({ error: googleMsg }, { status: status >= 400 ? status : 500 })
+  }
 }
