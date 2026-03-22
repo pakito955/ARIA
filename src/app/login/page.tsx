@@ -2,10 +2,13 @@
 
 import { signIn } from 'next-auth/react'
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
 
   const handleLogin = async (provider: string) => {
     setLoading(true)
@@ -19,6 +22,13 @@ export default function LoginPage() {
     >
       {/* Subtle grid */}
       <div className="absolute inset-0 grid-bg opacity-40" />
+
+      {/* Error banner */}
+      {error && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-lg text-xs font-mono" style={{ background: 'var(--red-subtle)', color: 'var(--red)', border: '1px solid var(--red)' }}>
+          Auth error: {error}
+        </div>
+      )}
 
       {/* Card */}
       <motion.div
