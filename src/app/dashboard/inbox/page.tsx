@@ -3,9 +3,11 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, SlidersHorizontal, RefreshCw, ChevronDown, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip, Inbox } from 'lucide-react'
+import { Search, SlidersHorizontal, RefreshCw, ChevronDown, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip, Inbox, RefreshCcw } from 'lucide-react'
 import { EmailCard } from '@/components/inbox/EmailCard'
 import { TriageMode } from '@/components/TriageMode'
+import { SnoozePickerModal } from '@/components/inbox/SnoozePickerModal'
+import { BulkActionBar } from '@/components/inbox/BulkActionBar'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -25,8 +27,11 @@ export default function InboxPage() {
   const [sort, setSort] = useState<'newest' | 'priority'>('newest')
   const [originalExpanded, setOriginalExpanded] = useState(false)
   const [replyStyle, setReplyStyle] = useState<'short' | 'professional' | 'friendly'>('professional')
+  const [editedReply, setEditedReply] = useState('')
   const [sent, setSent] = useState(false)
   const [triageMode, setTriageMode] = useState(false)
+  const [snoozeEmailId, setSnoozeEmailId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const qc = useQueryClient()
 
   // Real-time sync via SSE
@@ -112,6 +117,12 @@ export default function InboxPage() {
 
   const currentReply = replies[replyStyle]
 
+  // Sync editedReply when email or reply style changes
+  useEffect(() => {
+    setEditedReply(currentReply)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEmailId, replyStyle, currentReply])
+
   const handleArchive = useCallback((id: string) => {
     fetch(`/api/emails/${id}/archive`, { method: 'POST' }).then(() =>
       qc.invalidateQueries({ queryKey: ['emails'] })
@@ -132,13 +143,41 @@ export default function InboxPage() {
   }, [])
 
   const handleSnooze = useCallback((id: string) => {
-    // snooze for 24h — mark as read temporarily
-    fetch(`/api/emails/${id}`, {
-      method: 'PATCH',
+    setSnoozeEmailId(id)
+  }, [])
+
+  const handleSnoozeConfirm = useCallback((snoozeUntil: Date) => {
+    if (!snoozeEmailId) return
+    fetch('/api/emails/snooze', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isRead: true }),
-    }).then(() => qc.invalidateQueries({ queryKey: ['emails'] }))
-  }, [qc])
+      body: JSON.stringify({ emailId: snoozeEmailId, snoozeUntil: snoozeUntil.toISOString() }),
+    }).then(() => {
+      qc.invalidateQueries({ queryKey: ['emails'] })
+      setSnoozeEmailId(null)
+    })
+  }, [snoozeEmailId, qc])
+
+  const handleBulkAction = useCallback((action: 'archive' | 'read' | 'delete') => {
+    if (selectedIds.size === 0) return
+    fetch('/api/emails/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emailIds: Array.from(selectedIds), action }),
+    }).then(() => {
+      qc.invalidateQueries({ queryKey: ['emails'] })
+      setSelectedIds(new Set())
+    })
+  }, [selectedIds, qc])
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
 
   return (
     <>
@@ -152,6 +191,27 @@ export default function InboxPage() {
             onTask={handleTask}
             onSnooze={handleSnooze}
             onClose={() => setTriageMode(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Snooze Modal */}
+      <AnimatePresence>
+        {snoozeEmailId && (
+          <SnoozePickerModal
+            onConfirm={handleSnoozeConfirm}
+            onClose={() => setSnoozeEmailId(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Action Bar */}
+      <AnimatePresence>
+        {selectedIds.size > 0 && (
+          <BulkActionBar
+            count={selectedIds.size}
+            onAction={handleBulkAction}
+            onClear={() => setSelectedIds(new Set())}
           />
         )}
       </AnimatePresence>
@@ -250,6 +310,8 @@ export default function InboxPage() {
                 index={i}
                 onAnalyze={(id) => analyzeMutation.mutate(id)}
                 analyzing={analyzeMutation.isPending && analyzeMutation.variables === email.id}
+                selected={selectedIds.has(email.id)}
+                onToggleSelect={handleToggleSelect}
               />
             ))
           )}
@@ -419,16 +481,15 @@ export default function InboxPage() {
                           </motion.div>
                         ) : (
                           <>
-                            <div
-                              contentEditable
-                              suppressContentEditableWarning
-                              className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-3.5 text-[12px] leading-relaxed text-[var(--text-1)] min-h-[80px] outline-none focus:border-[var(--accent)] transition-colors"
-                            >
-                              {currentReply}
-                            </div>
-                            <div className="flex gap-2 mt-2">
+                            <textarea
+                              value={editedReply}
+                              onChange={(e) => setEditedReply(e.target.value)}
+                              rows={5}
+                              className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-3.5 text-[12px] leading-relaxed text-[var(--text-1)] outline-none focus:border-[var(--accent)] transition-colors resize-none"
+                            />
+                            <div className="flex gap-2 mt-2 flex-wrap">
                               <button
-                                onClick={() => sendMutation.mutate({ emailId: selectedEmail.id, replyText: currentReply, style: replyStyle })}
+                                onClick={() => sendMutation.mutate({ emailId: selectedEmail.id, replyText: editedReply, style: replyStyle })}
                                 disabled={sendMutation.isPending}
                                 className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white text-[11px] font-medium rounded-lg hover:bg-[var(--accent)] transition-colors disabled:opacity-60"
                               >
@@ -436,7 +497,35 @@ export default function InboxPage() {
                                 {sendMutation.isPending ? 'Sending…' : 'Send Reply'}
                               </button>
                               <button
-                                onClick={() => navigator.clipboard.writeText(currentReply)}
+                                onClick={() => {
+                                  fetch('/api/ai/draft', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ emailId: selectedEmail.id, draftText: editedReply, style: replyStyle }),
+                                  })
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] text-[var(--text-2)] text-[11px] rounded-lg hover:border-[var(--border-medium)] hover:text-white transition-all"
+                              >
+                                Save Draft
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const instr = window.prompt('Regenerate instructions (optional):') ?? ''
+                                  fetch('/api/ai/regenerate', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ emailId: selectedEmail.id, style: replyStyle, instructions: instr }),
+                                  })
+                                    .then((r) => r.json())
+                                    .then((d) => { if (d.reply) setEditedReply(d.reply) })
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] text-[var(--text-2)] text-[11px] rounded-lg hover:border-[var(--border-medium)] hover:text-white transition-all"
+                              >
+                                <RefreshCcw size={11} />
+                                Regenerate
+                              </button>
+                              <button
+                                onClick={() => navigator.clipboard.writeText(editedReply)}
                                 className="flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] text-[var(--text-2)] text-[11px] rounded-lg hover:border-[var(--border-medium)] hover:text-white transition-all"
                               >
                                 <Copy size={11} />

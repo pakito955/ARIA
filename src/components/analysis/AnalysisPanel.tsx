@@ -281,6 +281,24 @@ function AnalysisTab({ analysis, onAnalyze, loading }: any) {
 function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
   const [style, setStyle] = useState<'short' | 'professional' | 'friendly'>('professional')
   const [sent, setSent] = useState(false)
+  const [draftSaved, setDraftSaved] = useState(false)
+  const [showRegenerate, setShowRegenerate] = useState(false)
+  const [regenInstructions, setRegenInstructions] = useState('')
+
+  const replies: Record<string, string> = {
+    short: analysis?.replyShort ?? '',
+    professional: analysis?.replyProfessional ?? '',
+    friendly: analysis?.replyFriendly ?? '',
+  }
+
+  const [editedReply, setEditedReply] = useState(replies[style])
+
+  // Sync editedReply when style changes
+  const handleStyleChange = (s: 'short' | 'professional' | 'friendly') => {
+    setStyle(s)
+    setEditedReply(replies[s])
+    setDraftSaved(false)
+  }
 
   const sendMutation = useMutation({
     mutationFn: async (replyText: string) => {
@@ -293,6 +311,36 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
       return res.json()
     },
     onSuccess: () => setSent(true),
+  })
+
+  const saveDraftMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/ai/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailId, draftText: editedReply, style }),
+      })
+      if (!res.ok) throw new Error('Save draft failed')
+      return res.json()
+    },
+    onSuccess: () => { setDraftSaved(true); setTimeout(() => setDraftSaved(false), 2500) },
+  })
+
+  const regenMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/ai/regenerate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailId, style, instructions: regenInstructions }),
+      })
+      if (!res.ok) throw new Error('Regenerate failed')
+      return res.json()
+    },
+    onSuccess: (data) => {
+      setEditedReply(data.reply ?? '')
+      setShowRegenerate(false)
+      setRegenInstructions('')
+    },
   })
 
   if (!analysis?.replyProfessional) {
@@ -312,12 +360,6 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
         </button>
       </div>
     )
-  }
-
-  const replies: Record<string, string> = {
-    short: analysis.replyShort,
-    professional: analysis.replyProfessional,
-    friendly: analysis.replyFriendly,
   }
 
   if (sent) {
@@ -352,7 +394,7 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
         {(['short', 'professional', 'friendly'] as const).map((s) => (
           <button
             key={s}
-            onClick={() => setStyle(s)}
+            onClick={() => handleStyleChange(s)}
             className="flex-1 py-1.5 rounded-md text-[11px] font-medium transition-all capitalize"
             style={{
               background: style === s ? 'var(--bg-card)' : 'transparent',
@@ -365,11 +407,12 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
         ))}
       </div>
 
-      {/* Text area */}
-      <div
-        contentEditable
-        suppressContentEditableWarning
-        className="rounded-xl p-3 text-[12.5px] leading-relaxed min-h-[110px] outline-none transition-colors"
+      {/* Controlled textarea */}
+      <textarea
+        value={editedReply}
+        onChange={(e) => setEditedReply(e.target.value)}
+        rows={6}
+        className="w-full rounded-xl p-3 text-[12.5px] leading-relaxed outline-none transition-colors resize-none"
         style={{
           background: 'var(--bg-surface)',
           border: '1px solid var(--border)',
@@ -377,14 +420,60 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
         }}
         onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--border-focus)')}
         onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
-      >
-        {replies[style]}
-      </div>
+      />
+
+      {/* Regenerate panel */}
+      <AnimatePresence>
+        {showRegenerate && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-2 pt-1">
+              <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>Custom instructions (optional)</p>
+              <textarea
+                value={regenInstructions}
+                onChange={(e) => setRegenInstructions(e.target.value)}
+                rows={2}
+                placeholder="e.g. Make it shorter, more formal, mention the deadline…"
+                className="w-full rounded-lg p-2.5 text-[12px] leading-relaxed outline-none resize-none transition-colors"
+                style={{
+                  background: 'var(--bg-hover)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-2)',
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--border-focus)')}
+                onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => regenMutation.mutate()}
+                  disabled={regenMutation.isPending}
+                  className="flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-[11px] font-medium text-white disabled:opacity-50 transition-colors"
+                  style={{ background: 'var(--accent)' }}
+                >
+                  {regenMutation.isPending ? <Loader2 size={10} className="animate-spin" /> : <RefreshCw size={10} />}
+                  {regenMutation.isPending ? 'Regenerating…' : 'Regenerate'}
+                </button>
+                <button
+                  onClick={() => setShowRegenerate(false)}
+                  className="px-3 py-1.5 rounded-lg text-[11px] transition-colors"
+                  style={{ border: '1px solid var(--border)', color: 'var(--text-3)' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Actions */}
       <div className="flex gap-2">
         <button
-          onClick={() => sendMutation.mutate(replies[style])}
+          onClick={() => sendMutation.mutate(editedReply)}
           disabled={sendMutation.isPending}
           className="flex-1 py-2 rounded-lg flex items-center justify-center gap-2 text-[12px] font-medium text-white disabled:opacity-50 transition-colors"
           style={{ background: 'var(--accent)' }}
@@ -393,7 +482,37 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
           {sendMutation.isPending ? 'Sending…' : 'Send'}
         </button>
         <button
-          onClick={() => navigator.clipboard.writeText(replies[style])}
+          onClick={() => saveDraftMutation.mutate()}
+          disabled={saveDraftMutation.isPending || draftSaved}
+          className="px-3 py-2 rounded-lg flex items-center gap-1.5 text-[11px] transition-colors disabled:opacity-50"
+          style={{
+            border: '1px solid var(--border)',
+            color: draftSaved ? 'var(--green)' : 'var(--text-2)',
+            borderColor: draftSaved ? 'var(--green)' : 'var(--border)',
+          }}
+        >
+          {saveDraftMutation.isPending
+            ? <Loader2 size={10} className="animate-spin" />
+            : draftSaved
+            ? <CheckCircle size={10} />
+            : null}
+          {draftSaved ? 'Saved' : 'Draft'}
+        </button>
+        <button
+          onClick={() => { setShowRegenerate(!showRegenerate) }}
+          className="px-3 py-2 rounded-lg transition-colors"
+          style={{
+            border: '1px solid var(--border)',
+            color: showRegenerate ? 'var(--accent-text)' : 'var(--text-2)',
+            borderColor: showRegenerate ? 'var(--accent)' : 'var(--border)',
+            background: showRegenerate ? 'var(--accent-subtle)' : 'transparent',
+          }}
+          title="Regenerate with instructions"
+        >
+          <RefreshCw size={12} />
+        </button>
+        <button
+          onClick={() => navigator.clipboard.writeText(editedReply)}
           className="px-3 py-2 rounded-lg transition-colors"
           style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}
         >

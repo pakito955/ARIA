@@ -30,6 +30,8 @@ interface Props {
   index?: number
   onAnalyze: (id: string) => void
   analyzing?: boolean
+  selected?: boolean
+  onToggleSelect?: (id: string) => void
 }
 
 function avatarColor(email: string): string {
@@ -53,7 +55,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   SPAM:       'Spam',
 }
 
-export function EmailCard({ email, index = 0, onAnalyze, analyzing }: Props) {
+export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = false, onToggleSelect }: Props) {
   const { selectedEmailId, setSelectedEmail } = useAppStore()
   const isSelected = selectedEmailId === email.id
 
@@ -74,13 +76,14 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing }: Props) {
       onClick={() => setSelectedEmail(email.id)}
       className="group relative flex gap-3 px-3 py-3 cursor-pointer rounded-xl transition-all duration-150 mb-0.5"
       style={{
-        background: isSelected ? 'var(--accent-subtle)' : 'transparent',
+        background: selected ? 'var(--accent-subtle)' : isSelected ? 'var(--accent-subtle)' : 'transparent',
+        outline: selected ? '1px solid var(--accent)' : 'none',
       }}
       onMouseEnter={(e) => {
-        if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'
+        if (!isSelected && !selected) (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'
       }}
       onMouseLeave={(e) => {
-        if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'transparent'
+        if (!isSelected && !selected) (e.currentTarget as HTMLElement).style.background = 'transparent'
       }}
     >
       {/* Unread stripe */}
@@ -91,12 +94,33 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing }: Props) {
         />
       )}
 
-      {/* Avatar */}
-      <div
-        className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] font-semibold text-white mt-0.5"
-        style={{ background: color }}
-      >
-        {initials}
+      {/* Avatar / Checkbox */}
+      <div className="relative w-8 h-8 shrink-0 mt-0.5">
+        {/* Checkbox — appears on hover or when selected */}
+        {onToggleSelect && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleSelect(email.id) }}
+            className={`absolute inset-0 rounded-full flex items-center justify-center transition-opacity z-10 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+            style={{
+              background: selected ? 'var(--accent)' : 'var(--bg-card)',
+              border: selected ? '2px solid var(--accent)' : '2px solid var(--border)',
+            }}
+            aria-label={selected ? 'Deselect email' : 'Select email'}
+          >
+            {selected && (
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 5L4.2 7.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </button>
+        )}
+        {/* Avatar behind checkbox */}
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold text-white ${onToggleSelect && !selected ? 'group-hover:opacity-0' : selected ? 'opacity-0' : ''} transition-opacity`}
+          style={{ background: color }}
+        >
+          {initials}
+        </div>
       </div>
 
       {/* Content */}

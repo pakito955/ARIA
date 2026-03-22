@@ -32,6 +32,7 @@ model User {
   calendarEvents CalendarEvent[]
   briefings    Briefing[]
   settings     UserSettings?
+  vipContacts  VipContact[]
 
   @@map("users")
 }
@@ -252,6 +253,21 @@ model Briefing {
 
   @@unique([userId, date])
   @@map("briefings")
+}
+
+// ─── VIP CONTACTS ────────────────────────────────────────────────────
+
+model VipContact {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  name      String?
+  reason    String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, email])
+  @@map("vip_contacts")
 }
 
 // ─── SETTINGS ────────────────────────────────────────────────────────
