@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { CheckCircle, Send, Calendar, Copy, RefreshCw, Loader2, Zap } from 'lucide-react'
+import { CheckCircle, Send, Calendar, Copy, RefreshCw, Loader2, Zap, BookOpen } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -108,7 +108,7 @@ export function AnalysisPanel() {
                 loading={analyzeMutation.isPending}
               />
             )}
-            {rightPanel === 'meeting' && <MeetingTab analysis={analysis} />}
+            {rightPanel === 'meeting' && <MeetingTab analysis={analysis} email={email?.data} />}
           </>
         )}
       </div>
@@ -523,69 +523,193 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
   )
 }
 
-function MeetingTab({ analysis }: any) {
+function MeetingTab({ analysis, email }: any) {
   const [scheduled, setScheduled] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [prepText, setPrepText] = useState<string | null>(null)
+  const [prepLoading, setPrepLoading] = useState(false)
+
+  const generatePrep = async () => {
+    if (!email?.id) return
+    setPrepLoading(true)
+    try {
+      const res = await fetch('/api/ai/meetingprep', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailId: email.id }),
+      })
+      const data = await res.json()
+      setPrepText(data.prep || null)
+    } catch {
+      // ignore
+    } finally {
+      setPrepLoading(false)
+    }
+  }
+
+  // Pre-fill sensible defaults from detected meeting time
+  const tomorrow9am = new Date()
+  tomorrow9am.setDate(tomorrow9am.getDate() + 1)
+  tomorrow9am.setHours(9, 0, 0, 0)
+  const tomorrow10am = new Date(tomorrow9am)
+  tomorrow10am.setHours(10, 0, 0, 0)
+
+  const toLocalInput = (d: Date) =>
+    new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+
+  const [title, setTitle] = useState(email?.subject || 'Meeting')
+  const [startTime, setStartTime] = useState(toLocalInput(tomorrow9am))
+  const [endTime, setEndTime] = useState(toLocalInput(tomorrow10am))
+
+  const handleSchedule = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const participants = Array.isArray(analysis.meetingParticipants)
+        ? analysis.meetingParticipants
+        : email?.fromEmail ? [email.fromEmail] : []
+
+      const res = await fetch('/api/calendar/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description: `Scheduled via ARIA from email: ${email?.subject || ''}`,
+          startTime: new Date(startTime).toISOString(),
+          endTime: new Date(endTime).toISOString(),
+          participants,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to create event')
+      }
+      setScheduled(true)
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!analysis?.meetingDetected) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: 'var(--bg-hover)' }}
-        >
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-hover)' }}>
           <Calendar size={16} style={{ color: 'var(--text-3)' }} strokeWidth={1.5} />
         </div>
-        <p className="text-[12px]" style={{ color: 'var(--text-3)' }}>No meeting detected</p>
+        <p className="text-[12px]" style={{ color: 'var(--text-3)' }}>No meeting detected in this email</p>
       </div>
     )
   }
 
   if (scheduled) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex flex-col items-center gap-3 py-16 text-center"
-      >
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: 'var(--green-subtle)' }}
-        >
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-3 py-16 text-center">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--green-subtle)' }}>
           <CheckCircle size={18} style={{ color: 'var(--green)' }} />
         </div>
-        <p className="text-[13px] font-medium" style={{ color: 'var(--text-1)' }}>Meeting scheduled</p>
-        <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>Invites sent</p>
+        <p className="text-[13px] font-medium" style={{ color: 'var(--text-1)' }}>Event added to Google Calendar</p>
+        <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>Invites sent to participants</p>
       </motion.div>
     )
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 pt-1">
-      <div
-        className="p-4 rounded-xl"
-        style={{ background: 'var(--amber-subtle)', border: '1px solid color-mix(in srgb, var(--amber) 20%, transparent)' }}
-      >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-1">
+      {/* Detected info */}
+      <div className="p-4 rounded-xl" style={{ background: 'var(--amber-subtle)', border: '1px solid color-mix(in srgb, var(--amber) 20%, transparent)' }}>
         <p className="text-[10px] uppercase tracking-[0.08em] mb-2" style={{ color: 'var(--amber)' }}>Meeting Detected</p>
         {analysis.meetingTime && (
-          <p className="text-[16px] font-semibold mb-1" style={{ color: 'var(--text-1)' }}>
-            {analysis.meetingTime}
-          </p>
+          <p className="text-[15px] font-semibold mb-1" style={{ color: 'var(--text-1)' }}>{analysis.meetingTime}</p>
         )}
         {Array.isArray(analysis.meetingParticipants) && analysis.meetingParticipants.length > 0 && (
-          <p className="text-[12px]" style={{ color: 'var(--text-2)' }}>
-            {analysis.meetingParticipants.join(', ')}
-          </p>
+          <p className="text-[11px]" style={{ color: 'var(--text-2)' }}>{analysis.meetingParticipants.join(', ')}</p>
         )}
       </div>
 
-      <button
-        onClick={() => setScheduled(true)}
-        className="w-full py-2.5 rounded-lg flex items-center justify-center gap-2 text-[12px] font-medium text-white"
-        style={{ background: 'var(--amber)' }}
-      >
-        <Calendar size={12} />
-        Schedule Meeting
-      </button>
+      {/* Form */}
+      {showForm && (
+        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Meeting title"
+            className="w-full px-3 py-2 rounded-lg text-[12px] outline-none"
+            style={{ background: 'var(--bg-input)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>Start</p>
+              <input
+                type="datetime-local"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="w-full px-2 py-1.5 rounded-lg text-[11px] outline-none"
+                style={{ background: 'var(--bg-input)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+              />
+            </div>
+            <div>
+              <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>End</p>
+              <input
+                type="datetime-local"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="w-full px-2 py-1.5 rounded-lg text-[11px] outline-none"
+                style={{ background: 'var(--bg-input)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+              />
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {error && <p className="text-[11px]" style={{ color: 'var(--red)' }}>{error}</p>}
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="px-3 py-2.5 rounded-lg text-[12px] font-medium transition-colors"
+          style={{ border: '1px solid var(--border-medium)', color: 'var(--text-2)' }}
+        >
+          {showForm ? 'Hide' : 'Edit details'}
+        </button>
+        <button
+          onClick={handleSchedule}
+          disabled={loading}
+          className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 text-[12px] font-medium text-white transition-opacity disabled:opacity-50"
+          style={{ background: 'var(--amber)' }}
+        >
+          {loading ? <Loader2 size={12} className="animate-spin" /> : <Calendar size={12} />}
+          {loading ? 'Scheduling…' : 'Schedule Meeting'}
+        </button>
+      </div>
+
+      {/* Meeting Prep */}
+      {!prepText ? (
+        <button
+          onClick={generatePrep}
+          disabled={prepLoading || !email?.id}
+          className="w-full py-2 rounded-lg flex items-center justify-center gap-2 text-[12px] font-medium transition-colors disabled:opacity-50"
+          style={{ border: '1px solid var(--border-medium)', color: 'var(--text-2)' }}
+        >
+          {prepLoading ? <Loader2 size={12} className="animate-spin" /> : <BookOpen size={12} />}
+          {prepLoading ? 'Generating prep…' : 'Generate Meeting Prep'}
+        </button>
+      ) : (
+        <div className="p-3 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--accent-text)' }}>Meeting Prep</p>
+            <button onClick={() => setPrepText(null)} className="text-[10px]" style={{ color: 'var(--text-3)' }}>Reset</button>
+          </div>
+          <div
+            className="text-[12px] leading-relaxed"
+            style={{ color: 'var(--text-2)' }}
+            dangerouslySetInnerHTML={{ __html: prepText }}
+          />
+        </div>
+      )}
     </motion.div>
   )
 }

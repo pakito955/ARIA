@@ -22,6 +22,7 @@ interface Email {
     summary?: string
     urgencyScore: number
     confidenceScore: number
+    sentiment?: string
   }
 }
 
@@ -182,6 +183,21 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
           {email.analysis?.category && CATEGORY_LABEL[email.analysis.category] && (
             <span className="text-[11px]" style={{ color: 'var(--text-3)' }}>
               {priority && priority !== 'LOW' ? '·' : ''} {CATEGORY_LABEL[email.analysis.category]}
+            </span>
+          )}
+
+          {/* Sentiment badge — only for NEGATIVE or URGENT */}
+          {(email.analysis?.sentiment === 'NEGATIVE' || email.analysis?.sentiment === 'URGENT') && (
+            <span
+              className="text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0"
+              style={{
+                background: email.analysis.sentiment === 'URGENT'
+                  ? 'color-mix(in srgb, var(--amber) 15%, transparent)'
+                  : 'color-mix(in srgb, var(--red) 15%, transparent)',
+                color: email.analysis.sentiment === 'URGENT' ? 'var(--amber)' : 'var(--red)',
+              }}
+            >
+              {email.analysis.sentiment === 'URGENT' ? 'Urgent' : 'Tense'}
             </span>
           )}
 
