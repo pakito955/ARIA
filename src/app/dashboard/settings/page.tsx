@@ -1,38 +1,496 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Settings } from 'lucide-react'
+import {
+  Settings, Star, Zap, Bell, Eye, Shield, Palette,
+  Globe, Mail, CheckCircle, AlertCircle, Loader2,
+  Sun, Moon, Monitor, ChevronRight, ToggleLeft, ToggleRight,
+  Clock, MessageSquare, FileText, Inbox,
+} from 'lucide-react'
 import { VipContactManager } from '@/components/settings/VipContactManager'
+import { useTheme } from '@/lib/theme'
+import { useSession } from 'next-auth/react'
+import { useQuery } from '@tanstack/react-query'
+import { cn } from '@/lib/utils'
+
+// ─── Toggle component ───────────────────────────────────────────────────────
+function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus:outline-none"
+      style={{ background: enabled ? 'var(--accent)' : 'var(--bg-hover)', border: '1px solid var(--border-medium)' }}
+    >
+      <span
+        className="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200"
+        style={{ transform: enabled ? 'translateX(17px)' : 'translateX(1px)', marginTop: '1px' }}
+      />
+    </button>
+  )
+}
+
+// ─── Setting row component ───────────────────────────────────────────────────
+function SettingRow({
+  label, description, children,
+}: { label: string; description?: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-medium" style={{ color: 'var(--text-1)' }}>{label}</p>
+        {description && (
+          <p className="text-[11.5px] mt-0.5 leading-snug" style={{ color: 'var(--text-3)' }}>{description}</p>
+        )}
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  )
+}
+
+// ─── Section header ──────────────────────────────────────────────────────────
+function SectionHeader({
+  icon: Icon, title, description, color = 'var(--accent-text)', bg = 'var(--accent-subtle)',
+}: { icon: any; title: string; description: string; color?: string; bg?: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-5">
+      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: bg }}>
+        <Icon size={16} style={{ color }} />
+      </div>
+      <div>
+        <h2 className="text-[15px] font-semibold" style={{ color: 'var(--text-1)' }}>{title}</h2>
+        <p className="text-[12px]" style={{ color: 'var(--text-3)' }}>{description}</p>
+      </div>
+    </div>
+  )
+}
+
+// ─── Select component ────────────────────────────────────────────────────────
+function Select({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="rounded-lg px-3 py-1.5 text-[12px] outline-none cursor-pointer"
+      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+    >
+      {options.map((o) => (
+        <option key={o.value} value={o.value} style={{ background: 'var(--bg-surface)' }}>{o.label}</option>
+      ))}
+    </select>
+  )
+}
+
+// ─── Preferences key type ────────────────────────────────────────────────────
+const PREF_KEY = 'aria-preferences'
+
+interface Preferences {
+  autoAnalyze: boolean
+  autoCreateTasks: boolean
+  autoFollowUp: boolean
+  defaultReplyStyle: string
+  urgencyThreshold: string
+  briefingTime: string
+  briefingFrequency: string
+  emailDensity: string
+  snoozeDefault: string
+  showSentimentBadges: boolean
+  criticalNotifications: boolean
+  soundEnabled: boolean
+  language: string
+  followUpDays: string
+}
+
+const DEFAULT_PREFS: Preferences = {
+  autoAnalyze: true,
+  autoCreateTasks: true,
+  autoFollowUp: false,
+  defaultReplyStyle: 'professional',
+  urgencyThreshold: '7',
+  briefingTime: '08:00',
+  briefingFrequency: 'daily',
+  emailDensity: 'comfortable',
+  snoozeDefault: '1d',
+  showSentimentBadges: true,
+  criticalNotifications: true,
+  soundEnabled: false,
+  language: 'en',
+  followUpDays: '2',
+}
 
 export default function SettingsPage() {
+  const { theme, toggle: toggleTheme } = useTheme()
+  const { data: session } = useSession()
+  const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFS)
+  const [saved, setSaved] = useState(false)
+
+  // Load preferences from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(PREF_KEY)
+      if (stored) setPrefs({ ...DEFAULT_PREFS, ...JSON.parse(stored) })
+    } catch {}
+  }, [])
+
+  const setPref = <K extends keyof Preferences>(key: K, value: Preferences[K]) => {
+    const next = { ...prefs, [key]: value }
+    setPrefs(next)
+    localStorage.setItem(PREF_KEY, JSON.stringify(next))
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1800)
+  }
+
+  // Connected integrations
+  const { data: integrations, isLoading: intLoading } = useQuery({
+    queryKey: ['integrations-status'],
+    queryFn: async () => {
+      const res = await fetch('/api/integrations/gmail')
+      if (!res.ok) return null
+      return res.json()
+    },
+  })
+
+  const card = "p-5 rounded-2xl space-y-1"
+  const cardStyle = { background: 'var(--bg-card)', border: '1px solid var(--border)' }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="max-w-2xl mx-auto px-4 py-8 space-y-10"
+      className="max-w-2xl mx-auto px-4 py-8 space-y-8 pb-20"
     >
       {/* Page header */}
-      <div className="flex items-center gap-3">
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-        >
-          <Settings size={16} style={{ color: 'var(--accent-text)' }} />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="empty-state-icon" style={{ width: 40, height: 40 }}>
+            <Settings size={16} style={{ color: 'var(--accent-text)' }} />
+          </div>
+          <div>
+            <h1 className="font-outfit text-2xl font-semibold tracking-tight" style={{ color: 'var(--text-1)' }}>Settings</h1>
+            <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-3)' }}>Manage your ARIA preferences</p>
+          </div>
         </div>
-        <div>
-          <h1 className="font-outfit text-2xl font-semibold tracking-tight" style={{ color: 'var(--text-1)' }}>
-            Settings
-          </h1>
-          <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-3)' }}>
-            Manage your ARIA preferences
-          </p>
-        </div>
+        {saved && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px]"
+            style={{ background: 'var(--green-subtle)', color: 'var(--green)', border: '1px solid rgba(34,197,94,0.2)' }}
+          >
+            <CheckCircle size={11} />
+            Saved
+          </motion.div>
+        )}
       </div>
 
-      {/* VIP Contacts section */}
-      <section>
+      {/* ── 1. Connected Accounts ── */}
+      <section className={card} style={cardStyle}>
+        <SectionHeader
+          icon={Globe}
+          title="Connected Accounts"
+          description="Email providers synced with ARIA"
+          color="var(--blue)"
+          bg="rgba(59,130,246,0.1)"
+        />
+        <div className="space-y-2">
+          {/* Gmail */}
+          <div
+            className="flex items-center gap-3 p-3 rounded-xl"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+          >
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(234,67,53,0.1)' }}>
+              <Mail size={14} style={{ color: '#ea4335' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium" style={{ color: 'var(--text-1)' }}>Google Gmail</p>
+              <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                {session?.user?.email || 'Not connected'}
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="status-live" style={{ width: 6, height: 6 }} />
+              <span className="text-[11px]" style={{ color: 'var(--green)' }}>Active</span>
+            </div>
+          </div>
+
+          {/* Microsoft */}
+          <div
+            className="flex items-center gap-3 p-3 rounded-xl"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', opacity: 0.6 }}
+          >
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(0,164,239,0.1)' }}>
+              <Mail size={14} style={{ color: '#00a4ef' }} />
+            </div>
+            <div className="flex-1">
+              <p className="text-[13px] font-medium" style={{ color: 'var(--text-1)' }}>Microsoft Outlook</p>
+              <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>Not connected</p>
+            </div>
+            <button
+              className="px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
+              style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-2)' }}
+            >
+              Connect
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 2. AI Behavior ── */}
+      <section className={card} style={cardStyle}>
+        <SectionHeader
+          icon={Zap}
+          title="AI Behavior"
+          description="Control how ARIA analyzes and acts on your emails"
+        />
+        <div>
+          <SettingRow label="Auto-analyze new emails" description="ARIA automatically runs analysis when new emails arrive">
+            <Toggle enabled={prefs.autoAnalyze} onToggle={() => setPref('autoAnalyze', !prefs.autoAnalyze)} />
+          </SettingRow>
+          <SettingRow label="Auto-create tasks" description="Extract tasks from emails and add them to your task list automatically">
+            <Toggle enabled={prefs.autoCreateTasks} onToggle={() => setPref('autoCreateTasks', !prefs.autoCreateTasks)} />
+          </SettingRow>
+          <SettingRow label="Show sentiment badges" description="Display Tense / Urgent indicators on email cards">
+            <Toggle enabled={prefs.showSentimentBadges} onToggle={() => setPref('showSentimentBadges', !prefs.showSentimentBadges)} />
+          </SettingRow>
+          <SettingRow label="Default reply style" description="Pre-selected tone when opening the Reply tab">
+            <Select
+              value={prefs.defaultReplyStyle}
+              onChange={(v) => setPref('defaultReplyStyle', v)}
+              options={[
+                { value: 'short', label: 'Short & Direct' },
+                { value: 'professional', label: 'Professional' },
+                { value: 'friendly', label: 'Friendly' },
+              ]}
+            />
+          </SettingRow>
+          <SettingRow label="Critical urgency threshold" description="Emails with urgency score above this are marked CRITICAL">
+            <Select
+              value={prefs.urgencyThreshold}
+              onChange={(v) => setPref('urgencyThreshold', v)}
+              options={[
+                { value: '6', label: 'Score ≥ 6' },
+                { value: '7', label: 'Score ≥ 7' },
+                { value: '8', label: 'Score ≥ 8' },
+                { value: '9', label: 'Score ≥ 9' },
+              ]}
+            />
+          </SettingRow>
+          <SettingRow label="Auto send follow-ups" description="ARIA automatically sends follow-up emails after your set number of days">
+            <Toggle enabled={prefs.autoFollowUp} onToggle={() => setPref('autoFollowUp', !prefs.autoFollowUp)} />
+          </SettingRow>
+          <SettingRow label="Follow-up after" description="Days without reply before ARIA flags an email as awaiting">
+            <Select
+              value={prefs.followUpDays}
+              onChange={(v) => setPref('followUpDays', v)}
+              options={[
+                { value: '1', label: '1 day' },
+                { value: '2', label: '2 days' },
+                { value: '3', label: '3 days' },
+                { value: '5', label: '5 days' },
+                { value: '7', label: '1 week' },
+              ]}
+            />
+          </SettingRow>
+        </div>
+      </section>
+
+      {/* ── 3. Briefing & Notifications ── */}
+      <section className={card} style={cardStyle}>
+        <SectionHeader
+          icon={Bell}
+          title="Briefing & Notifications"
+          description="Schedule your daily AI briefing and alert preferences"
+          color="var(--amber)"
+          bg="var(--amber-subtle)"
+        />
+        <div>
+          <SettingRow label="Daily briefing time" description="When ARIA generates your morning briefing">
+            <input
+              type="time"
+              value={prefs.briefingTime}
+              onChange={(e) => setPref('briefingTime', e.target.value)}
+              className="rounded-lg px-3 py-1.5 text-[12px] outline-none"
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-medium)', color: 'var(--text-1)' }}
+            />
+          </SettingRow>
+          <SettingRow label="Briefing frequency" description="How often ARIA generates a new briefing">
+            <Select
+              value={prefs.briefingFrequency}
+              onChange={(v) => setPref('briefingFrequency', v)}
+              options={[
+                { value: 'daily', label: 'Every day' },
+                { value: 'weekdays', label: 'Weekdays only' },
+                { value: 'manual', label: 'Manual only' },
+              ]}
+            />
+          </SettingRow>
+          <SettingRow label="Critical email alerts" description="Browser notifications when a CRITICAL email arrives">
+            <Toggle enabled={prefs.criticalNotifications} onToggle={() => setPref('criticalNotifications', !prefs.criticalNotifications)} />
+          </SettingRow>
+          <SettingRow label="Sound notifications" description="Play a sound for critical alerts">
+            <Toggle enabled={prefs.soundEnabled} onToggle={() => setPref('soundEnabled', !prefs.soundEnabled)} />
+          </SettingRow>
+        </div>
+      </section>
+
+      {/* ── 4. Inbox Behaviour ── */}
+      <section className={card} style={cardStyle}>
+        <SectionHeader
+          icon={Inbox}
+          title="Inbox Behaviour"
+          description="Customize how your inbox displays and handles emails"
+          color="var(--green)"
+          bg="var(--green-subtle)"
+        />
+        <div>
+          <SettingRow label="Default snooze duration" description="Duration when you snooze an email without picking a time">
+            <Select
+              value={prefs.snoozeDefault}
+              onChange={(v) => setPref('snoozeDefault', v)}
+              options={[
+                { value: '1h', label: '1 hour' },
+                { value: '3h', label: '3 hours' },
+                { value: '1d', label: 'Tomorrow' },
+                { value: '3d', label: '3 days' },
+                { value: '1w', label: '1 week' },
+              ]}
+            />
+          </SettingRow>
+          <SettingRow label="Email list density" description="Spacing between email cards in the inbox">
+            <Select
+              value={prefs.emailDensity}
+              onChange={(v) => setPref('emailDensity', v)}
+              options={[
+                { value: 'compact', label: 'Compact' },
+                { value: 'comfortable', label: 'Comfortable' },
+                { value: 'spacious', label: 'Spacious' },
+              ]}
+            />
+          </SettingRow>
+          <SettingRow label="AI response language" description="Language ARIA uses for briefings and reply suggestions">
+            <Select
+              value={prefs.language}
+              onChange={(v) => setPref('language', v)}
+              options={[
+                { value: 'en', label: 'English' },
+                { value: 'de', label: 'German' },
+                { value: 'fr', label: 'French' },
+                { value: 'es', label: 'Spanish' },
+                { value: 'bs', label: 'Bosnian' },
+              ]}
+            />
+          </SettingRow>
+        </div>
+      </section>
+
+      {/* ── 5. Appearance ── */}
+      <section className={card} style={cardStyle}>
+        <SectionHeader
+          icon={Palette}
+          title="Appearance"
+          description="Customize the look and feel of ARIA"
+          color="#f472b6"
+          bg="rgba(244,114,182,0.1)"
+        />
+        <div>
+          <SettingRow label="Theme" description="Switch between dark and light mode">
+            <div className="flex gap-1.5">
+              {[
+                { value: 'dark', icon: Moon, label: 'Dark' },
+                { value: 'light', icon: Sun, label: 'Light' },
+              ].map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => { if (theme !== t.value) toggleTheme() }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all"
+                  style={{
+                    background: theme === t.value ? 'var(--accent)' : 'var(--bg-surface)',
+                    border: `1px solid ${theme === t.value ? 'var(--accent)' : 'var(--border)'}`,
+                    color: theme === t.value ? 'white' : 'var(--text-2)',
+                  }}
+                >
+                  <t.icon size={11} />
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </SettingRow>
+        </div>
+      </section>
+
+      {/* ── 6. Privacy & Security ── */}
+      <section className={card} style={cardStyle}>
+        <SectionHeader
+          icon={Shield}
+          title="Privacy & Security"
+          description="Data handling and security preferences"
+          color="var(--red)"
+          bg="var(--red-subtle)"
+        />
+        <div>
+          <SettingRow label="Email content processing" description="ARIA sends email content to Claude AI for analysis — never stored externally">
+            <div className="flex items-center gap-1.5">
+              <span className="status-live" style={{ width: 6, height: 6 }} />
+              <span className="text-[11px]" style={{ color: 'var(--green)' }}>End-to-end encrypted</span>
+            </div>
+          </SettingRow>
+          <SettingRow label="Tokens stored" description="OAuth access tokens are encrypted at rest using AES-256">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle size={12} style={{ color: 'var(--green)' }} />
+              <span className="text-[11px]" style={{ color: 'var(--text-2)' }}>AES-256</span>
+            </div>
+          </SettingRow>
+          <SettingRow label="Data retention" description="Email analysis data is stored only in your private database">
+            <span className="text-[11px] px-2 py-1 rounded-md" style={{ background: 'var(--bg-surface)', color: 'var(--text-2)' }}>
+              Your DB only
+            </span>
+          </SettingRow>
+        </div>
+      </section>
+
+      {/* ── 7. VIP Contacts ── */}
+      <section className={card} style={cardStyle}>
         <VipContactManager />
+      </section>
+
+      {/* ── 8. Account info ── */}
+      <section className={card} style={cardStyle}>
+        <SectionHeader
+          icon={Eye}
+          title="Account"
+          description="Your ARIA account details"
+          color="var(--text-2)"
+          bg="var(--bg-hover)"
+        />
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold text-white shrink-0"
+              style={{ background: 'linear-gradient(135deg, var(--accent), var(--amber))' }}
+            >
+              {session?.user?.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium truncate" style={{ color: 'var(--text-1)' }}>
+                {session?.user?.name || 'User'}
+              </p>
+              <p className="text-[11px] truncate" style={{ color: 'var(--text-3)' }}>
+                {session?.user?.email || ''}
+              </p>
+            </div>
+            <span
+              className="text-[10px] px-2 py-1 rounded-full font-medium"
+              style={{ background: 'var(--accent-subtle)', color: 'var(--accent-text)' }}
+            >
+              Pro
+            </span>
+          </div>
+
+          <p className="text-[10.5px] text-center pt-2" style={{ color: 'var(--text-3)' }}>
+            ARIA v2.0 · Powered by Claude AI · All preferences saved locally
+          </p>
+        </div>
       </section>
     </motion.div>
   )
