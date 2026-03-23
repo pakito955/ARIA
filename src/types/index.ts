@@ -231,6 +231,13 @@ export interface BriefingJob {
   date: string
 }
 
+export interface WeeklyReportJob {
+  userId?: string
+  weekStart?: string
+  weekEnd?: string
+  isGlobalCron?: boolean
+}
+
 // ─── Email Template ───────────────────────────────────────────────────────────
 
 export interface EmailTemplate {

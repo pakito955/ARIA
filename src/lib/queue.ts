@@ -50,6 +50,13 @@ export const briefingQueue: Queue<BriefingJob> | null = hasRedis
     })
   : null
 
+export const reportQueue: Queue<any> | null = hasRedis
+  ? new Queue<any>('weekly-report', {
+      ...queueDefaults,
+      defaultJobOptions: { ...queueDefaults.defaultJobOptions, attempts: 2 },
+    })
+  : null
+
 export async function scheduleEmailSync(
   userId: string,
   integrationId: string,
@@ -79,5 +86,14 @@ export async function scheduleBriefing(userId: string, date: string) {
     'briefing',
     { userId, date },
     { jobId: `briefing-${userId}-${date}` }
+  )
+}
+
+export async function scheduleWeeklyReport(userId: string, weekStart: string, weekEnd: string) {
+  if (!reportQueue) return null
+  return reportQueue.add(
+    'weekly-report',
+    { userId, weekStart, weekEnd },
+    { jobId: `report-${userId}-${weekStart}` }
   )
 }
