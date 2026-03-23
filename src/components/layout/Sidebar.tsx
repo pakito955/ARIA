@@ -7,7 +7,7 @@ import {
   Inbox, CheckSquare, BarChart3, Zap,
   ChevronLeft, Settings, LogOut, Command, CalendarDays,
   FileText, MailX, Layout, Filter,
-  Send, AlarmClock, LayoutDashboard,
+  Send, AlarmClock, LayoutDashboard, BookOpen, Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
@@ -41,13 +41,15 @@ const NAV_SECTIONS = [
   {
     label: 'Insights',
     items: [
-      { label: 'Analytics',  href: '/dashboard/analytics',   icon: BarChart3,    badge: null,      exact: false },
-      { label: 'Reports',    href: '/dashboard/report',      icon: FileText,     badge: null,      exact: false },
+      { label: 'AI Insights', href: '/dashboard/insights',   icon: Sparkles,     badge: null,      exact: false },
+      { label: 'Analytics',   href: '/dashboard/analytics',  icon: BarChart3,    badge: null,      exact: false },
+      { label: 'Reports',     href: '/dashboard/report',     icon: FileText,     badge: null,      exact: false },
     ],
   },
   {
     label: 'Tools',
     items: [
+      { label: 'Knowledge',  href: '/dashboard/knowledge',   icon: BookOpen,     badge: null,      exact: false },
       { label: 'Templates',  href: '/dashboard/templates',   icon: Layout,       badge: null,      exact: false },
       { label: 'Rules',      href: '/dashboard/rules',       icon: Filter,       badge: null,      exact: false },
       { label: 'Unsubscribe',href: '/dashboard/unsubscribe', icon: MailX,        badge: null,      exact: false },

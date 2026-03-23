@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Star, Mail, Clock, CheckCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { X, Star, Mail, Clock, CheckCircle, TrendingUp, TrendingDown, Minus, Sparkles, Loader2 } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { formatDistanceToNow, format } from 'date-fns'
 
@@ -42,6 +42,17 @@ export function ContactPanel() {
       return res.json()
     },
     enabled: !!contactPanelEmail,
+  })
+
+  const { data: summaryData, isLoading: summaryLoading } = useQuery({
+    queryKey: ['contact-summary', contactPanelEmail],
+    queryFn: async () => {
+      const res = await fetch(`/api/contacts/summary?email=${encoded}`)
+      if (!res.ok) return null
+      return res.json()
+    },
+    enabled: !!contactPanelEmail && !!data,
+    staleTime: 30 * 60_000,
   })
 
   const vipMutation = useMutation({
@@ -180,6 +191,31 @@ export function ContactPanel() {
                     </div>
                   ))}
                 </div>
+
+                {/* AI Relationship Summary */}
+                {(summaryLoading || summaryData?.summary) && (
+                  <div
+                    className="p-3 rounded-xl"
+                    style={{ background: 'rgba(124,92,255,0.06)', border: '1px solid rgba(124,92,255,0.15)' }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Sparkles size={10} style={{ color: 'var(--accent-text)' }} />
+                      <p className="text-[9px] uppercase tracking-[1.5px]" style={{ color: 'var(--accent-text)' }}>
+                        ARIA Analysis
+                      </p>
+                    </div>
+                    {summaryLoading ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 size={10} className="animate-spin" style={{ color: 'var(--accent-text)' }} />
+                        <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>Analyzing relationship…</span>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-2)' }}>
+                        {summaryData?.summary}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Last contact */}
                 {data?.lastContact && (

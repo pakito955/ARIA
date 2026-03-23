@@ -42,6 +42,8 @@ model User {
   emailRules       EmailRule[]
   notifications    Notification[]
   webhooks         Webhook[]
+  knowledgeItems   KnowledgeItem[]
+  contactNotes     ContactNote[]
 
   @@map("users")
 }
@@ -388,17 +390,20 @@ model EmailSignature {
 // ─── EMAIL RULES ─────────────────────────────────────────────────────────────
 
 model EmailRule {
-  id              String   @id @default(cuid())
-  userId          String
-  name            String
-  enabled         Boolean  @default(true)
-  triggerField    String   // from | subject | body | category | priority
-  triggerOperator String   // contains | equals | startsWith | endsWith
-  triggerValue    String
-  action          String   // archive | markRead | createTask | snooze | label
-  actionValue     String?
-  createdAt       DateTime @default(now())
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String    @id @default(cuid())
+  userId           String
+  name             String
+  enabled          Boolean   @default(true)
+  triggerField     String    // from | subject | body | category | priority | sentiment | hasAttachment
+  triggerOperator  String    // contains | equals | startsWith | endsWith | is
+  triggerValue     String
+  action           String    // archive | markRead | createTask | snooze | label | forward | notifyWebhook | autoReply | setVip
+  actionValue      String?
+  triggerCount     Int       @default(0)
+  lastTriggeredAt  DateTime?
+  aiGenerated      Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("email_rules")
 }
@@ -438,6 +443,40 @@ model UserSettings {
   user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
+}
+
+// ─── KNOWLEDGE BASE ──────────────────────────────────────────────────────────
+
+model KnowledgeItem {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  content     String
+  source      String   @default("MANUAL") // MANUAL | NOTE | PASTE
+  tags        String   @default("[]")     // JSON array of tag strings
+  useCount    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("knowledge_items")
+}
+
+// ─── CONTACT NOTES ───────────────────────────────────────────────────────────
+
+model ContactNote {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  note      String
+  aiSummary String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, email])
+  @@map("contact_notes")
 }
 
 // ─── WEBHOOKS ────────────────────────────────────────────────────────────────
