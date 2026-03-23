@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileNav } from '@/components/layout/MobileNav'
+import { VoiceCommand } from '@/components/VoiceCommand'
 import { AnalysisPanel } from '@/components/analysis/AnalysisPanel'
 import { CommandPalette } from '@/components/CommandPalette'
 import { NotificationManager } from '@/components/NotificationManager'
@@ -53,6 +54,11 @@ export default async function DashboardLayout({
       <ComposeModal />
       <OnboardingFlow />
       <KeyboardShortcuts />
+
+      {/* Floating Voice Agent Button */}
+      <div className="fixed bottom-20 md:bottom-8 right-6 z-[100]">
+        <VoiceCommand />
+      </div>
 
       {/* Mobile bottom nav */}
       <MobileNav />
