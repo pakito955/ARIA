@@ -378,10 +378,15 @@ export default function InboxPage() {
             <button
               onClick={() => setFocusMode(!focusMode)}
               title={focusMode ? 'Exit focus mode (F)' : 'Focus mode (F)'}
-              className="p-2 rounded-xl text-[var(--text-3)] hover:text-[var(--text-2)] hover:bg-[var(--bg-hover)] transition-all"
-              style={{ color: focusMode ? 'var(--accent-text)' : undefined }}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] font-medium transition-all",
+                focusMode 
+                  ? "bg-purple-500/20 text-purple-400 border border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+                  : "bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--bg-hover)] hover:text-white"
+              )}
             >
-              {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+              {focusMode ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
+              {focusMode ? 'Exit Focus' : 'Focus Mode'}
             </button>
             <button
               onClick={() => { setSyncForced(true); refetch() }}
