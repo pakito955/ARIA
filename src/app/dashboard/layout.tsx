@@ -9,6 +9,8 @@ import { PageTransition } from '@/components/layout/PageTransition'
 import { ToastContainer } from '@/components/ui/Toast'
 import { ComposeModal } from '@/components/ComposeModal'
 import { OnboardingFlow } from '@/components/OnboardingFlow'
+import { KeyboardShortcuts } from '@/components/KeyboardShortcuts'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
 
 export default async function DashboardLayout({
   children,
@@ -43,6 +45,7 @@ export default async function DashboardLayout({
       <ComposeModal />
       <OnboardingFlow />
       <AnalysisPanel />
+      <KeyboardShortcuts />
 
       {/* Mobile bottom nav */}
       <MobileNav />

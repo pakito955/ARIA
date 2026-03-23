@@ -37,6 +37,10 @@ model User {
   followupReminders FollowupReminder[]
   scheduledEmails  ScheduledEmail[]
   extensionTokens  ExtensionToken[]
+  outboxEmails     OutboxEmail[]
+  emailSignatures  EmailSignature[]
+  emailRules       EmailRule[]
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -125,27 +129,32 @@ model Thread {
 }
 
 model Email {
-  id             String   @id @default(cuid())
-  userId         String
-  threadId       String?
-  provider       String
-  externalId     String
-  subject        String
-  bodyText       String
-  bodyHtml       String?
-  fromEmail      String
-  fromName       String?
-  toEmails       String   // JSON array
-  ccEmails       String   @default("[]")
-  labels         String   @default("[]") // JSON array
-  isRead         Boolean  @default(false)
-  isStarred      Boolean  @default(false)
-  isSnoozed      Boolean  @default(false)
-  snoozeUntil    DateTime?
-  hasAttachments Boolean  @default(false)
-  receivedAt     DateTime
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id               String    @id @default(cuid())
+  userId           String
+  threadId         String?
+  provider         String
+  externalId       String
+  subject          String
+  bodyText         String
+  bodyHtml         String?
+  fromEmail        String
+  fromName         String?
+  toEmails         String    // JSON array
+  ccEmails         String    @default("[]")
+  labels           String    @default("[]") // JSON array
+  isRead           Boolean   @default(false)
+  isStarred        Boolean   @default(false)
+  isSnoozed        Boolean   @default(false)
+  snoozeUntil      DateTime?
+  snoozedUntil     DateTime?
+  followUpAt       DateTime?
+  readReceiptToken String?
+  openedAt         DateTime?
+  openCount        Int       @default(0)
+  hasAttachments   Boolean   @default(false)
+  receivedAt       DateTime
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   thread            Thread?            @relation(fields: [threadId], references: [id])
@@ -343,6 +352,70 @@ model ExtensionToken {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("extension_tokens")
+}
+
+// ─── OUTBOX / SCHEDULING ─────────────────────────────────────────────────────
+
+model OutboxEmail {
+  id          String    @id @default(cuid())
+  userId      String
+  to          String
+  subject     String
+  body        String
+  scheduledAt DateTime
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("outbox_emails")
+}
+
+// ─── EMAIL SIGNATURES ────────────────────────────────────────────────────────
+
+model EmailSignature {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  content   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_signatures")
+}
+
+// ─── EMAIL RULES ─────────────────────────────────────────────────────────────
+
+model EmailRule {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String
+  enabled         Boolean  @default(true)
+  triggerField    String   // from | subject | body | category | priority
+  triggerOperator String   // contains | equals | startsWith | endsWith
+  triggerValue    String
+  action          String   // archive | markRead | createTask | snooze | label
+  actionValue     String?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_rules")
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // followup | snooze | rule | system
+  title     String
+  body      String
+  emailId   String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }
 
 // ─── SETTINGS ────────────────────────────────────────────────────────

@@ -10,6 +10,8 @@ import { SnoozePickerModal } from '@/components/inbox/SnoozePickerModal'
 import { BulkActionBar } from '@/components/inbox/BulkActionBar'
 import { ThreadView } from '@/components/inbox/ThreadView'
 import { ContactPanel } from '@/components/inbox/ContactPanel'
+import { SmartReply } from '@/components/inbox/SmartReply'
+import { MeetingBooking } from '@/components/inbox/MeetingBooking'
 import { EmailCardSkeleton } from '@/components/ui/Skeletons'
 import { useAppStore, toast } from '@/lib/store'
 import { cn } from '@/lib/utils'
@@ -39,6 +41,7 @@ export default function InboxPage() {
   const [smartSearch, setSmartSearch] = useState(false)
   const [followupNote, setFollowupNote] = useState('')
   const [followupEmailId, setFollowupEmailId] = useState<string | null>(null)
+  const [showSmartReply, setShowSmartReply] = useState(false)
   const qc = useQueryClient()
 
   // Real-time sync via SSE
@@ -141,6 +144,7 @@ export default function InboxPage() {
   // Sync editedReply when email or reply style changes
   useEffect(() => {
     setEditedReply(currentReply)
+    setShowSmartReply(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEmailId, replyStyle, currentReply])
 
@@ -691,6 +695,17 @@ export default function InboxPage() {
                         <Bell size={11} />
                         Follow-up
                       </button>
+                      <button
+                        onClick={() => setShowSmartReply(!showSmartReply)}
+                        className={cn(
+                          'flex items-center gap-1.5 px-3 py-1.5 border text-[10.5px] rounded-lg transition-all',
+                          showSmartReply
+                            ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+                            : 'border-[var(--border)] text-[var(--text-2)] hover:border-[var(--border-medium)] hover:text-white'
+                        )}
+                      >
+                        ✨ Smart Reply
+                      </button>
                       {analysis.meetingDetected && (
                         <button className="flex items-center gap-1.5 px-3 py-1.5 border border-[#f59e0b]/20 text-[var(--amber)] text-[10.5px] rounded-lg hover:border-[#f59e0b]/35 transition-all bg-[#f59e0b]/05">
                           <Calendar size={11} />
@@ -738,6 +753,23 @@ export default function InboxPage() {
                     </AnimatePresence>
                   </div>
                 )}
+
+                {/* Meeting booking detection */}
+                <MeetingBooking emailId={selectedEmail.id} />
+
+                {/* Smart Reply */}
+                <AnimatePresence>
+                  {showSmartReply && (
+                    <SmartReply
+                      emailId={selectedEmail.id}
+                      onSelect={(content) => {
+                        setEditedReply(content)
+                        setShowSmartReply(false)
+                      }}
+                      onClose={() => setShowSmartReply(false)}
+                    />
+                  )}
+                </AnimatePresence>
 
                 {/* Thread view */}
                 <ThreadView emailId={selectedEmail.id} />

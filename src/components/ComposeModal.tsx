@@ -2,9 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Zap, Send, Copy, ChevronDown, Loader2, Sparkles } from 'lucide-react'
+import { X, Zap, Send, Copy, ChevronDown, Loader2, Sparkles, Clock, PenLine } from 'lucide-react'
 import { useAppStore, toast } from '@/lib/store'
 import { cn } from '@/lib/utils'
+import { useQuery } from '@tanstack/react-query'
+import { WritingCoach } from '@/components/inbox/WritingCoach'
 
 const TONES = ['professional', 'friendly', 'concise', 'formal', 'casual'] as const
 type Tone = typeof TONES[number]
@@ -19,7 +21,23 @@ export function ComposeModal() {
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const [step, setStep] = useState<'prompt' | 'edit'>('prompt')
+  const [selectedSignatureId, setSelectedSignatureId] = useState<string | null>(null)
+  const [showSendLater, setShowSendLater] = useState(false)
+  const [sendLaterDate, setSendLaterDate] = useState('')
+  const [schedulingSend, setSchedulingSend] = useState(false)
   const promptRef = useRef<HTMLTextAreaElement>(null)
+
+  const { data: signaturesData } = useQuery({
+    queryKey: ['signatures'],
+    queryFn: async () => {
+      const res = await fetch('/api/signatures')
+      if (!res.ok) return { data: [] }
+      return res.json()
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const signatures = signaturesData?.data || []
 
   useEffect(() => {
     if (composeOpen) {
@@ -28,8 +46,14 @@ export function ComposeModal() {
       setSubject('')
       setBody('')
       setRecipient('')
+      setShowSendLater(false)
+      setSendLaterDate('')
+      // Pre-select default signature
+      const defaultSig = signatures.find((s: any) => s.isDefault)
+      setSelectedSignatureId(defaultSig?.id || null)
       setTimeout(() => promptRef.current?.focus(), 80)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [composeOpen])
 
   useEffect(() => {
@@ -88,6 +112,43 @@ export function ComposeModal() {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`)
     toast.success('Copied to clipboard')
+  }
+
+  const selectedSignature = signatures.find((s: any) => s.id === selectedSignatureId)
+
+  const getBodyWithSignature = () => {
+    if (!selectedSignature) return body
+    return `${body}\n\n--\n${selectedSignature.content}`
+  }
+
+  const sendLater = async () => {
+    if (!recipient.trim() || !body.trim() || !sendLaterDate) {
+      toast.warning('Add recipient, body and schedule time')
+      return
+    }
+    setSchedulingSend(true)
+    try {
+      const res = await fetch('/api/outbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: recipient,
+          subject,
+          body: getBodyWithSignature(),
+          scheduledAt: new Date(sendLaterDate).toISOString(),
+        }),
+      })
+      if (res.ok) {
+        toast.success('Email scheduled', 'Scheduled')
+        setComposeOpen(false)
+      } else {
+        toast.error('Failed to schedule email')
+      }
+    } catch {
+      toast.error('Schedule failed')
+    } finally {
+      setSchedulingSend(false)
+    }
   }
 
   return (
@@ -243,12 +304,67 @@ export function ComposeModal() {
                       <textarea
                         value={body}
                         onChange={(e) => setBody(e.target.value)}
-                        rows={9}
+                        rows={7}
                         className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-3.5 py-3 text-[13px] text-white outline-none focus:border-[var(--accent)] transition-colors resize-none leading-relaxed font-mono text-[12px]"
                       />
                     </div>
 
-                    <div className="flex gap-2">
+                    {/* Writing Coach */}
+                    <WritingCoach
+                      draft={body}
+                      onApplyImproved={(improved) => setBody(improved)}
+                    />
+
+                    {/* Signature selector */}
+                    {signatures.length > 0 && (
+                      <div>
+                        <label className="text-[10px] uppercase tracking-[1.5px] text-[var(--text-3)] mb-1.5 block flex items-center gap-1">
+                          <PenLine size={9} />
+                          Signature
+                        </label>
+                        <select
+                          value={selectedSignatureId || ''}
+                          onChange={(e) => setSelectedSignatureId(e.target.value || null)}
+                          className="w-full rounded-xl px-3 py-2 text-[12px] outline-none"
+                          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+                        >
+                          <option value="" style={{ background: 'var(--bg-surface)' }}>No signature</option>
+                          {signatures.map((sig: any) => (
+                            <option key={sig.id} value={sig.id} style={{ background: 'var(--bg-surface)' }}>
+                              {sig.name}{sig.isDefault ? ' (default)' : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Send Later panel */}
+                    <AnimatePresence>
+                      {showSendLater && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div
+                            className="p-3 rounded-xl"
+                            style={{ background: 'var(--accent-subtle)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}
+                          >
+                            <p className="text-[10px] uppercase tracking-[1.5px] text-[var(--accent-text)] mb-2">Schedule send</p>
+                            <input
+                              type="datetime-local"
+                              value={sendLaterDate}
+                              onChange={(e) => setSendLaterDate(e.target.value)}
+                              className="w-full rounded-lg px-3 py-2 text-[12px] outline-none"
+                              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => setStep('prompt')}
                         className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-2)] text-[12px] hover:border-[var(--border-medium)] transition-all"
@@ -263,17 +379,43 @@ export function ComposeModal() {
                         <Copy size={12} />
                         Copy
                       </button>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={send}
-                        disabled={sending}
-                        className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-medium text-white disabled:opacity-50 transition-all"
-                        style={{ background: 'var(--accent)' }}
+                      <button
+                        onClick={() => setShowSendLater(!showSendLater)}
+                        className={cn(
+                          'flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-[12px] border transition-all',
+                          showSendLater
+                            ? 'border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent-subtle)]'
+                            : 'border-[var(--border)] text-[var(--text-2)] hover:border-[var(--border-medium)]'
+                        )}
                       >
-                        {sending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-                        {sending ? 'Sending…' : 'Send'}
-                      </motion.button>
+                        <Clock size={12} />
+                        Send Later
+                      </button>
+                      {showSendLater ? (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={sendLater}
+                          disabled={schedulingSend || !sendLaterDate}
+                          className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-medium text-white disabled:opacity-50 transition-all"
+                          style={{ background: 'var(--accent)' }}
+                        >
+                          {schedulingSend ? <Loader2 size={12} className="animate-spin" /> : <Clock size={12} />}
+                          {schedulingSend ? 'Scheduling…' : 'Schedule'}
+                        </motion.button>
+                      ) : (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={send}
+                          disabled={sending}
+                          className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-medium text-white disabled:opacity-50 transition-all"
+                          style={{ background: 'var(--accent)' }}
+                        >
+                          {sending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                          {sending ? 'Sending…' : 'Send'}
+                        </motion.button>
+                      )}
                     </div>
                   </>
                 )}

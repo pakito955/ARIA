@@ -1,19 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Settings, Star, Zap, Bell, Eye, Shield, Palette,
   Globe, Mail, CheckCircle, AlertCircle, Loader2,
   Sun, Moon, Monitor, ChevronRight, ToggleLeft, ToggleRight,
-  Clock, MessageSquare, FileText, Inbox,
+  Clock, MessageSquare, FileText, Inbox, PenLine, Plus, Trash2, X,
 } from 'lucide-react'
 import { VipContactManager } from '@/components/settings/VipContactManager'
 import { ExtensionTokenManager } from '@/components/settings/ExtensionTokenManager'
 import { useTheme } from '@/lib/theme'
 import { useSession } from 'next-auth/react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
+import { toast } from '@/lib/store'
 
 // ─── Toggle component ───────────────────────────────────────────────────────
 function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
@@ -136,6 +137,290 @@ const DEFAULT_PREFS: Preferences = {
   oooMessage: '',
   oooStartDate: '',
   oooEndDate: '',
+}
+
+// ─── Signatures section ──────────────────────────────────────────────────────
+function SignaturesSection() {
+  const qc = useQueryClient()
+  const [showAdd, setShowAdd] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newContent, setNewContent] = useState('')
+  const [newDefault, setNewDefault] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState('')
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['signatures'],
+    queryFn: async () => {
+      const res = await fetch('/api/signatures')
+      if (!res.ok) throw new Error('Failed to fetch signatures')
+      return res.json()
+    },
+  })
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/signatures', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName, content: newContent, isDefault: newDefault }),
+      })
+      if (!res.ok) throw new Error('Failed to create signature')
+      return res.json()
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['signatures'] })
+      setShowAdd(false)
+      setNewName('')
+      setNewContent('')
+      setNewDefault(false)
+      toast.success('Signature created')
+    },
+    onError: () => toast.error('Failed to create signature'),
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, content }: { id: string; content: string }) => {
+      const res = await fetch(`/api/signatures/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      })
+      if (!res.ok) throw new Error('Failed to update signature')
+      return res.json()
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['signatures'] })
+      setEditingId(null)
+      toast.success('Signature updated')
+    },
+    onError: () => toast.error('Failed to update signature'),
+  })
+
+  const setDefaultMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/signatures/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isDefault: true }),
+      })
+      if (!res.ok) throw new Error('Failed to set default')
+      return res.json()
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['signatures'] })
+      toast.success('Default signature updated')
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/signatures/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete signature')
+      return res.json()
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['signatures'] })
+      toast.success('Signature deleted')
+    },
+    onError: () => toast.error('Failed to delete signature'),
+  })
+
+  const signatures = data?.data || []
+
+  return (
+    <>
+      <SectionHeader
+        icon={PenLine}
+        title="Email Signatures"
+        description="Manage signatures for outgoing emails"
+        color="var(--accent-text)"
+        bg="var(--accent-subtle)"
+      />
+
+      <div className="space-y-3">
+        {isLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 size={16} className="animate-spin" style={{ color: 'var(--accent-text)' }} />
+          </div>
+        ) : signatures.length === 0 && !showAdd ? (
+          <p className="text-[12px] py-2" style={{ color: 'var(--text-3)' }}>
+            No signatures yet. Create one to add it to your emails.
+          </p>
+        ) : (
+          signatures.map((sig: any) => (
+            <div
+              key={sig.id}
+              className="p-3 rounded-xl"
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <p className="text-[12px] font-medium" style={{ color: 'var(--text-1)' }}>{sig.name}</p>
+                  {sig.isDefault && (
+                    <span
+                      className="text-[9px] px-1.5 py-0.5 rounded-full font-medium"
+                      style={{ background: 'var(--accent-subtle)', color: 'var(--accent-text)' }}
+                    >
+                      Default
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  {!sig.isDefault && (
+                    <button
+                      onClick={() => setDefaultMutation.mutate(sig.id)}
+                      className="text-[10px] px-2 py-1 rounded-lg transition-colors hover:text-[var(--text-1)]"
+                      style={{ color: 'var(--text-3)' }}
+                    >
+                      Set default
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (editingId === sig.id) { setEditingId(null) } else {
+                        setEditingId(sig.id)
+                        setEditContent(sig.content)
+                      }
+                    }}
+                    className="p-1 rounded-lg transition-colors"
+                    style={{ color: 'var(--text-3)' }}
+                  >
+                    <PenLine size={12} />
+                  </button>
+                  <button
+                    onClick={() => deleteMutation.mutate(sig.id)}
+                    className="p-1 rounded-lg transition-colors"
+                    style={{ color: 'var(--red)' }}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+
+              <AnimatePresence>
+                {editingId === sig.id ? (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                  >
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      rows={3}
+                      className="w-full rounded-lg px-3 py-2 text-[12px] outline-none resize-none mb-2"
+                      style={{ background: 'var(--bg-card)', border: '1px solid var(--accent)', color: 'var(--text-1)' }}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => updateMutation.mutate({ id: sig.id, content: editContent })}
+                        disabled={updateMutation.isPending}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-white"
+                        style={{ background: 'var(--accent)' }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="px-3 py-1.5 rounded-lg text-[11px] border"
+                        style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <pre
+                    className="text-[11px] leading-relaxed whitespace-pre-wrap"
+                    style={{ color: 'var(--text-2)', fontFamily: 'inherit' }}
+                  >
+                    {sig.content.slice(0, 200)}{sig.content.length > 200 && '…'}
+                  </pre>
+                )}
+              </AnimatePresence>
+            </div>
+          ))
+        )}
+
+        {/* Add new signature */}
+        <AnimatePresence>
+          {showAdd && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div
+                className="p-4 rounded-xl space-y-3"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--accent)' }}
+              >
+                <input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Signature name (e.g. Work, Personal)"
+                  className="w-full rounded-lg px-3 py-2 text-[12px] outline-none"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+                />
+                <textarea
+                  value={newContent}
+                  onChange={(e) => setNewContent(e.target.value)}
+                  rows={4}
+                  placeholder="Your signature content…"
+                  className="w-full rounded-lg px-3 py-2 text-[12px] outline-none resize-none"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="sig-default"
+                    checked={newDefault}
+                    onChange={(e) => setNewDefault(e.target.checked)}
+                    className="rounded"
+                    style={{ accentColor: 'var(--accent)' }}
+                  />
+                  <label htmlFor="sig-default" className="text-[11px]" style={{ color: 'var(--text-2)' }}>
+                    Set as default signature
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => createMutation.mutate()}
+                    disabled={createMutation.isPending || !newName.trim() || !newContent.trim()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-white transition-all disabled:opacity-60"
+                    style={{ background: 'var(--accent)' }}
+                  >
+                    {createMutation.isPending ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+                    Create
+                  </button>
+                  <button
+                    onClick={() => { setShowAdd(false); setNewName(''); setNewContent('') }}
+                    className="px-3 py-1.5 rounded-lg text-[11px] border"
+                    style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <button
+          onClick={() => setShowAdd(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-medium transition-all w-full justify-center"
+          style={{
+            border: '1px dashed var(--border-medium)',
+            color: 'var(--text-3)',
+          }}
+        >
+          <Plus size={11} />
+          Add signature
+        </button>
+      </div>
+    </>
+  )
 }
 
 export default function SettingsPage() {
@@ -612,17 +897,22 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* ── 9. Chrome Extension Tokens ── */}
+      {/* ── 9. Email Signatures ── */}
+      <section className={card} style={cardStyle}>
+        <SignaturesSection />
+      </section>
+
+      {/* ── 10. Chrome Extension Tokens ── */}
       <section className={card} style={cardStyle}>
         <ExtensionTokenManager />
       </section>
 
-      {/* ── 10. VIP Contacts ── */}
+      {/* ── 11. VIP Contacts ── */}
       <section className={card} style={cardStyle}>
         <VipContactManager />
       </section>
 
-      {/* ── 11. Account info ── */}
+      {/* ── 12. Account info ── */}
       <section className={card} style={cardStyle}>
         <SectionHeader
           icon={Eye}

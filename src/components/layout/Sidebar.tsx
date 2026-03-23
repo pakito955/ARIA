@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Inbox, CheckSquare, Clock, BarChart3, Zap,
   ChevronLeft, Settings, LogOut, Command, CalendarDays,
-  Sun, Moon, FileText, Bell, MailX, Layout, Sparkles,
+  Sun, Moon, FileText, Bell, MailX, Layout, Sparkles, Filter,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useSession, signOut } from 'next-auth/react'
 import { useEffect } from 'react'
 import { useTheme } from '@/lib/theme'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
 
 const NAV_ITEMS = [
   { label: 'Home',       href: '/dashboard',              icon: Zap,          exact: true,  badge: null,       group: 'main' },
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { label: 'Waiting',    href: '/dashboard/waiting',      icon: Clock,        exact: false, badge: 'waiting',  group: 'main' },
   { label: 'Follow-ups', href: '/dashboard/followups',    icon: Bell,         exact: false, badge: null,       group: 'tools' },
   { label: 'Templates',  href: '/dashboard/templates',    icon: Layout,       exact: false, badge: null,       group: 'tools' },
+  { label: 'Rules',      href: '/dashboard/rules',        icon: Filter,       exact: false, badge: null,       group: 'tools' },
   { label: 'Unsubscribe',href: '/dashboard/unsubscribe',  icon: MailX,        exact: false, badge: null,       group: 'tools' },
   { label: 'Insights',   href: '/dashboard/analytics',    icon: BarChart3,    exact: false, badge: null,       group: 'reports' },
   { label: 'Report',     href: '/dashboard/report',       icon: FileText,     exact: false, badge: null,       group: 'reports' },
@@ -91,12 +93,17 @@ export function Sidebar() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -6 }}
               transition={{ duration: 0.15 }}
-              className="font-outfit text-[15px] font-semibold tracking-[0.12em] whitespace-nowrap overflow-hidden gradient-text"
+              className="font-outfit text-[15px] font-semibold tracking-[0.12em] whitespace-nowrap overflow-hidden gradient-text flex-1"
             >
               ARIA
             </motion.span>
           )}
         </AnimatePresence>
+        {!sidebarCollapsed && (
+          <div className="shrink-0">
+            <NotificationBell />
+          </div>
+        )}
       </div>
 
       {/* Compose button */}
