@@ -23,11 +23,12 @@ CATEGORIES:
 - INFO: informational
 - SPAM: unwanted
 - NEWSLETTER: automated newsletter
-- INVOICE: invoice/payment`
+- INVOICE: invoice/payment
+- LEAD: potential client, new lead or prospect`
 
 const ANALYSIS_SCHEMA = `{
   "priority": "CRITICAL|HIGH|MEDIUM|LOW",
-  "category": "MEETING|TASK|CRITICAL|INFO|SPAM|NEWSLETTER|INVOICE",
+  "category": "MEETING|TASK|CRITICAL|INFO|SPAM|NEWSLETTER|INVOICE|LEAD",
   "intent": "max 12 words in the email's language",
   "summary": "2-3 sentences in the email's language",
   "deadlineText": "string or null",

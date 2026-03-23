@@ -180,6 +180,34 @@ const analysisWorker = new Worker<EmailAnalysisJob>(
       },
     })
 
+    // CRM & Invoice Automation -> Webhooks
+    if (analysis.category === 'INVOICE' || analysis.category === 'LEAD') {
+      const eventName = analysis.category === 'INVOICE' ? 'INVOICE_RECEIVED' : 'LEAD_RECEIVED'
+      const webhooks = await prisma.webhook.findMany({
+        where: { userId, event: eventName, isActive: true },
+      })
+      for (const wh of webhooks) {
+        try {
+          await fetch(wh.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: eventName,
+              emailId: email.id,
+              subject: email.subject,
+              from: email.fromEmail,
+              amount: analysis.amount,
+              summary: analysis.summary,
+              receivedAt: email.receivedAt,
+            }),
+          })
+          console.log(`[Webhook] Forwarded ${analysis.category.toLowerCase()} ${email.id} to ${wh.url}`)
+        } catch (err) {
+          console.error(`[Webhook] Failed sending to ${wh.url}:`, err)
+        }
+      }
+    }
+
     // Auto create task if AI detected one
     if (analysis.taskExtracted && analysis.taskText) {
       const settings = await prisma.userSettings.findUnique({ where: { userId } })

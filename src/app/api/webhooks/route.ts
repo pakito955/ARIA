@@ -1,56 +1,60 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 
-// GET — list user's webhooks
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(req: Request) {
+  try {
+    const user = await getAuthUser(req as any)
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Return mock webhooks for now (schema extension needed for prod)
-  return NextResponse.json({
-    data: [],
-    message: 'Webhook management active. Add DATABASE migration to persist webhooks.',
-  })
+    const webhooks = await prisma.webhook.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json(webhooks)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }
 
-// POST — create webhook
-export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function POST(req: Request) {
+  try {
+    const user = await getAuthUser(req as any)
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { url, trigger, filters } = await req.json()
+    const { name, url, event } = await req.json()
+    if (!name || !url || !event) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
-  if (!url || !trigger) {
-    return NextResponse.json({ error: 'url and trigger are required' }, { status: 400 })
+    const webhook = await prisma.webhook.create({
+      data: {
+        userId: user.id,
+        name,
+        url,
+        event
+      }
+    })
+
+    return NextResponse.json(webhook)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
-
-  const validTriggers = ['email.critical', 'email.invoice', 'email.meeting', 'email.task', 'email.any']
-  if (!validTriggers.includes(trigger)) {
-    return NextResponse.json({ error: `Invalid trigger. Valid: ${validTriggers.join(', ')}` }, { status: 400 })
-  }
-
-  // In production: save to DB. For now return the created config.
-  return NextResponse.json({
-    data: {
-      id: `wh_${Date.now()}`,
-      url,
-      trigger,
-      filters: filters || {},
-      userId: session.user.id,
-      createdAt: new Date(),
-      active: true,
-    },
-    message: 'Webhook registered. ARIA will call your URL when the trigger fires.',
-  })
 }
 
-// Trigger webhook (called internally when email arrives)
-export async function triggerWebhooks(
-  userId: string,
-  event: string,
-  payload: object
-) {
-  // TODO: fetch user's webhooks from DB and POST to each URL
-  console.log(`[Webhooks] ${event} for user ${userId}`, payload)
+export async function DELETE(req: Request) {
+  try {
+    const user = await getAuthUser(req as any)
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { id } = await req.json()
+    if (!id) return NextResponse.json({ error: 'Select webhook to delete' }, { status: 400 })
+
+    await prisma.webhook.deleteMany({
+      where: { id, userId: user.id }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }

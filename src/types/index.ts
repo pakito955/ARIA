@@ -2,7 +2,7 @@
 
 export type EmailProvider = 'GMAIL' | 'OUTLOOK'
 export type Priority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
-export type EmailCategory = 'MEETING' | 'TASK' | 'CRITICAL' | 'INFO' | 'SPAM' | 'NEWSLETTER' | 'INVOICE'
+export type EmailCategory = 'MEETING' | 'TASK' | 'CRITICAL' | 'INFO' | 'SPAM' | 'NEWSLETTER' | 'INVOICE' | 'LEAD'
 export type Sentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' | 'URGENT'
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED'
 
