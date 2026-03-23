@@ -174,6 +174,7 @@ export default function SettingsPage() {
   const cardStyle = { background: 'var(--bg-card)', border: '1px solid var(--border)' }
 
   return (
+    <div className="h-full overflow-y-auto">
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -660,5 +661,6 @@ export default function SettingsPage() {
         </div>
       </section>
     </motion.div>
+    </div>
   )
 }
