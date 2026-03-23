@@ -9,18 +9,17 @@ import { testImapConnection, detectServerConfig } from './providers/imap'
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
+  secret: process.env.AUTH_SECRET,
   trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      checks: ['state'],
       authorization: {
         params: {
-          prompt: 'consent',
+          prompt: 'select_account consent',
           access_type: 'offline',
           response_type: 'code',
-          // Request Gmail + Calendar scopes alongside login
           scope: [
             'openid',
             'email',
@@ -41,54 +40,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        console.log("[Auth] Authorize attempt:", credentials?.email)
         const { email, password } = credentials as Record<string, string>
         if (!email || !password) return null
 
         const config = detectServerConfig(email)
-        if (!config) {
-          throw new Error("Pružalac usluge nije prepoznat. Molimo koristite Gmail ili Outlook OAuth.")
-        }
+        if (!config) throw new Error("Pružalac nije prepoznat.")
 
         try {
-          // Dry-run connection verify
-          await testImapConnection({
-            email,
-            password,
-            imapHost: config.imapHost,
-            imapPort: config.imapPort,
-            useSsl: config.useSsl
-          })
-
-          // Find or create user
+          await testImapConnection({ ...config, email, password })
           let user = await prisma.user.findUnique({ where: { email } })
           if (!user) {
-            user = await prisma.user.create({
-              data: {
-                email,
-                name: email.split('@')[0],
-              }
-            })
+            user = await prisma.user.create({ data: { email, name: email.split('@')[0] } })
           }
 
-          // Create/Update Integration so background sync works
           await (prisma as any).integration.upsert({
-            where: {
-              userId_provider_email: {
-                userId: user.id,
-                provider: 'IMAP',
-                email,
-              }
-            },
+            where: { userId_provider_email: { userId: user.id, provider: 'IMAP', email } },
             create: {
               userId: user.id,
               provider: 'IMAP',
               email,
               encryptedPassword: encrypt(password),
-              imapHost: config.imapHost,
-              imapPort: config.imapPort,
-              smtpHost: config.smtpHost,
-              smtpPort: config.smtpPort,
-              useSsl: config.useSsl,
+              ...config,
               isActive: true,
             },
             update: {
@@ -97,13 +70,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
           })
 
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-          }
+          return { id: user.id, email: user.email, name: user.name }
         } catch (err) {
-          console.error("[Auth] IMAP Login failed:", err)
+          console.error("[Auth] IMAP Error:", err)
           return null
         }
       }
