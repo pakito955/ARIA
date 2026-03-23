@@ -60,7 +60,7 @@ export const reportQueue: Queue<any> | null = hasRedis
 export async function scheduleEmailSync(
   userId: string,
   integrationId: string,
-  provider: 'GMAIL' | 'OUTLOOK',
+  provider: 'GMAIL' | 'OUTLOOK' | 'IMAP',
   isInitial = false
 ) {
   if (!emailSyncQueue) return null

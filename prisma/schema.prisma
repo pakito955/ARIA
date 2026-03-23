@@ -90,23 +90,33 @@ model VerificationToken {
 // ─── INTEGRATIONS ────────────────────────────────────────────────────
 
 model Integration {
-  id           String   @id @default(cuid())
-  userId       String
-  provider     String   // GMAIL | OUTLOOK
-  email        String
-  accessToken  String
-  refreshToken String?
-  expiresAt    DateTime?
-  scope        String?
-  isActive     Boolean  @default(true)
-  lastSyncAt   DateTime?
-  syncCursor   String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                String    @id @default(cuid())
+  userId            String
+  provider          String    // GMAIL | OUTLOOK | IMAP
+  email             String
+  // OAuth providers (GMAIL / OUTLOOK)
+  accessToken       String    @default("")
+  refreshToken      String?
+  expiresAt         DateTime?
+  scope             String?
+  // IMAP / SMTP fields (provider === 'IMAP')
+  imapHost          String?
+  imapPort          Int?
+  smtpHost          String?
+  smtpPort          Int?
+  encryptedPassword String?   // AES-256-GCM encrypted app password
+  useSsl            Boolean   @default(true)
+  //
+  isActive          Boolean   @default(true)
+  lastSyncAt        DateTime?
+  syncCursor        String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, provider, email])
+  @@index([userId, provider])
   @@map("integrations")
 }
 

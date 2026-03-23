@@ -1,6 +1,6 @@
 // ─── ARIA Core Types ─────────────────────────────────────────────────────────
 
-export type EmailProvider = 'GMAIL' | 'OUTLOOK'
+export type EmailProvider = 'GMAIL' | 'OUTLOOK' | 'IMAP'
 export type Priority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
 export type EmailCategory = 'MEETING' | 'TASK' | 'CRITICAL' | 'INFO' | 'SPAM' | 'NEWSLETTER' | 'INVOICE' | 'LEAD'
 export type Sentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' | 'URGENT'
@@ -210,6 +210,12 @@ export interface Integration {
   email: string
   isActive: boolean
   lastSyncAt?: Date
+  // IMAP-specific (only set when provider === 'IMAP')
+  imapHost?: string
+  imapPort?: number
+  smtpHost?: string
+  smtpPort?: number
+  useSsl?: boolean
 }
 
 // ─── Queue Job Types ──────────────────────────────────────────────────────────

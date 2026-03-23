@@ -6,10 +6,11 @@ import {
   Settings, Star, Zap, Bell, Eye, Shield, Palette,
   Globe, Mail, CheckCircle, AlertCircle, Loader2,
   Sun, Moon, Monitor, ChevronRight, ToggleLeft, ToggleRight,
-  Clock, MessageSquare, FileText, Inbox, PenLine, Plus, Trash2, X,
+  Clock, MessageSquare, FileText, Inbox, PenLine, Plus, Trash2, X, Server,
 } from 'lucide-react'
 import { VipContactManager } from '@/components/settings/VipContactManager'
 import { ExtensionTokenManager } from '@/components/settings/ExtensionTokenManager'
+import { ImapConnectModal } from '@/components/settings/ImapConnectModal'
 import { useTheme } from '@/lib/theme'
 import { useSession } from 'next-auth/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -426,8 +427,10 @@ function SignaturesSection() {
 export default function SettingsPage() {
   const { theme, toggle: toggleTheme } = useTheme()
   const { data: session } = useSession()
+  const queryClient = useQueryClient()
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFS)
   const [saved, setSaved] = useState(false)
+  const [imapModalOpen, setImapModalOpen] = useState(false)
 
   // Load preferences from localStorage
   useEffect(() => {
@@ -452,6 +455,25 @@ export default function SettingsPage() {
       const res = await fetch('/api/integrations/gmail')
       if (!res.ok) return null
       return res.json()
+    },
+  })
+
+  // IMAP integrations
+  const { data: imapIntegrations } = useQuery<Array<{ id: string; email: string; isActive: boolean; imapHost: string | null }>>({
+    queryKey: ['imap-integrations'],
+    queryFn: async () => {
+      const res = await fetch('/api/integrations/imap')
+      if (!res.ok) return []
+      return res.json()
+    },
+  })
+
+  const disconnectImap = useMutation({
+    mutationFn: async (email: string) => {
+      await fetch(`/api/integrations/imap/connect?email=${encodeURIComponent(email)}`, { method: 'DELETE' })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['imap-integrations'] })
     },
   })
 
@@ -493,13 +515,24 @@ export default function SettingsPage() {
 
       {/* ── 1. Connected Accounts ── */}
       <section className={card} style={cardStyle}>
-        <SectionHeader
-          icon={Globe}
-          title="Connected Accounts"
-          description="Email providers synced with ARIA"
-          color="var(--blue)"
-          bg="rgba(59,130,246,0.1)"
-        />
+        <div className="flex items-center justify-between mb-5">
+          <SectionHeader
+            icon={Globe}
+            title="Connected Accounts"
+            description="Email providers synced with ARIA"
+            color="var(--blue)"
+            bg="rgba(59,130,246,0.1)"
+          />
+          <button
+            onClick={() => setImapModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-medium transition-colors shrink-0"
+            style={{ background: 'var(--accent-subtle)', border: '1px solid rgba(124,92,255,0.25)', color: 'var(--accent-text)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(124,92,255,0.18)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--accent-subtle)')}
+          >
+            <Plus size={12} /> Add Account
+          </button>
+        </div>
         <div className="space-y-2">
           {/* Gmail */}
           <div
@@ -540,8 +573,37 @@ export default function SettingsPage() {
               Connect
             </button>
           </div>
+
+          {/* IMAP accounts */}
+          {imapIntegrations && imapIntegrations.length > 0 && imapIntegrations.map((acc) => (
+            <div
+              key={acc.id}
+              className="flex items-center gap-3 p-3 rounded-xl"
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+            >
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-subtle)' }}>
+                <Server size={14} style={{ color: 'var(--accent-text)' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium truncate" style={{ color: 'var(--text-1)' }}>{acc.email}</p>
+                <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                  {acc.imapHost ?? 'IMAP'} · {acc.isActive ? 'Active' : 'Inactive'}
+                </p>
+              </div>
+              <button
+                onClick={() => disconnectImap.mutate(acc.email)}
+                className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
+                style={{ background: 'var(--red-subtle)', border: '1px solid rgba(239,68,68,0.2)', color: 'var(--red)' }}
+              >
+                Disconnect
+              </button>
+            </div>
+          ))}
         </div>
       </section>
+
+      {/* IMAP Connect Modal */}
+      {imapModalOpen && <ImapConnectModal onClose={() => setImapModalOpen(false)} />}
 
       {/* ── 2. AI Behavior ── */}
       <section className={card} style={cardStyle}>

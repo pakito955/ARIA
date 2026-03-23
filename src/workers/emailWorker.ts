@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma'
 import { decrypt } from '@/lib/encryption'
 import { GmailProvider } from '@/lib/providers/gmail'
 import { OutlookProvider } from '@/lib/providers/outlook'
+import { IMAPProvider } from '@/lib/providers/imap'
 import { classifyEmail } from '@/agents/classificationAgent'
 import { generateBriefing } from '@/agents/briefingAgent'
 import type { EmailSyncJob, EmailAnalysisJob, BriefingJob, WeeklyReportJob } from '@/types'
@@ -27,21 +28,36 @@ const syncWorker = new Worker<EmailSyncJob>(
     })
     if (!integration) throw new Error('Integration not found')
 
-    const accessToken = decrypt(integration.accessToken)
-    const refreshToken = integration.refreshToken ? decrypt(integration.refreshToken) : undefined
-
     let provider
-    if (integration.provider === 'GMAIL') {
-      provider = new GmailProvider(accessToken, refreshToken)
-    } else {
-      provider = new OutlookProvider(accessToken, refreshToken, async (newToken) => {
-        const { encrypt } = await import('@/lib/encryption');
-        const { prisma } = await import('@/lib/prisma');
-        await prisma.integration.update({
-          where: { id: integrationId },
-          data: { accessToken: encrypt(newToken) },
-        });
+    if (integration.provider === 'IMAP') {
+      if (!integration.encryptedPassword || !integration.imapHost || !integration.smtpHost) {
+        throw new Error('IMAP integration missing required fields')
+      }
+      provider = new IMAPProvider({
+        email: integration.email,
+        password: decrypt(integration.encryptedPassword),
+        imapHost: integration.imapHost,
+        imapPort: integration.imapPort ?? 993,
+        smtpHost: integration.smtpHost,
+        smtpPort: integration.smtpPort ?? 587,
+        useSsl: integration.useSsl,
       })
+    } else {
+      const accessToken = decrypt(integration.accessToken)
+      const refreshToken = integration.refreshToken ? decrypt(integration.refreshToken) : undefined
+
+      if (integration.provider === 'GMAIL') {
+        provider = new GmailProvider(accessToken, refreshToken)
+      } else {
+        provider = new OutlookProvider(accessToken, refreshToken, async (newToken) => {
+          const { encrypt } = await import('@/lib/encryption');
+          const { prisma } = await import('@/lib/prisma');
+          await prisma.integration.update({
+            where: { id: integrationId },
+            data: { accessToken: encrypt(newToken) },
+          });
+        })
+      }
     }
 
     const emails = await provider.fetchEmails({
@@ -428,9 +444,9 @@ const reportWorker = new Worker<WeeklyReportJob>(
 
     const timeSaved = Math.round((analyses * 2) / 60 * 10) / 10
 
-    // Fetch primary integration to send FROM
+    // Fetch primary OAuth integration to send FROM (IMAP doesn't use OAuth report flow)
     const integration = await prisma.integration.findFirst({
-      where: { userId, isActive: true },
+      where: { userId, isActive: true, provider: { in: ['GMAIL', 'OUTLOOK'] } },
       orderBy: { createdAt: 'asc' }
     })
     
