@@ -231,6 +231,51 @@ export interface BriefingJob {
   date: string
 }
 
+// ─── Email Template ───────────────────────────────────────────────────────────
+
+export interface EmailTemplate {
+  id: string
+  userId: string
+  name: string
+  subject: string
+  body: string
+  variables: string[]
+  category?: string
+  useCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+// ─── Follow-up Reminder ───────────────────────────────────────────────────────
+
+export interface FollowupReminder {
+  id: string
+  userId: string
+  emailId: string
+  dueAt: string
+  note?: string
+  isDone: boolean
+  createdAt: string
+  email?: {
+    id: string
+    subject: string
+    fromName?: string
+    fromEmail: string
+  }
+}
+
+// ─── Scheduled Email ──────────────────────────────────────────────────────────
+
+export interface ScheduledEmail {
+  id: string
+  toEmail: string
+  subject: string
+  body: string
+  scheduledAt: string
+  status: 'PENDING' | 'SENT' | 'FAILED' | 'CANCELLED'
+  createdAt: string
+}
+
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
 export interface ToastItem {
@@ -273,4 +318,13 @@ export interface AppStore {
   toasts: ToastItem[]
   addToast: (toast: Omit<ToastItem, 'id'>) => void
   removeToast: (id: string) => void
+
+  composeOpen: boolean
+  setComposeOpen: (open: boolean) => void
+
+  batchMode: boolean
+  setBatchMode: (v: boolean) => void
+
+  smartSearchMode: boolean
+  setSmartSearchMode: (v: boolean) => void
 }

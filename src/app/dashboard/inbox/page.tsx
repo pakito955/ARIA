@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, SlidersHorizontal, RefreshCw, ChevronDown, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip, Inbox, RefreshCcw, Maximize2, Minimize2, AlertTriangle, User } from 'lucide-react'
+import { Search, SlidersHorizontal, RefreshCw, ChevronDown, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip, Inbox, RefreshCcw, Maximize2, Minimize2, AlertTriangle, User, Bell, BrainCircuit } from 'lucide-react'
 import { EmailCard } from '@/components/inbox/EmailCard'
 import { TriageMode } from '@/components/TriageMode'
 import { SnoozePickerModal } from '@/components/inbox/SnoozePickerModal'
@@ -36,6 +36,9 @@ export default function InboxPage() {
   const [triageMode, setTriageMode] = useState(false)
   const [snoozeEmailId, setSnoozeEmailId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [smartSearch, setSmartSearch] = useState(false)
+  const [followupNote, setFollowupNote] = useState('')
+  const [followupEmailId, setFollowupEmailId] = useState<string | null>(null)
   const qc = useQueryClient()
 
   // Real-time sync via SSE
@@ -135,6 +138,25 @@ export default function InboxPage() {
     setEditedReply(currentReply)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEmailId, replyStyle, currentReply])
+
+  const followupMutation = useMutation({
+    mutationFn: async ({ emailId, daysFromNow, note }: { emailId: string; daysFromNow: number; note?: string }) => {
+      const dueAt = new Date()
+      dueAt.setDate(dueAt.getDate() + daysFromNow)
+      const res = await fetch('/api/followup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailId, dueAt: dueAt.toISOString(), note }),
+      })
+      return res.json()
+    },
+    onSuccess: () => {
+      toast.success('Follow-up reminder set', 'Reminder')
+      setFollowupEmailId(null)
+      setFollowupNote('')
+      qc.invalidateQueries({ queryKey: ['followups'] })
+    },
+  })
 
   const handleArchive = useCallback((id: string) => {
     fetch(`/api/emails/${id}/archive`, { method: 'POST' }).then(() => {
@@ -290,19 +312,37 @@ export default function InboxPage() {
         </div>
 
         {/* Search */}
-        <div className="px-3 py-2.5 border-b border-[var(--border)]">
-          <div className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg px-3 py-2">
-            <Search size={12} className="text-[var(--text-3)] shrink-0" />
+        <div className="px-3 py-2.5 border-b border-[var(--border)] space-y-2">
+          <div className={cn(
+            'flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors',
+            smartSearch ? 'bg-[var(--accent)]/5 border-[var(--accent)]' : 'bg-[var(--bg-card)] border-[var(--border)]'
+          )}>
+            {smartSearch
+              ? <BrainCircuit size={12} className="text-[var(--accent-text)] shrink-0" />
+              : <Search size={12} className="text-[var(--text-3)] shrink-0" />
+            }
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search emails…"
+              placeholder={smartSearch ? 'Ask ARIA anything about your emails…' : 'Search emails…'}
               className="flex-1 bg-transparent text-[12px] text-white placeholder:text-[var(--text-3)] outline-none"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="text-[var(--text-3)] text-xs hover:text-[var(--text-2)]">✕</button>
             )}
           </div>
+          <button
+            onClick={() => setSmartSearch(!smartSearch)}
+            className={cn(
+              'flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-lg border transition-all',
+              smartSearch
+                ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+                : 'border-[var(--border)] text-[var(--text-3)] hover:border-[var(--border-medium)] hover:text-[var(--text-2)]'
+            )}
+          >
+            <BrainCircuit size={10} />
+            {smartSearch ? 'AI Search ON' : 'AI Search'}
+          </button>
         </div>
 
         {/* Filters */}
@@ -618,9 +658,24 @@ export default function InboxPage() {
                           Generate Replies
                         </button>
                       )}
-                      <button className="flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] text-[var(--text-2)] text-[10.5px] rounded-lg hover:border-[var(--border-medium)] hover:text-white transition-all">
+                      <button
+                        onClick={() => handleTask(selectedEmail.id)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] text-[var(--text-2)] text-[10.5px] rounded-lg hover:border-[var(--border-medium)] hover:text-white transition-all"
+                      >
                         <CheckCircle size={11} />
                         Create Task
+                      </button>
+                      <button
+                        onClick={() => setFollowupEmailId(followupEmailId === selectedEmail.id ? null : selectedEmail.id)}
+                        className={cn(
+                          'flex items-center gap-1.5 px-3 py-1.5 border text-[10.5px] rounded-lg transition-all',
+                          followupEmailId === selectedEmail.id
+                            ? 'border-[var(--amber)] bg-[var(--amber)]/10 text-[var(--amber)]'
+                            : 'border-[var(--border)] text-[var(--text-2)] hover:border-[var(--amber)]/40 hover:text-[var(--amber)]'
+                        )}
+                      >
+                        <Bell size={11} />
+                        Follow-up
                       </button>
                       {analysis.meetingDetected && (
                         <button className="flex items-center gap-1.5 px-3 py-1.5 border border-[#f59e0b]/20 text-[var(--amber)] text-[10.5px] rounded-lg hover:border-[#f59e0b]/35 transition-all bg-[#f59e0b]/05">
@@ -629,6 +684,44 @@ export default function InboxPage() {
                         </button>
                       )}
                     </div>
+
+                    {/* Follow-up picker */}
+                    <AnimatePresence>
+                      {followupEmailId === selectedEmail.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-2 p-3 rounded-xl border border-[var(--amber)]/30 overflow-hidden"
+                          style={{ background: 'rgba(245,158,11,0.04)' }}
+                        >
+                          <p className="text-[10px] uppercase tracking-[1.5px] text-[var(--amber)] mb-2">Set reminder</p>
+                          <input
+                            value={followupNote}
+                            onChange={(e) => setFollowupNote(e.target.value)}
+                            placeholder="Optional note…"
+                            className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-[11.5px] text-white placeholder:text-[var(--text-3)] outline-none mb-2"
+                          />
+                          <div className="flex gap-1.5 flex-wrap">
+                            {[
+                              { label: 'Tomorrow', days: 1 },
+                              { label: 'In 3 days', days: 3 },
+                              { label: 'Next week', days: 7 },
+                              { label: 'In 2 weeks', days: 14 },
+                            ].map((opt) => (
+                              <button
+                                key={opt.days}
+                                onClick={() => followupMutation.mutate({ emailId: selectedEmail.id, daysFromNow: opt.days, note: followupNote || undefined })}
+                                disabled={followupMutation.isPending}
+                                className="px-2.5 py-1 text-[10px] rounded-lg border border-[var(--amber)]/30 text-[var(--amber)] hover:bg-[var(--amber)]/10 transition-all disabled:opacity-50"
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )}
 

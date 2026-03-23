@@ -39,6 +39,15 @@ export const useAppStore = create<AppStore>((set) => ({
     })),
   removeToast: (id) =>
     set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+
+  composeOpen: false,
+  setComposeOpen: (open) => set({ composeOpen: open }),
+
+  batchMode: false,
+  setBatchMode: (v) => set({ batchMode: v }),
+
+  smartSearchMode: false,
+  setSmartSearchMode: (v) => set({ smartSearchMode: v }),
 }))
 
 // Convenience helper — call from anywhere without hooks

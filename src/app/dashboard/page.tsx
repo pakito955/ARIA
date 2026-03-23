@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { ArrowRight, Zap, AlertCircle, CheckCircle2, Clock, TrendingUp, Loader2, Flame, FileText } from 'lucide-react'
+import { ArrowRight, Zap, AlertCircle, CheckCircle2, Clock, TrendingUp, Loader2, Flame, FileText, Bell, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { VoiceBriefing } from '@/components/VoiceBriefing'
@@ -65,6 +65,24 @@ export default function DashboardPage() {
         criticalEmails: emails.data?.filter((e: any) => e.analysis?.priority === 'CRITICAL').slice(0, 3) ?? [],
         recentEmails: emails.data?.slice(0, 3) ?? [],
       }
+    },
+  })
+
+  const { data: followupData } = useQuery({
+    queryKey: ['dashboard-followups'],
+    queryFn: async () => {
+      const res = await fetch('/api/followup')
+      if (!res.ok) return null
+      return res.json()
+    },
+  })
+
+  const { data: invoiceData } = useQuery({
+    queryKey: ['dashboard-invoices'],
+    queryFn: async () => {
+      const res = await fetch('/api/invoices')
+      if (!res.ok) return null
+      return res.json()
     },
   })
 
@@ -437,6 +455,107 @@ export default function DashboardPage() {
               <Link href="/dashboard/report" className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>
                 <span className="flex items-center gap-1 hover:text-[var(--accent-text)] transition-colors">
                   <FileText size={9} /> Weekly report
+                </span>
+              </Link>
+            </motion.div>
+
+            {/* Follow-ups Due — 1/3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.19 }}
+              className="card-premium p-5"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Bell size={13} className="text-[var(--amber)]" />
+                  <span className="text-[9px] tracking-[2px] uppercase text-[var(--amber)]">Follow-ups</span>
+                </div>
+                {(followupData?.total ?? 0) > 0 && (
+                  <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--amber)' }}>
+                    {followupData.total} pending
+                  </span>
+                )}
+              </div>
+
+              {!followupData || followupData.total === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 gap-2">
+                  <CheckCircle2 size={22} className="text-[var(--green)] opacity-60" />
+                  <p className="text-[11px] text-[var(--text-3)] text-center">All followed up!</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {(followupData.overdue ?? []).slice(0, 2).map((r: any) => (
+                    <div key={r.id} className="flex items-start gap-2 p-2.5 rounded-lg" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                      <div className="w-1 h-full min-h-[28px] rounded-full shrink-0" style={{ background: 'var(--red)' }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11.5px] font-medium text-white truncate">{r.email?.subject || 'Email'}</p>
+                        <p className="text-[10px] text-[var(--red)]">Overdue</p>
+                      </div>
+                    </div>
+                  ))}
+                  {(followupData.upcoming ?? []).slice(0, 2 - Math.min(2, followupData.overdue?.length ?? 0)).map((r: any) => (
+                    <div key={r.id} className="flex items-start gap-2 p-2.5 rounded-lg" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)' }}>
+                      <div className="w-1 h-full min-h-[28px] rounded-full shrink-0" style={{ background: 'var(--amber)' }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11.5px] font-medium text-white truncate">{r.email?.subject || 'Email'}</p>
+                        <p className="text-[10px] text-[var(--amber)]">Upcoming</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Link href="/dashboard/followups" className="block mt-3">
+                <span className="text-[10px] text-[var(--text-3)] hover:text-[var(--amber)] transition-colors flex items-center gap-1">
+                  View all <ArrowRight size={9} />
+                </span>
+              </Link>
+            </motion.div>
+
+            {/* Invoice Tracker — 1/3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.21 }}
+              className="card-premium p-5"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <DollarSign size={13} className="text-[var(--green)]" />
+                  <span className="text-[9px] tracking-[2px] uppercase text-[var(--green)]">Invoices</span>
+                </div>
+                {(invoiceData?.overdue ?? 0) > 0 && (
+                  <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,0.12)', color: 'var(--red)' }}>
+                    {invoiceData.overdue} overdue
+                  </span>
+                )}
+              </div>
+
+              {!invoiceData || invoiceData.total === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 gap-2">
+                  <CheckCircle2 size={22} className="text-[var(--green)] opacity-60" />
+                  <p className="text-[11px] text-[var(--text-3)] text-center">No invoice emails found</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {(invoiceData.invoices ?? []).slice(0, 3).map((inv: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11.5px] font-medium text-white truncate">{inv.fromName || inv.fromEmail}</p>
+                        {inv.amount && <p className="text-[10px] text-[var(--green)]">{inv.amount}</p>}
+                      </div>
+                      {inv.isOverdue && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--red)' }}>Late</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Link href="/dashboard/inbox?filter=all" className="block mt-3">
+                <span className="text-[10px] text-[var(--text-3)] hover:text-[var(--green)] transition-colors flex items-center gap-1">
+                  View inbox <ArrowRight size={9} />
                 </span>
               </Link>
             </motion.div>

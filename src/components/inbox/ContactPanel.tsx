@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Star, Mail, Clock, CheckCircle } from 'lucide-react'
+import { X, Star, Mail, Clock, CheckCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { formatDistanceToNow, format } from 'date-fns'
 
@@ -29,6 +29,16 @@ export function ContactPanel() {
     queryKey: ['contact', contactPanelEmail],
     queryFn: async () => {
       const res = await fetch(`/api/contacts/${encoded}`)
+      return res.json()
+    },
+    enabled: !!contactPanelEmail,
+  })
+
+  const { data: healthData } = useQuery({
+    queryKey: ['contact-health', contactPanelEmail],
+    queryFn: async () => {
+      const res = await fetch(`/api/contacts/health?email=${encoded}`)
+      if (!res.ok) return null
       return res.json()
     },
     enabled: !!contactPanelEmail,
@@ -174,6 +184,40 @@ export function ContactPanel() {
                     <p className="text-[12px] text-[var(--text-2)]">
                       {formatDistanceToNow(new Date(data.lastContact), { addSuffix: true })}
                     </p>
+                  </div>
+                )}
+
+                {/* Relationship Health */}
+                {healthData && (
+                  <div
+                    className="p-3 rounded-xl"
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                  >
+                    <p className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] mb-2">Relationship Health</p>
+                    <div className="flex items-center gap-2">
+                      {healthData.trend === 'improving' && <TrendingUp size={14} className="text-[var(--green)]" />}
+                      {healthData.trend === 'declining' && <TrendingDown size={14} className="text-[var(--red)]" />}
+                      {(healthData.trend === 'stable' || healthData.trend === 'new') && <Minus size={14} className="text-[var(--amber)]" />}
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[11px] font-medium capitalize" style={{
+                            color: healthData.trend === 'improving' ? 'var(--green)' : healthData.trend === 'declining' ? 'var(--red)' : 'var(--amber)'
+                          }}>
+                            {healthData.trend === 'improving' ? 'Growing' : healthData.trend === 'declining' ? 'Fading' : healthData.trend === 'new' ? 'New contact' : 'Stable'}
+                          </span>
+                          <span className="text-[10px] text-[var(--text-3)]">{healthData.last30Days ?? 0} emails/30d</span>
+                        </div>
+                        <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-hover)' }}>
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{
+                              width: `${Math.min(100, (healthData.last30Days ?? 0) * 10)}%`,
+                              background: healthData.trend === 'improving' ? 'var(--green)' : healthData.trend === 'declining' ? 'var(--red)' : 'var(--amber)',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 

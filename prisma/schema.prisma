@@ -22,17 +22,20 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts     Account[]
-  sessions     Session[]
-  integrations Integration[]
-  emails       Email[]
-  threads      Thread[]
-  tasks        Task[]
-  analyses     AIAnalysis[]
-  calendarEvents CalendarEvent[]
-  briefings    Briefing[]
-  settings     UserSettings?
-  vipContacts  VipContact[]
+  accounts         Account[]
+  sessions         Session[]
+  integrations     Integration[]
+  emails           Email[]
+  threads          Thread[]
+  tasks            Task[]
+  analyses         AIAnalysis[]
+  calendarEvents   CalendarEvent[]
+  briefings        Briefing[]
+  settings         UserSettings?
+  vipContacts      VipContact[]
+  emailTemplates   EmailTemplate[]
+  followupReminders FollowupReminder[]
+  scheduledEmails  ScheduledEmail[]
 
   @@map("users")
 }
@@ -143,10 +146,11 @@ model Email {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  thread         Thread?    @relation(fields: [threadId], references: [id])
-  analysis       AIAnalysis?
-  tasks          Task[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread            Thread?            @relation(fields: [threadId], references: [id])
+  analysis          AIAnalysis?
+  tasks             Task[]
+  followupReminders FollowupReminder[]
 
   @@unique([userId, provider, externalId])
   @@index([userId, receivedAt])
@@ -268,6 +272,61 @@ model VipContact {
 
   @@unique([userId, email])
   @@map("vip_contacts")
+}
+
+// ─── EMAIL TEMPLATES ─────────────────────────────────────────────────────────
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  subject   String   @default("")
+  body      String
+  variables String   @default("[]")
+  category  String?
+  useCount  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_templates")
+}
+
+// ─── FOLLOW-UP REMINDERS ─────────────────────────────────────────────────────
+
+model FollowupReminder {
+  id        String   @id @default(cuid())
+  userId    String
+  emailId   String
+  dueAt     DateTime
+  note      String?
+  isDone    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     Email    @relation(fields: [emailId], references: [id], onDelete: Cascade)
+
+  @@map("followup_reminders")
+}
+
+// ─── SCHEDULED EMAILS ────────────────────────────────────────────────────────
+
+model ScheduledEmail {
+  id          String    @id @default(cuid())
+  userId      String
+  toEmail     String
+  subject     String
+  body        String
+  scheduledAt DateTime
+  sentAt      DateTime?
+  status      String    @default("PENDING")
+  replyToId   String?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("scheduled_emails")
 }
 
 // ─── SETTINGS ────────────────────────────────────────────────────────

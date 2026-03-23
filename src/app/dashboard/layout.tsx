@@ -7,6 +7,8 @@ import { CommandPalette } from '@/components/CommandPalette'
 import { NotificationManager } from '@/components/NotificationManager'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { ToastContainer } from '@/components/ui/Toast'
+import { ComposeModal } from '@/components/ComposeModal'
+import { OnboardingFlow } from '@/components/OnboardingFlow'
 
 export default async function DashboardLayout({
   children,
@@ -43,6 +45,8 @@ export default async function DashboardLayout({
       <CommandPalette />
       <NotificationManager />
       <ToastContainer />
+      <ComposeModal />
+      <OnboardingFlow />
 
       {/* Mobile bottom nav */}
       <MobileNav />
