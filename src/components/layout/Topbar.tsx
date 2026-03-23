@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { Command, Bell, LogOut } from 'lucide-react'
+import { VoiceCommand } from '@/components/VoiceCommand'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 
@@ -63,6 +64,7 @@ export function Topbar() {
       </button>
 
       <div className="ml-auto flex items-center gap-4">
+        <VoiceCommand />
         <span className="font-mono text-[11px] text-[var(--text-2)]">{time}</span>
 
         <button className="text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors">
