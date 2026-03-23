@@ -47,7 +47,10 @@ export async function GET(req: NextRequest) {
       },
       orderBy: { startTime: 'asc' },
     })
-    return NextResponse.json({ events: cached, source: 'cache' })
+    return NextResponse.json(
+      { events: cached, source: 'cache' },
+      { headers: { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } }
+    )
   }
 
   try {
@@ -86,7 +89,10 @@ export async function GET(req: NextRequest) {
       })
     )
 
-    return NextResponse.json({ events, source: 'live' })
+    return NextResponse.json(
+      { events, source: 'live' },
+      { headers: { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } }
+    )
   } catch (err: unknown) {
     const e = err as { response?: { data?: { error?: { message?: string } }; status?: number }; message?: string }
     const msg = e?.response?.data?.error?.message || e?.message || 'Failed to fetch calendar events'

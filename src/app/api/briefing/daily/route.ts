@@ -147,5 +147,8 @@ export async function GET(req: NextRequest) {
     knowledgeSummary,
   }
 
-  return NextResponse.json(data)
+  // Cache for 10 minutes — briefing is expensive to generate
+  return NextResponse.json(data, {
+    headers: { 'Cache-Control': 'private, max-age=600, stale-while-revalidate=300' },
+  })
 }

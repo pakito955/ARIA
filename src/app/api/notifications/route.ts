@@ -18,7 +18,10 @@ export async function GET(req: NextRequest) {
 
     const unreadCount = notifications.filter((n: any) => !n.read).length
 
-    return NextResponse.json({ data: notifications, unreadCount })
+    return NextResponse.json(
+      { data: notifications, unreadCount },
+      { headers: { 'Cache-Control': 'private, max-age=20, stale-while-revalidate=40' } }
+    )
   } catch (err) {
     console.error('[Notifications] GET error:', err)
     return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 })

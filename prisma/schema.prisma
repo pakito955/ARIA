@@ -205,6 +205,7 @@ model AIAnalysis {
   email               Email    @relation(fields: [emailId], references: [id], onDelete: Cascade)
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, priority])
   @@map("ai_analyses")
 }
 
@@ -226,6 +227,8 @@ model Task {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   email       Email?   @relation(fields: [emailId], references: [id])
 
+  @@index([userId, status])
+  @@index([userId, dueDate])
   @@map("tasks")
 }
 
@@ -250,6 +253,7 @@ model CalendarEvent {
 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, startTime])
   @@map("calendar_events")
 }
 
@@ -501,6 +505,7 @@ model DraftEmail {
 
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, status])
   @@map("draft_emails")
 }
 

@@ -26,7 +26,7 @@ export class OutlookProvider implements EmailProviderInterface {
 
   async refreshAccessToken(clientId: string, clientSecret: string, tenantId = 'common') {
     if (!this.refreshToken) return;
-    
+
     try {
       const res = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
         method: 'POST',
@@ -40,7 +40,7 @@ export class OutlookProvider implements EmailProviderInterface {
       });
 
       if (!res.ok) throw new Error('Failed to refresh Outlook token');
-      
+
       const data = await res.json();
       if (data.access_token) {
         this.newAccessToken = data.access_token;

@@ -3,9 +3,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
-  CalendarDays, CheckSquare, Mail, BookOpen, Loader2,
+  CalendarDays, CheckSquare, Mail, BookOpen,
   Clock, Users, ExternalLink, Sparkles, MapPin, ChevronDown
 } from 'lucide-react'
+import { BriefingSkeleton } from '@/components/ui/Skeletons'
 import { format } from 'date-fns'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -121,6 +122,7 @@ export default function BriefingPage() {
       return res.json()
     },
     staleTime: 10 * 60_000,
+    gcTime: 30 * 60_000,
   })
 
   const today = new Date()
@@ -144,21 +146,7 @@ export default function BriefingPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {isLoading && (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="relative">
-              <Loader2 size={28} className="animate-spin" style={{ color: 'var(--accent-text)' }} />
-            </div>
-            <div className="text-center">
-              <p className="text-[13px] font-medium" style={{ color: 'var(--text-1)' }}>
-                ARIA is preparing your briefing…
-              </p>
-              <p className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>
-                Analyzing calendar, emails, and contacts
-              </p>
-            </div>
-          </div>
-        )}
+        {isLoading && <BriefingSkeleton />}
 
         {error && (
           <div className="flex items-center justify-center py-12">

@@ -37,7 +37,10 @@ export async function GET(req: NextRequest) {
     orderBy: [{ priority: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
   })
 
-  return NextResponse.json({ data: tasks })
+  return NextResponse.json(
+    { data: tasks },
+    { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } }
+  )
 }
 
 export async function POST(req: NextRequest) {

@@ -68,7 +68,11 @@ const NAV_SECTIONS = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { sidebarCollapsed, setSidebarCollapsed, setCommandOpen, setComposeOpen, focusMode } = useAppStore()
+  const sidebarCollapsed = useAppStore((s) => s.sidebarCollapsed)
+  const setSidebarCollapsed = useAppStore((s) => s.setSidebarCollapsed)
+  const setCommandOpen = useAppStore((s) => s.setCommandOpen)
+  const setComposeOpen = useAppStore((s) => s.setComposeOpen)
+  const focusMode = useAppStore((s) => s.focusMode)
   const { data: session } = useSession()
 
   const { data: stats } = useQuery({

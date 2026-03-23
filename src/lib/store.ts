@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
 import { persist } from 'zustand/middleware'
 import type { AppStore, BrainDumpResult } from '@/types'
 
@@ -69,6 +70,27 @@ export const useAppStore = create<AppStore>()(
       partialize: (state) => ({ sidebarCollapsed: state.sidebarCollapsed }),
     }
   )
+)
+
+// ── Selector hooks — subscribe to only the slice you need ─────────────────
+// Usage: const { selectedEmailId, setSelectedEmail } = useEmailSelection()
+export const useEmailSelection = () => useAppStore(
+  useShallow((s) => ({ selectedEmailId: s.selectedEmailId, setSelectedEmail: s.setSelectedEmail }))
+)
+export const useInboxFilters = () => useAppStore(
+  useShallow((s) => ({
+    emailFilter: s.emailFilter, setEmailFilter: s.setEmailFilter,
+    searchQuery: s.searchQuery, setSearchQuery: s.setSearchQuery,
+    focusMode: s.focusMode, setFocusMode: s.setFocusMode,
+  }))
+)
+export const useUIState = () => useAppStore(
+  useShallow((s) => ({
+    commandOpen: s.commandOpen, setCommandOpen: s.setCommandOpen,
+    composeOpen: s.composeOpen, setComposeOpen: s.setComposeOpen,
+    aiPanelOpen: s.aiPanelOpen, setAiPanelOpen: s.setAiPanelOpen,
+    rightPanel: s.rightPanel, setRightPanel: s.setRightPanel,
+  }))
 )
 
 // Convenience helper — call from anywhere without hooks

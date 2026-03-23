@@ -1,10 +1,10 @@
 'use client'
 
+import { memo, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
 import { Paperclip, Zap, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { motion } from 'framer-motion'
 
 interface Email {
   id: string
@@ -35,14 +35,15 @@ interface Props {
   onToggleSelect?: (id: string) => void
 }
 
-function avatarColor(email: string): string {
-  const colors = [
-    '#F24E1E', '#1971C2', '#2F9E44', '#F08C00',
-    '#E03131', '#0B7285', '#E599F7', '#339AF0',
-  ]
+const AVATAR_COLORS = [
+  '#F24E1E', '#1971C2', '#2F9E44', '#F08C00',
+  '#E03131', '#0B7285', '#E599F7', '#339AF0',
+]
+
+function getAvatarColor(email: string): string {
   let hash = 0
   for (let i = 0; i < email.length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash)
-  return colors[Math.abs(hash) % colors.length]
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -53,39 +54,31 @@ const CATEGORY_LABEL: Record<string, string> = {
   SPAM:       'Spam',
 }
 
-export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = false, onToggleSelect }: Props) {
-  const { selectedEmailId, setSelectedEmail } = useAppStore()
+export const EmailCard = memo(function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = false, onToggleSelect }: Props) {
+  const selectedEmailId = useAppStore((s) => s.selectedEmailId)
+  const setSelectedEmail = useAppStore((s) => s.setSelectedEmail)
   const isSelected = selectedEmailId === email.id
 
   const name = email.fromName || email.fromEmail.split('@')[0]
-  const initials = name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-  const color = avatarColor(email.fromEmail)
+  const initials = useMemo(() => name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2), [name])
+  const color = useMemo(() => getAvatarColor(email.fromEmail), [email.fromEmail])
   const priority = email.analysis?.priority
-  const timeAgo = formatDistanceToNow(new Date(email.receivedAt), { addSuffix: false })
+  const timeAgo = useMemo(() => formatDistanceToNow(new Date(email.receivedAt), { addSuffix: false }), [email.receivedAt])
   const preview = email.analysis?.summary
     ? email.analysis.summary
     : email.bodyText?.slice(0, 80).replace(/\n/g, ' ')
 
-  const isCritical = priority === 'CRITICAL'
+  const selectedClass = isSelected
+    ? 'bg-surface border-border shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+    : 'border-transparent bg-transparent hover:bg-hover'
 
-  // Refined flat styles for selection
-  const selectedClass = isSelected 
-    ? "bg-surface border-border shadow-[0_2px_8px_rgba(0,0,0,0.04)]" 
-    : "border-transparent bg-transparent hover:bg-hover"
-
-  const massSelectedClass = selected 
-    ? "bg-accent-subtle border-accent/20" 
-    : ""
+  const massSelectedClass = selected ? 'bg-accent-subtle border-accent/20' : ''
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -1 }}
+    <div
       onClick={() => setSelectedEmail(email.id)}
       className={cn(
-        'group relative flex gap-3 px-4 py-3 cursor-pointer transition-all duration-200 border rounded-xl mb-1 mx-1',
+        'group relative flex gap-3 px-4 py-3 cursor-pointer transition-colors duration-150 border rounded-xl mb-1 mx-1',
         isSelected ? selectedClass : massSelectedClass || selectedClass
       )}
     >
@@ -149,7 +142,7 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
 
         <div className="flex items-center gap-2 mt-2">
           {priority && priority !== 'LOW' && (
-            <span className={cn("badge", priority === 'CRITICAL' ? 'badge-red' : priority === 'HIGH' ? 'badge-amber' : 'badge-accent')}>
+            <span className={cn('badge', priority === 'CRITICAL' ? 'badge-red' : priority === 'HIGH' ? 'badge-amber' : 'badge-accent')}>
               {priority === 'CRITICAL' ? 'Critical' : priority === 'HIGH' ? 'High' : 'Medium'}
             </span>
           )}
@@ -161,7 +154,7 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
           )}
 
           {(email.analysis?.sentiment === 'NEGATIVE' || email.analysis?.sentiment === 'URGENT') && (
-            <span className={cn("badge", email.analysis.sentiment === 'URGENT' ? 'badge-amber' : 'badge-red')}>
+            <span className={cn('badge', email.analysis.sentiment === 'URGENT' ? 'badge-amber' : 'badge-red')}>
               {email.analysis.sentiment === 'URGENT' ? 'Urgent' : 'Tense'}
             </span>
           )}
@@ -182,6 +175,6 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   )
-}
+})

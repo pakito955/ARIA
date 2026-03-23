@@ -7,6 +7,7 @@ import {
   CheckCircle, XCircle, Mail, Zap, Globe, Mic,
   ChevronLeft, ChevronRight, Loader2, Inbox,
 } from 'lucide-react'
+import { QueueSkeleton } from '@/components/ui/Skeletons'
 import { toast } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -45,7 +46,8 @@ export default function QueuePage() {
       return res.json()
     },
     refetchInterval: 30_000,
-    staleTime: 10_000,
+    staleTime: 15_000,
+    gcTime: 60_000,
   })
 
   const actionMutation = useMutation({
@@ -104,8 +106,11 @@ export default function QueuePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-text)' }} />
+      <div className="flex flex-col h-full">
+        <div className="px-6 py-5 border-b border-[var(--border)] shrink-0">
+          <div className="h-6 w-40 skeleton rounded-lg" />
+        </div>
+        <QueueSkeleton />
       </div>
     )
   }

@@ -98,7 +98,10 @@ export async function GET(req: NextRequest) {
     prisma.email.count({ where }),
   ])
 
-  return NextResponse.json({ data: emails, total, hasMore: total > limit })
+  return NextResponse.json(
+    { data: emails, total, hasMore: total > limit },
+    { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } }
+  )
 }
 
 // ── Background sync helper ─────────────────────────────────────────────────

@@ -32,7 +32,10 @@ export async function GET(req: NextRequest) {
     orderBy: [{ useCount: 'desc' }, { updatedAt: 'desc' }],
   })
 
-  return NextResponse.json({ data: items })
+  return NextResponse.json(
+    { data: items },
+    { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } }
+  )
 }
 
 export async function POST(req: NextRequest) {

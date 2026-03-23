@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(
     { unread, critical, tasks, waiting, drafts, gmail: hasGmail, outlook: hasOutlook, calendar: hasGmail || hasOutlook },
-    { headers: { 'Cache-Control': 'private, max-age=15' } }
+    { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } }
   )
   } catch {
     return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 })

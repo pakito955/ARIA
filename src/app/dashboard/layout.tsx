@@ -2,16 +2,9 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileNav } from '@/components/layout/MobileNav'
-import { VoiceCommand } from '@/components/VoiceCommand'
-import { AnalysisPanel } from '@/components/analysis/AnalysisPanel'
-import { CommandPalette } from '@/components/CommandPalette'
-import { NotificationManager } from '@/components/NotificationManager'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { ToastContainer } from '@/components/ui/Toast'
-import { ComposeModal } from '@/components/ComposeModal'
-import { OnboardingFlow } from '@/components/OnboardingFlow'
-import { KeyboardShortcuts } from '@/components/KeyboardShortcuts'
-import { NotificationBell } from '@/components/notifications/NotificationBell'
+import { DashboardShell } from '@/components/layout/DashboardShell'
 
 export default async function DashboardLayout({
   children,
@@ -23,36 +16,20 @@ export default async function DashboardLayout({
 
   return (
     <div className="h-screen flex overflow-hidden">
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — static, server-rendered */}
       <div className="hidden md:block shrink-0 relative z-10">
         <Sidebar />
       </div>
 
-      {/* Main content + AI panel side by side */}
-      <div className="flex-1 flex overflow-hidden min-w-0">
-        <main
-          className="flex-1 overflow-hidden pb-16 md:pb-0 min-w-0 relative z-10"
-        >
-          <PageTransition>
-            {children}
-          </PageTransition>
-        </main>
+      {/* Client shell: lazy-loads overlays + AI panel */}
+      <DashboardShell>
+        <PageTransition>
+          {children}
+        </PageTransition>
+      </DashboardShell>
 
-        {/* AI Panel — in-flow, pushes main content */}
-        <AnalysisPanel />
-      </div>
-
-      <CommandPalette />
-      <NotificationManager />
+      {/* Toast notifications — lightweight, always needed */}
       <ToastContainer />
-      <ComposeModal />
-      <OnboardingFlow />
-      <KeyboardShortcuts />
-
-      {/* Floating Voice Agent Button */}
-      <div className="fixed bottom-20 md:bottom-8 right-6 z-[100]">
-        <VoiceCommand />
-      </div>
 
       {/* Mobile bottom nav */}
       <MobileNav />

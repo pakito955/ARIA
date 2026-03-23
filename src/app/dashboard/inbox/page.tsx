@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, SlidersHorizontal, RefreshCw, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip, Inbox, Maximize2, Minimize2, User, Bell, BrainCircuit, Circle, CalendarDays, CheckSquare, Star, AlertCircle, ChevronDown, AlertTriangle, RefreshCcw } from 'lucide-react'
@@ -13,7 +13,7 @@ import { ContactPanel } from '@/components/inbox/ContactPanel'
 import { SmartReply } from '@/components/inbox/SmartReply'
 import { MeetingBooking } from '@/components/inbox/MeetingBooking'
 import { EmailCardSkeleton } from '@/components/ui/Skeletons'
-import { useAppStore, toast } from '@/lib/store'
+import { useAppStore, useInboxFilters, useEmailSelection, toast } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useInboxKeyboard } from '@/hooks/useInboxKeyboard'
@@ -29,7 +29,11 @@ const FILTERS = [
 ] as const
 
 export default function InboxPage() {
-  const { emailFilter, setEmailFilter, searchQuery, setSearchQuery, selectedEmailId, setSelectedEmail, focusMode, setFocusMode, setContactPanelEmail, newEmailsCount, setNewEmailsCount } = useAppStore()
+  const { emailFilter, setEmailFilter, searchQuery, setSearchQuery, focusMode, setFocusMode } = useInboxFilters()
+  const { selectedEmailId, setSelectedEmail } = useEmailSelection()
+  const setContactPanelEmail = useAppStore((s) => s.setContactPanelEmail)
+  const newEmailsCount = useAppStore((s) => s.newEmailsCount)
+  const setNewEmailsCount = useAppStore((s) => s.setNewEmailsCount)
   const [sort, setSort] = useState<'newest' | 'priority'>('newest')
   const [originalExpanded, setOriginalExpanded] = useState(false)
   const [replyStyle, setReplyStyle] = useState<'short' | 'professional' | 'friendly'>('professional')
@@ -94,6 +98,7 @@ export default function InboxPage() {
       return res.json()
     },
     enabled: !!selectedEmailId,
+    staleTime: 30_000,
   })
 
   const analyzeMutation = useMutation({
@@ -232,6 +237,11 @@ export default function InboxPage() {
       return next
     })
   }, [])
+
+  const handleAnalyze = useCallback((id: string) => {
+    analyzeMutation.mutate(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analyzeMutation.mutate])
 
   return (
     <>
@@ -500,7 +510,7 @@ export default function InboxPage() {
                 key={email.id}
                 email={email}
                 index={i}
-                onAnalyze={(id) => analyzeMutation.mutate(id)}
+                onAnalyze={handleAnalyze}
                 analyzing={analyzeMutation.isPending && analyzeMutation.variables === email.id}
                 selected={selectedIds.has(email.id)}
                 onToggleSelect={handleToggleSelect}

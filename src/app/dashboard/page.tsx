@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -76,19 +76,11 @@ export default function DashboardPage() {
   const { config } = useWidgetConfig()
 
   const { data: statsData } = useQuery({
-    queryKey: ['dashboard-stats'],
+    queryKey: ['sidebar-stats'],
     queryFn: async () => {
-      const [emailsRes, tasksRes] = await Promise.all([
-        fetch('/api/emails?limit=10&filter=all'),
-        fetch('/api/tasks?status=TODO'),
-      ])
-      const emails = await emailsRes.json()
-      const tasks = await tasksRes.json()
-      return {
-        unread: emails.data?.filter((e: any) => !e.isRead).length ?? 0,
-        critical: emails.data?.filter((e: any) => e.analysis?.priority === 'CRITICAL').length ?? 0,
-        tasks: tasks.data?.length ?? 0,
-      }
+      const res = await fetch('/api/stats')
+      if (!res.ok) return null
+      return res.json()
     },
     staleTime: 30_000,
   })
@@ -110,14 +102,14 @@ export default function DashboardPage() {
     onSuccess: () => refetchBriefing(),
   })
 
-  // WOW splash screen
+  // WOW splash screen — only on first visit, skip if already seen
   useEffect(() => {
     const shown = sessionStorage.getItem('aria-wow-shown')
     if (shown) { setWowDone(true); return }
     const timer = setTimeout(() => {
       setWowDone(true)
       sessionStorage.setItem('aria-wow-shown', '1')
-    }, 3200)
+    }, 1800)  // Reduced from 3200ms → 1800ms
     return () => clearTimeout(timer)
   }, [])
 
@@ -259,11 +251,10 @@ export default function DashboardPage() {
                 return (
                   <motion.div
                     key={id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.96, y: 12 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.94, y: -8 }}
-                    transition={{ delay: i * 0.04, duration: 0.3, layout: { duration: 0.3 } }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ delay: i * 0.03, duration: 0.2 }}
                     className={COL_SPAN[def.size]}
                   >
                     <Component />

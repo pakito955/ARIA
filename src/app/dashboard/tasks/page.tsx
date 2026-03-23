@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Check, Clock, CalendarPlus, Loader2, X, ChevronDown } from 'lucide-react'
@@ -161,6 +161,7 @@ export default function TasksPage() {
       const res = await fetch('/api/tasks')
       return res.json()
     },
+    staleTime: 30_000,
   })
 
   const toggleMutation = useMutation({
@@ -193,9 +194,13 @@ export default function TasksPage() {
   })
 
   const tasks = data?.data || []
-  const today = tasks.filter((t: any) => t.status !== 'DONE')
-  const done = tasks.filter((t: any) => t.status === 'DONE')
-  const completionPct = tasks.length > 0 ? Math.round((done.length / tasks.length) * 100) : 0
+  const { today, done, completionPct } = useMemo(() => {
+    const today: any[] = [], done: any[] = []
+    for (const t of tasks) {
+      if (t.status === 'DONE') done.push(t); else today.push(t)
+    }
+    return { today, done, completionPct: tasks.length > 0 ? Math.round((done.length / tasks.length) * 100) : 0 }
+  }, [tasks])
 
   return (
     <div className="flex flex-col h-full">
