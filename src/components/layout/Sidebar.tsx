@@ -65,7 +65,7 @@ const NAV_SECTIONS = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { sidebarCollapsed, setSidebarCollapsed, setCommandOpen, setComposeOpen } = useAppStore()
+  const { sidebarCollapsed, setSidebarCollapsed, setCommandOpen, setComposeOpen, focusMode } = useAppStore()
   const { data: session } = useSession()
   const { theme, toggle: toggleTheme } = useTheme()
 
@@ -97,9 +97,9 @@ export function Sidebar() {
 
   return (
     <motion.nav
-      animate={{ width: sidebarCollapsed ? 56 : 220 }}
+      animate={{ width: sidebarCollapsed ? 56 : 220, opacity: focusMode ? 0.2 : 1, filter: focusMode ? 'grayscale(100%)' : 'none' }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="flex flex-col h-full shrink-0 z-40 overflow-hidden"
+      className={cn("flex flex-col h-full shrink-0 z-40 overflow-hidden", focusMode && "pointer-events-none")}
       style={{
         background: 'var(--bg-base)',
         boxShadow: '1px 0 0 var(--border)',

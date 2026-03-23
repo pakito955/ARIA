@@ -69,7 +69,7 @@ export default function InboxPage() {
   const [syncForced, setSyncForced] = useState(false)
 
   const { data: emailsData, isLoading, refetch } = useQuery({
-    queryKey: ['emails', emailFilter, debouncedSearch, sort],
+    queryKey: ['emails', emailFilter, debouncedSearch, sort, focusMode],
     queryFn: async () => {
       const params = new URLSearchParams({
         filter: emailFilter,
@@ -77,6 +77,7 @@ export default function InboxPage() {
         limit: '50',
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(syncForced && { sync: 'true' }),
+        ...(focusMode && { focusMode: 'true' }),
       })
       setSyncForced(false)
       const res = await fetch(`/api/emails?${params}`)

@@ -59,12 +59,32 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  const focusMode = searchParams.get('focusMode') === 'true'
+
+  const andClauses: any[] = []
+
+  if (focusMode) {
+    const vips = await prisma.vipContact.findMany({ where: { userId }, select: { email: true } })
+    andClauses.push({
+      OR: [
+        { analysis: { is: { priority: 'CRITICAL' } } },
+        { fromEmail: { in: vips.map(v => v.email) } }
+      ]
+    })
+  }
+
   if (search) {
-    where.OR = [
-      { subject:   { contains: search, mode: 'insensitive' } },
-      { fromEmail: { contains: search, mode: 'insensitive' } },
-      { fromName:  { contains: search, mode: 'insensitive' } },
-    ]
+    andClauses.push({
+      OR: [
+        { subject:   { contains: search, mode: 'insensitive' } },
+        { fromEmail: { contains: search, mode: 'insensitive' } },
+        { fromName:  { contains: search, mode: 'insensitive' } },
+      ]
+    })
+  }
+
+  if (andClauses.length > 0) {
+    where.AND = andClauses
   }
 
   const orderBy =

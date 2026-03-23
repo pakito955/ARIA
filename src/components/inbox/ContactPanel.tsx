@@ -47,9 +47,13 @@ export function ContactPanel() {
   const vipMutation = useMutation({
     mutationFn: async () => {
       if (data?.isVip) {
-        await fetch(`/api/vip/${encoded}`, { method: 'DELETE' })
+        await fetch('/api/gatekeeper', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: contactPanelEmail })
+        })
       } else {
-        await fetch('/api/vip', {
+        await fetch('/api/gatekeeper', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: contactPanelEmail, name: data?.name }),
@@ -58,7 +62,7 @@ export function ContactPanel() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['contact', contactPanelEmail] })
-      qc.invalidateQueries({ queryKey: ['vip'] })
+      qc.invalidateQueries({ queryKey: ['emails'] })
     },
   })
 
