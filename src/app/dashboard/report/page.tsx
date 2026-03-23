@@ -62,7 +62,7 @@ export default function WeeklyReportPage() {
         {/* Stats grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[
-            { label: 'Emails handled', value: stats?.totalEmails ?? 0, icon: Mail, color: '#D97757', suffix: '' },
+            { label: 'Emails handled', value: stats?.totalEmails ?? 0, icon: Mail, color: '#7C5CFF', suffix: '' },
             { label: 'Critical emails', value: stats?.criticalEmails ?? 0, icon: TrendingUp, color: '#ef4444', suffix: '' },
             { label: 'AI analyses', value: stats?.analyses ?? 0, icon: Zap, color: '#4fd1c5', suffix: '' },
             { label: 'Tasks created', value: stats?.tasksCreated ?? 0, icon: CheckCircle, color: '#f59e0b', suffix: '' },

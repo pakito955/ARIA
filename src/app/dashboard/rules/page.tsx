@@ -199,7 +199,7 @@ export default function RulesPage() {
           <button
             onClick={() => setShowAdd(!showAdd)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-medium text-white transition-all"
-            style={{ background: 'var(--accent)', boxShadow: '0 4px 14px rgba(217,119,87,0.3)' }}
+            style={{ background: 'var(--accent)', boxShadow: '0 4px 14px rgba(124,92,255,0.3)' }}
           >
             <Plus size={13} />
             Add Rule
@@ -218,7 +218,7 @@ export default function RulesPage() {
             >
               <div
                 className="p-5 rounded-2xl space-y-4"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--accent)', boxShadow: '0 0 0 1px rgba(217,119,87,0.1)' }}
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--accent)', boxShadow: '0 0 0 1px rgba(124,92,255,0.1)' }}
               >
                 <p className="text-[11px] uppercase tracking-[2px] font-medium" style={{ color: 'var(--accent-text)' }}>
                   New Rule

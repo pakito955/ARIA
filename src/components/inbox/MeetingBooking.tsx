@@ -255,7 +255,7 @@ export function MeetingBooking({ emailId }: Props) {
                         onClick={() => bookMutation.mutate()}
                         disabled={bookMutation.isPending || !startTime}
                         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-medium text-white transition-all disabled:opacity-60"
-                        style={{ background: 'var(--accent)', boxShadow: '0 4px 16px rgba(217,119,87,0.3)' }}
+                        style={{ background: 'var(--accent)', boxShadow: '0 4px 16px rgba(124,92,255,0.3)' }}
                       >
                         {bookMutation.isPending ? (
                           <><Loader2 size={13} className="animate-spin" /> Booking…</>

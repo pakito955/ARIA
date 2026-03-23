@@ -10,7 +10,7 @@ const STEPS = [
   {
     id: 'welcome',
     icon: Zap,
-    color: '#D97757',
+    color: '#7C5CFF',
     title: 'Welcome to ARIA',
     subtitle: 'Your AI executive email assistant',
     description: 'ARIA automatically reads, prioritizes, and responds to your emails — saving you hours every week.',

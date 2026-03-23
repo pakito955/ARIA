@@ -17,14 +17,14 @@ import { cn } from '@/lib/utils'
 const PRIORITY_COLOR: Record<string, string> = {
   CRITICAL: '#ef4444',
   HIGH: '#f59e0b',
-  MEDIUM: '#D97757',
-  LOW: '#5a4a3a',
+  MEDIUM: '#7C5CFF',
+  LOW: 'var(--text-3)',
 }
 
 const PRIORITY_BG: Record<string, string> = {
   CRITICAL: 'rgba(239,68,68,0.12)',
   HIGH: 'rgba(245,158,11,0.12)',
-  MEDIUM: 'rgba(217,119,87,0.12)',
+  MEDIUM: 'rgba(124,92,255,0.12)',
   LOW: 'rgba(74,74,106,0.1)',
 }
 
@@ -204,7 +204,7 @@ export default function CalendarPage() {
                           key={t.id}
                           className="w-1.5 h-1.5 rounded-full"
                           style={{
-                            background: t.status === 'DONE' ? '#5a4a3a' : (PRIORITY_COLOR[t.priority] || '#D97757'),
+                            background: t.status === 'DONE' ? 'var(--text-3)' : (PRIORITY_COLOR[t.priority] || '#7C5CFF'),
                           }}
                         />
                       ))}
@@ -256,7 +256,7 @@ export default function CalendarPage() {
                   >
                     <div
                       className="w-1 h-8 rounded-full shrink-0"
-                      style={{ background: PRIORITY_COLOR[task.priority] || '#D97757' }}
+                      style={{ background: PRIORITY_COLOR[task.priority] || '#7C5CFF' }}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-[11.5px] font-medium truncate text-[var(--text-1)]">{task.title}</p>
@@ -425,7 +425,7 @@ export default function CalendarPage() {
                     {/* Priority dot */}
                     <div
                       className="w-2 h-2 rounded-full shrink-0 mt-1.5"
-                      style={{ background: PRIORITY_COLOR[task.priority] || '#5a4a3a' }}
+                      style={{ background: PRIORITY_COLOR[task.priority] || 'var(--text-3)' }}
                     />
                   </motion.div>
                 ))}

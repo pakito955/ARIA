@@ -267,7 +267,7 @@ function TemplateForm({
   return (
     <div
       className="rounded-2xl p-5 space-y-4"
-      style={{ background: 'var(--bg-card)', border: '1px solid var(--accent)', boxShadow: '0 0 0 1px rgba(217,119,87,0.1)' }}
+      style={{ background: 'var(--bg-card)', border: '1px solid var(--accent)', boxShadow: '0 0 0 1px rgba(124,92,255,0.1)' }}
     >
       <div className="flex items-center justify-between">
         <p className="text-[11px] uppercase tracking-[2px] text-[var(--accent-text)]">

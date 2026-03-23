@@ -159,7 +159,7 @@ export default function DashboardPage() {
             <div className="relative">
               <div
                 className="absolute inset-0 rounded-full blur-[80px] orb-float"
-                style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.15), transparent 70%)', width: 400, height: 400, top: -180, left: -190 }}
+                style={{ background: 'radial-gradient(circle, rgba(124,92,255,0.12), transparent 70%)', width: 400, height: 400, top: -180, left: -190 }}
               />
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)' }}>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
         <div className="relative px-6 py-5 border-b border-[var(--border)] overflow-hidden shrink-0">
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: 'linear-gradient(135deg, rgba(217,119,87,0.06) 0%, transparent 60%)' }}
+            style={{ background: 'linear-gradient(135deg, rgba(124,92,255,0.06) 0%, transparent 60%)' }}
           />
           <div className="flex items-center justify-between relative">
             <div className="flex-1">

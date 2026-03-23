@@ -55,7 +55,7 @@ export function Topbar() {
       {/* Command palette hint */}
       <button
         onClick={() => setCommandOpen(true)}
-        className="hidden md:flex items-center gap-2 ml-4 px-3 py-1.5 rounded bg-white/[0.03] border border-white/[0.07] text-[#5a5a78] hover:text-[#8888aa] hover:border-white/[0.11] transition-all text-xs"
+        className="hidden md:flex items-center gap-2 ml-4 px-3 py-1.5 rounded bg-white/[0.03] border border-white/[0.07] text-[var(--text-3)] hover:text-[var(--text-2)] hover:border-white/[0.11] transition-all text-xs"
       >
         <Command size={11} />
         <span>Quick actions</span>
@@ -63,9 +63,9 @@ export function Topbar() {
       </button>
 
       <div className="ml-auto flex items-center gap-4">
-        <span className="font-mono text-[11px] text-[#8888aa]">{time}</span>
+        <span className="font-mono text-[11px] text-[var(--text-2)]">{time}</span>
 
-        <button className="text-[#5a5a78] hover:text-[#8888aa] transition-colors">
+        <button className="text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors">
           <Bell size={15} />
         </button>
 
@@ -75,13 +75,13 @@ export function Topbar() {
             {initials}
           </div>
           {session?.user?.name && (
-            <span className="text-xs text-[#8888aa] hidden md:block">
+            <span className="text-xs text-[var(--text-2)] hidden md:block">
               {session.user.name.split(' ')[0]}
             </span>
           )}
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-[#5a5a78] hover:text-[#f4a0b5]"
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--text-3)] hover:text-[#f4a0b5]"
           >
             <LogOut size={13} />
           </button>

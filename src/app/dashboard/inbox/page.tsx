@@ -245,7 +245,7 @@ export default function InboxPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -40 }}
             className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-medium text-white shadow-2xl"
-            style={{ background: 'var(--accent)', boxShadow: '0 4px 20px rgba(217,119,87,0.4)' }}
+            style={{ background: 'var(--accent)', boxShadow: '0 4px 20px rgba(124,92,255,0.35)' }}
           >
             ↑ {newEmailsCount} new email{newEmailsCount > 1 ? 's' : ''}
           </motion.div>
@@ -474,7 +474,7 @@ export default function InboxPage() {
                 </div>
                 <div
                   className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-                  style={{ background: 'var(--green)', boxShadow: '0 0 8px rgba(34,197,94,0.4)' }}
+                  style={{ background: 'var(--green)', boxShadow: '0 0 8px rgba(52,211,153,0.4)' }}
                 >
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path d="M2 5l2 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -612,7 +612,7 @@ export default function InboxPage() {
                   <div className="mx-6 mt-5 p-4 rounded-xl border border-[var(--accent)] bg-[var(--accent)]/[0.04] relative overflow-hidden">
                     <div
                       className="absolute right-0 top-0 w-32 h-full pointer-events-none"
-                      style={{ background: 'radial-gradient(ellipse at right, rgba(217,119,87,0.06), transparent 70%)' }}
+                      style={{ background: 'radial-gradient(ellipse at right, rgba(124,92,255,0.06), transparent 70%)' }}
                     />
                     <div className="flex items-center gap-2 mb-3">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
@@ -664,7 +664,7 @@ export default function InboxPage() {
                           <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="flex items-center gap-2 p-3 bg-[#10b981]/08 border border-[#10b981]/20 rounded-lg"
+                            className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'var(--green-subtle)', border: '1px solid rgba(52,211,153,0.2)' }}
                           >
                             <CheckCircle size={14} className="text-[var(--green)]" />
                             <span className="text-[11px] text-[var(--green)]">Reply sent successfully</span>

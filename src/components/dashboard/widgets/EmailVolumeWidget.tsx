@@ -83,9 +83,9 @@ export function EmailVolumeWidget() {
                   className="flex-1 rounded-t-sm min-h-[2px]"
                   style={{
                     background: isToday
-                      ? 'linear-gradient(to top, var(--accent), rgba(217,119,87,0.6))'
-                      : 'rgba(217,119,87,0.35)',
-                    boxShadow: isToday ? '0 0 8px rgba(217,119,87,0.3)' : undefined,
+                      ? 'linear-gradient(to top, var(--accent), rgba(124,92,255,0.6))'
+                      : 'rgba(124,92,255,0.35)',
+                    boxShadow: isToday ? '0 0 8px rgba(124,92,255,0.3)' : undefined,
                   }}
                 />
                 {/* Outgoing bar */}

@@ -21,7 +21,7 @@ export default async function DashboardLayout({
   if (!session?.user) redirect('/login')
 
   return (
-    <div className="h-screen flex overflow-hidden" style={{ background: 'var(--bg-base)' }}>
+    <div className="h-screen flex overflow-hidden" style={{ background: '#0B0B0F' }}>
       {/* Ambient gradient orbs */}
       <div className="mesh-bg" />
       {/* Film grain noise overlay */}
@@ -32,8 +32,11 @@ export default async function DashboardLayout({
         <Sidebar />
       </div>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-hidden grid-bg pb-16 md:pb-0 min-w-0 relative z-10">
+      {/* Main content area */}
+      <main
+        className="flex-1 overflow-hidden pb-16 md:pb-0 min-w-0 relative z-10"
+        style={{ background: '#0B0B0F' }}
+      >
         <PageTransition>
           {children}
         </PageTransition>

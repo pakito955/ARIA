@@ -39,7 +39,7 @@ export function NextActionWidget() {
     <div className="card-premium p-5 relative overflow-hidden flex flex-col h-full">
       <div
         className="absolute bottom-0 right-0 w-32 h-32 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.08), transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(124,92,255,0.08), transparent 70%)' }}
       />
       <div className="flex items-center gap-2 mb-4">
         <Zap size={13} className="text-[var(--accent-text)]" />

@@ -89,12 +89,12 @@ export function TriageMode({ emails, onArchive, onReply, onTask, onSnooze, onClo
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-[9px] tracking-[2.5px] uppercase text-[#D97757]">ARIA Triage Mode</p>
-            <p className="text-[12px] text-[#8888aa] mt-0.5">
+            <p className="text-[9px] tracking-[2.5px] uppercase text-[#7C5CFF]">ARIA Triage Mode</p>
+            <p className="text-[12px] text-[var(--text-2)] mt-0.5">
               {index + 1} of {emails.length} · {processed} processed
             </p>
           </div>
-          <button onClick={onClose} className="text-[#5a4a3a] hover:text-white p-1.5">
+          <button onClick={onClose} className="text-[var(--text-3)] hover:text-white p-1.5">
             <X size={16} />
           </button>
         </div>
@@ -103,7 +103,7 @@ export function TriageMode({ emails, onArchive, onReply, onTask, onSnooze, onClo
         <div className="h-1 bg-white/[0.04] rounded-full mb-4 overflow-hidden">
           <motion.div
             animate={{ width: `${progressPct}%` }}
-            className="h-full bg-[#D97757] rounded-full"
+            className="h-full bg-[#7C5CFF] rounded-full"
             transition={{ duration: 0.3 }}
           />
         </div>
@@ -116,7 +116,7 @@ export function TriageMode({ emails, onArchive, onReply, onTask, onSnooze, onClo
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
             transition={{ duration: 0.2 }}
-            className="rounded-2xl border border-white/[0.08] bg-[#0c0c1a] p-6 mb-4"
+            className="rounded-2xl border border-white/[0.08] bg-[var(--bg-card)] p-6 mb-4"
           >
             {/* Priority indicator */}
             {current.analysis?.priority && (
@@ -125,8 +125,8 @@ export function TriageMode({ emails, onArchive, onReply, onTask, onSnooze, onClo
                   className="text-[8px] tracking-[1.5px] uppercase px-2 py-0.5 rounded-full"
                   style={{
                     background: current.analysis.priority === 'CRITICAL'
-                      ? 'rgba(239,68,68,0.12)' : 'rgba(217,119,87,0.1)',
-                    color: current.analysis.priority === 'CRITICAL' ? '#ef4444' : '#D97757',
+                      ? 'rgba(239,68,68,0.12)' : 'rgba(124,92,255,0.1)',
+                    color: current.analysis.priority === 'CRITICAL' ? '#ef4444' : '#7C5CFF',
                   }}
                 >
                   {current.analysis.priority}
@@ -134,7 +134,7 @@ export function TriageMode({ emails, onArchive, onReply, onTask, onSnooze, onClo
               </div>
             )}
 
-            <p className="text-[11px] text-[#8888aa] mb-1.5">
+            <p className="text-[11px] text-[var(--text-2)] mb-1.5">
               {current.fromName || current.fromEmail}
             </p>
             <h3 className="text-[15px] font-medium text-white mb-3 leading-snug">
@@ -142,11 +142,11 @@ export function TriageMode({ emails, onArchive, onReply, onTask, onSnooze, onClo
             </h3>
 
             {current.analysis?.summary ? (
-              <p className="text-[12px] text-[#8888aa] leading-relaxed border-l-2 border-[#D97757]/30 pl-3">
+              <p className="text-[12px] text-[var(--text-2)] leading-relaxed border-l-2 border-[#7C5CFF]/30 pl-3">
                 {current.analysis.summary}
               </p>
             ) : (
-              <p className="text-[12px] text-[#8888aa] leading-relaxed line-clamp-3">
+              <p className="text-[12px] text-[var(--text-2)] leading-relaxed line-clamp-3">
                 {current.bodyText?.slice(0, 200)}
               </p>
             )}
@@ -156,8 +156,8 @@ export function TriageMode({ emails, onArchive, onReply, onTask, onSnooze, onClo
         {/* Action buttons */}
         <div className="grid grid-cols-4 gap-2 mb-4">
           {[
-            { action: 'archive' as const, icon: Archive, label: 'Archive', key: 'E', color: '#5a4a3a', bg: 'rgba(74,74,106,0.12)' },
-            { action: 'reply' as const, icon: Reply, label: 'Reply', key: 'R', color: '#D97757', bg: 'rgba(217,119,87,0.12)' },
+            { action: 'archive' as const, icon: Archive, label: 'Archive', key: 'E', color: 'var(--text-3)', bg: 'rgba(74,74,106,0.12)' },
+            { action: 'reply' as const, icon: Reply, label: 'Reply', key: 'R', color: '#7C5CFF', bg: 'rgba(124,92,255,0.12)' },
             { action: 'task' as const, icon: CheckSquare, label: 'Task', key: 'T', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
             { action: 'snooze' as const, icon: Clock, label: 'Snooze', key: 'S', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
           ].map(({ action, icon: Icon, label, key, color, bg }) => (
@@ -169,7 +169,7 @@ export function TriageMode({ emails, onArchive, onReply, onTask, onSnooze, onClo
             >
               <Icon size={18} style={{ color }} />
               <span className="text-[10px] font-medium" style={{ color }}>{label}</span>
-              <kbd className="text-[8px] bg-white/[0.05] text-[#5a4a3a] px-1.5 py-0.5 rounded font-mono">{key}</kbd>
+              <kbd className="text-[8px] bg-white/[0.05] text-[var(--text-3)] px-1.5 py-0.5 rounded font-mono">{key}</kbd>
             </button>
           ))}
         </div>
@@ -179,15 +179,15 @@ export function TriageMode({ emails, onArchive, onReply, onTask, onSnooze, onClo
           <button
             onClick={prev}
             disabled={index === 0}
-            className="flex items-center gap-1.5 text-[10px] text-[#5a4a3a] hover:text-[#8888aa] transition-colors disabled:opacity-30"
+            className="flex items-center gap-1.5 text-[10px] text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors disabled:opacity-30"
           >
             <ChevronUp size={13} />
             K — Previous
           </button>
-          <p className="text-[9px] text-[#5a4a3a]">ESC to exit</p>
+          <p className="text-[9px] text-[var(--text-3)]">ESC to exit</p>
           <button
             onClick={next}
-            className="flex items-center gap-1.5 text-[10px] text-[#5a4a3a] hover:text-[#8888aa] transition-colors"
+            className="flex items-center gap-1.5 text-[10px] text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors"
           >
             J — Next
             <ChevronDown size={13} />

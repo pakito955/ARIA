@@ -4,7 +4,7 @@ import { signIn } from 'next-auth/react'
 import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Zap, Mail, Calendar } from 'lucide-react'
 
 function ErrorBanner() {
   const searchParams = useSearchParams()
@@ -26,15 +26,21 @@ function ErrorBanner() {
       style={{
         background: 'var(--red-subtle)',
         color: 'var(--red)',
-        border: '1px solid rgba(239,68,68,0.25)',
+        border: '1px solid rgba(248,113,113,0.25)',
         boxShadow: 'var(--glow-red)',
       }}
     >
-      <span style={{ fontSize: 14 }}>⚠</span>
+      <span className="text-sm">!</span>
       {messages[error] || messages.Default}
     </motion.div>
   )
 }
+
+const FEATURES = [
+  { Icon: Zap,      label: 'AI Analysis' },
+  { Icon: Mail,     label: 'Gmail + Outlook' },
+  { Icon: Calendar, label: 'Auto Schedule' },
+]
 
 export default function LoginPage() {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null)
@@ -51,138 +57,156 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{ background: 'var(--bg-base)' }}
+      style={{ background: '#0B0B0F' }}
     >
-      {/* Ambient background */}
-      <div className="absolute inset-0 grid-bg opacity-30" />
-      <div className="mesh-bg" />
+      {/* Subtle ambient gradient orbs */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: '-15%',
+          right: '-8%',
+          width: 700,
+          height: 700,
+          background: 'radial-gradient(ellipse, rgba(124,92,255,0.07) 0%, transparent 60%)',
+          animation: 'float-orb 9s ease-in-out infinite',
+        }}
+      />
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: '-10%',
+          left: '-5%',
+          width: 500,
+          height: 500,
+          background: 'radial-gradient(ellipse, rgba(96,165,250,0.04) 0%, transparent 65%)',
+          animation: 'float-orb 12s ease-in-out infinite reverse',
+        }}
+      />
+
+      {/* Grid */}
+      <div className="absolute inset-0 grid-bg opacity-25" />
       <div className="noise-overlay" />
 
       <Suspense><ErrorBanner /></Suspense>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-[380px] mx-4"
+        className="relative z-10 w-full max-w-[400px] mx-4"
       >
-        {/* Logo mark */}
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-10"
+        {/* Card */}
+        <div
+          className="card-glass px-10 py-10"
+          style={{ borderRadius: 20 }}
         >
-          <div className="flex items-center justify-center mb-6">
+          {/* Logo */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.45 }}
+            className="flex flex-col items-center mb-8"
+          >
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
               style={{
-                background: 'linear-gradient(135deg, #D97757 0%, #C96842 100%)',
-                boxShadow: '0 0 40px rgba(217,119,87,0.35), inset 0 1px 0 rgba(255,255,255,0.15)',
+                background: 'linear-gradient(135deg, #7C5CFF, #A78BFA)',
+                boxShadow: '0 0 32px rgba(124,92,255,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
               }}
             >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"
-                  fill="white"
-                  stroke="white"
-                  strokeWidth="0.5"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <Zap size={22} className="text-white" strokeWidth={2.5} />
             </div>
-          </div>
+            <h1 className="gradient-text font-outfit text-4xl font-bold tracking-[0.1em] mb-2">
+              ARIA
+            </h1>
+            <p className="text-[14px] text-center leading-relaxed" style={{ color: 'var(--text-2)' }}>
+              Your AI-powered email assistant
+            </p>
+          </motion.div>
 
-          <p
-            className="text-[10px] tracking-[4px] uppercase mb-3 font-medium"
+          {/* Divider */}
+          <div className="mb-6 h-px" style={{ background: 'var(--border)' }} />
+
+          {/* Auth buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="space-y-3"
+          >
+            <AuthButton
+              provider="google"
+              label="Continue with Google"
+              loading={loadingProvider === 'google'}
+              disabled={loadingProvider !== null}
+              onClick={() => handleLogin('google')}
+              icon={<GoogleIcon />}
+            />
+
+            <div className="flex items-center gap-3 py-0.5">
+              <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+              <span className="text-[10px] tracking-[3px] font-medium" style={{ color: 'var(--text-3)' }}>
+                OR
+              </span>
+              <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+            </div>
+
+            <AuthButton
+              provider="azure-ad"
+              label="Continue with Microsoft"
+              loading={loadingProvider === 'azure-ad'}
+              disabled={loadingProvider !== null}
+              onClick={() => handleLogin('azure-ad')}
+              icon={<MicrosoftIcon />}
+            />
+          </motion.div>
+
+          {/* Fine print */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35 }}
+            className="text-center text-[11px] mt-6"
             style={{ color: 'var(--text-3)' }}
           >
-            AI Executive Assistant
-          </p>
-          <h1
-            className="font-outfit text-5xl font-bold tracking-[-0.03em] mb-3"
-            style={{ color: 'var(--text-1)' }}
-          >
-            ARIA
-          </h1>
-          <p className="text-[14px] leading-relaxed" style={{ color: 'var(--text-2)' }}>
-            Reads your emails. Understands context.
-            <br />
-            Organizes everything — automatically.
-          </p>
-        </motion.div>
+            By continuing you agree to our{' '}
+            <a href="#" style={{ color: 'var(--accent-text)' }} className="hover:underline">Terms</a>
+            {' '}&amp;{' '}
+            <a href="#" style={{ color: 'var(--accent-text)' }} className="hover:underline">Privacy Policy</a>
+          </motion.p>
+        </div>
 
-        {/* Auth buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.45 }}
-          className="space-y-3"
-        >
-          <AuthButton
-            provider="google"
-            label="Continue with Google"
-            loading={loadingProvider === 'google'}
-            disabled={loadingProvider !== null}
-            onClick={() => handleLogin('google')}
-            icon={<GoogleIcon />}
-          />
-
-          <div className="flex items-center gap-3 py-0.5">
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-            <span className="text-[10px] tracking-[3px] font-medium" style={{ color: 'var(--text-3)' }}>
-              OR
-            </span>
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-          </div>
-
-          <AuthButton
-            provider="azure-ad"
-            label="Continue with Microsoft"
-            loading={loadingProvider === 'azure-ad'}
-            disabled={loadingProvider !== null}
-            onClick={() => handleLogin('azure-ad')}
-            icon={<MicrosoftIcon />}
-          />
-        </motion.div>
-
-        {/* Feature chips */}
+        {/* Feature chips below card */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
-          className="mt-8 grid grid-cols-3 gap-2"
+          transition={{ delay: 0.4 }}
+          className="mt-6 grid grid-cols-3 gap-2"
         >
           {FEATURES.map((f) => (
             <div
               key={f.label}
-              className="py-3.5 rounded-xl text-center"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="py-3 rounded-xl text-center"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid var(--border)',
+              }}
             >
-              <div className="text-[18px] mb-1.5" style={{ lineHeight: 1 }}>{f.icon}</div>
+              <div className="mb-1.5 flex justify-center">
+                <f.Icon size={14} style={{ color: 'var(--accent-text)' }} />
+              </div>
               <p className="text-[10px] font-medium leading-tight" style={{ color: 'var(--text-3)' }}>
                 {f.label}
               </p>
             </div>
           ))}
         </motion.div>
-
-        <p className="text-center text-[10px] mt-7" style={{ color: 'var(--text-3)' }}>
-          By signing in you agree to our{' '}
-          <a href="#" style={{ color: 'var(--accent-text)' }} className="hover:underline">
-            Terms
-          </a>{' '}
-          &{' '}
-          <a href="#" style={{ color: 'var(--accent-text)' }} className="hover:underline">
-            Privacy Policy
-          </a>
-        </p>
       </motion.div>
     </div>
   )
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────
+// ── Sub-components ──────────────────────────────────────────────────────────
 
 interface AuthButtonProps {
   provider: string
@@ -198,30 +222,21 @@ function AuthButton({ label, icon, loading, disabled, onClick }: AuthButtonProps
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl text-[13px] font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[13px] font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-hover)]"
       style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border-medium)',
         color: 'var(--text-1)',
       }}
-      onMouseEnter={(e) => {
-        if (!disabled) e.currentTarget.style.borderColor = 'var(--border-focus)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border-medium)'
-      }}
     >
-      {loading ? <Loader2 size={16} className="animate-spin" /> : icon}
+      {loading
+        ? <Loader2 size={16} className="animate-spin" style={{ color: 'var(--accent-text)' }} />
+        : icon
+      }
       {loading ? 'Signing in…' : label}
     </button>
   )
 }
-
-const FEATURES = [
-  { icon: '⚡', label: 'AI Analysis' },
-  { icon: '✉', label: 'Gmail + Outlook' },
-  { icon: '📅', label: 'Auto Schedule' },
-]
 
 function GoogleIcon() {
   return (

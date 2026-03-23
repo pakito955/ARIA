@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
 import { Paperclip, Zap, Loader2 } from 'lucide-react'
@@ -36,7 +35,10 @@ interface Props {
 }
 
 function avatarColor(email: string): string {
-  const colors = ['#D97757', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#6366f1', '#14b8a6']
+  const colors = [
+    '#7C5CFF', '#0ea5e9', '#34D399', '#FBBF24',
+    '#ec4899', '#6366f1', '#14b8a6', '#F87171',
+  ]
   let hash = 0
   for (let i = 0; i < email.length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash)
   return colors[Math.abs(hash) % colors.length]
@@ -45,7 +47,13 @@ function avatarColor(email: string): string {
 const PRIORITY_COLOR: Record<string, string> = {
   CRITICAL: 'var(--red)',
   HIGH:     'var(--amber)',
-  MEDIUM:   'var(--accent)',
+  MEDIUM:   'var(--accent-text)',
+}
+
+const PRIORITY_BG: Record<string, string> = {
+  CRITICAL: 'var(--red-subtle)',
+  HIGH:     'var(--amber-subtle)',
+  MEDIUM:   'var(--accent-subtle)',
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -69,70 +77,56 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
     ? email.analysis.summary
     : email.bodyText?.slice(0, 80).replace(/\n/g, ' ')
 
-  const priorityStripColor =
-    priority === 'CRITICAL' ? 'var(--red)' :
-    priority === 'HIGH' ? 'var(--amber)' :
-    priority === 'MEDIUM' ? 'var(--accent)' :
-    null
+  const isCritical = priority === 'CRITICAL'
+
+  // Left border color logic
+  const leftBorderColor = isSelected
+    ? 'var(--accent)'
+    : (priority === 'CRITICAL' || priority === 'HIGH') && !email.isRead
+    ? PRIORITY_COLOR[priority]
+    : 'transparent'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={!isSelected && !selected ? { y: -1 } : {}}
-      transition={{ delay: index * 0.02, duration: 0.25, ease: 'easeOut' }}
+    <div
       onClick={() => setSelectedEmail(email.id)}
-      className="group relative flex gap-3 px-3 py-3 cursor-pointer rounded-xl transition-colors duration-150 mb-0.5"
+      className={cn(
+        'group relative flex gap-3 px-3 py-3 cursor-pointer transition-colors duration-150 mb-px',
+        isSelected
+          ? 'bg-[rgba(124,92,255,0.08)]'
+          : selected
+          ? 'bg-[var(--accent-subtle)]'
+          : 'hover:bg-[var(--bg-hover)]',
+        isCritical && !isSelected && 'bg-[rgba(248,113,113,0.04)]'
+      )}
       style={{
-        background: isSelected
-          ? 'rgba(217,119,87,0.07)'
-          : selected
-          ? 'var(--accent-subtle)'
-          : 'transparent',
+        borderLeft: `2px solid ${leftBorderColor}`,
         boxShadow: isSelected
-          ? '0 0 0 1px rgba(217,119,87,0.25), 0 4px 20px rgba(217,119,87,0.12)'
+          ? '0 0 0 1px rgba(124,92,255,0.2) inset'
           : selected
-          ? '0 0 0 1px rgba(217,119,87,0.2)'
+          ? '0 0 0 1px rgba(124,92,255,0.15) inset'
           : 'none',
-        borderLeft: isSelected
-          ? '2px solid var(--accent)'
-          : priorityStripColor && !email.isRead
-          ? `2px solid ${priorityStripColor}`
-          : '2px solid transparent',
-      }}
-      onMouseEnter={(e) => {
-        if (!isSelected && !selected) {
-          const el = e.currentTarget as HTMLElement
-          el.style.background = 'var(--bg-hover)'
-          el.style.boxShadow = '0 0 0 1px rgba(217,119,87,0.08), 0 2px 12px rgba(0,0,0,0.2)'
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isSelected && !selected) {
-          const el = e.currentTarget as HTMLElement
-          el.style.background = 'transparent'
-          el.style.boxShadow = 'none'
-        }
       }}
     >
-      {/* Unread stripe */}
-      {!email.isRead && (
+      {/* Unread dot */}
+      {!email.isRead && !isSelected && (
         <div
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full"
-          style={{ background: 'var(--accent)' }}
+          className="absolute left-[2px] top-1/2 -translate-y-1/2 w-[6px] h-[6px] rounded-full"
+          style={{ background: 'var(--accent)', boxShadow: '0 0 6px rgba(124,92,255,0.5)' }}
         />
       )}
 
       {/* Avatar / Checkbox */}
       <div className="relative w-8 h-8 shrink-0 mt-0.5">
-        {/* Checkbox — appears on hover or when selected */}
         {onToggleSelect && (
           <button
             onClick={(e) => { e.stopPropagation(); onToggleSelect(email.id) }}
-            className={`absolute inset-0 rounded-full flex items-center justify-center transition-opacity z-10 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+            className={cn(
+              'absolute inset-0 rounded-full flex items-center justify-center transition-opacity z-10',
+              selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            )}
             style={{
               background: selected ? 'var(--accent)' : 'var(--bg-card)',
-              border: selected ? '2px solid var(--accent)' : '2px solid var(--border)',
+              border: selected ? '2px solid var(--accent)' : '2px solid var(--border-medium)',
             }}
             aria-label={selected ? 'Deselect email' : 'Select email'}
           >
@@ -143,9 +137,11 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
             )}
           </button>
         )}
-        {/* Avatar behind checkbox */}
         <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold text-white ${onToggleSelect && !selected ? 'group-hover:opacity-0' : selected ? 'opacity-0' : ''} transition-opacity`}
+          className={cn(
+            'w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold text-white transition-opacity',
+            onToggleSelect && !selected ? 'group-hover:opacity-0' : selected ? 'opacity-0' : ''
+          )}
           style={{ background: color }}
         >
           {initials}
@@ -154,74 +150,65 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        {/* Sender + time */}
+        {/* Sender + time row */}
         <div className="flex items-baseline justify-between gap-2 mb-0.5">
           <span
-            className="text-[13px] truncate"
-            style={{
-              color: 'var(--text-1)',
-              fontWeight: !email.isRead ? 600 : 400,
-            }}
+            className={cn(
+              'text-[13px] truncate',
+              !email.isRead ? 'font-semibold' : 'font-normal'
+            )}
+            style={{ color: 'var(--text-1)' }}
           >
             {name}
           </span>
-          <span
-            className="text-[11px] shrink-0 tabular-nums"
-            style={{ color: 'var(--text-3)' }}
-          >
+          <span className="text-[11px] shrink-0 tabular-nums" style={{ color: 'var(--text-3)' }}>
             {timeAgo}
           </span>
         </div>
 
         {/* Subject */}
         <p
-          className="text-[12.5px] truncate mb-1"
-          style={{
-            color: !email.isRead ? 'var(--text-1)' : 'var(--text-2)',
-            fontWeight: !email.isRead ? 500 : 400,
-          }}
+          className={cn('text-[12.5px] truncate mb-1', !email.isRead ? 'font-medium' : 'font-normal')}
+          style={{ color: !email.isRead ? 'var(--text-1)' : 'var(--text-2)' }}
         >
           {email.subject}
         </p>
 
         {/* Preview */}
-        <p
-          className="text-[12px] truncate"
-          style={{ color: 'var(--text-3)' }}
-        >
+        <p className="text-[12px] truncate" style={{ color: 'var(--text-3)' }}>
           {preview}
         </p>
 
         {/* Meta row */}
         <div className="flex items-center gap-2 mt-2">
-          {/* Priority dot + label */}
+          {/* Priority badge */}
           {priority && priority !== 'LOW' && (
-            <div className="flex items-center gap-1">
-              <span
-                className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ background: PRIORITY_COLOR[priority] }}
-              />
-              <span className="text-[11px]" style={{ color: PRIORITY_COLOR[priority] }}>
-                {priority === 'CRITICAL' ? 'Critical' : priority === 'HIGH' ? 'High' : 'Medium'}
-              </span>
-            </div>
-          )}
-
-          {/* Category */}
-          {email.analysis?.category && CATEGORY_LABEL[email.analysis.category] && (
-            <span className="text-[11px]" style={{ color: 'var(--text-3)' }}>
-              {priority && priority !== 'LOW' ? '·' : ''} {CATEGORY_LABEL[email.analysis.category]}
+            <span
+              className="text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0"
+              style={{
+                background: PRIORITY_BG[priority],
+                color: PRIORITY_COLOR[priority],
+              }}
+            >
+              {priority === 'CRITICAL' ? 'Critical' : priority === 'HIGH' ? 'High' : 'Medium'}
             </span>
           )}
 
-          {/* Sentiment badge — only for NEGATIVE or URGENT */}
+          {/* Category tag */}
+          {email.analysis?.category && CATEGORY_LABEL[email.analysis.category] && (
+            <span className="tag shrink-0">
+              {CATEGORY_LABEL[email.analysis.category]}
+            </span>
+          )}
+
+          {/* Sentiment badge */}
           {(email.analysis?.sentiment === 'NEGATIVE' || email.analysis?.sentiment === 'URGENT') && (
             <span
               className="text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0"
               style={{
                 background: email.analysis.sentiment === 'URGENT'
-                  ? 'color-mix(in srgb, var(--amber) 15%, transparent)'
-                  : 'color-mix(in srgb, var(--red) 15%, transparent)',
+                  ? 'var(--amber-subtle)'
+                  : 'var(--red-subtle)',
                 color: email.analysis.sentiment === 'URGENT' ? 'var(--amber)' : 'var(--red)',
               }}
             >
@@ -231,16 +218,16 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
 
           {/* Attachment */}
           {email.hasAttachments && (
-            <Paperclip size={10} style={{ color: 'var(--text-3)' }} />
+            <Paperclip size={10} className="shrink-0" style={{ color: 'var(--text-3)' }} />
           )}
 
-          {/* Analyze */}
+          {/* Analyze button */}
           {!email.analysis && (
             <button
               onClick={(e) => { e.stopPropagation(); onAnalyze(email.id) }}
               disabled={analyzing}
               className="ml-auto flex items-center gap-1 text-[11px] opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-30"
-              style={{ color: 'var(--accent)' }}
+              style={{ color: 'var(--accent-text)' }}
             >
               {analyzing
                 ? <Loader2 size={9} className="animate-spin" />
@@ -251,6 +238,6 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
