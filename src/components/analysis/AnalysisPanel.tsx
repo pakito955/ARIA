@@ -18,57 +18,43 @@ export function AITriggerButton() {
   const { aiPanelOpen, setAiPanelOpen, selectedEmailId } = useAppStore()
   const hasEmail = !!selectedEmailId
 
+  // Hide when panel is open — the panel header has a close button
+  if (aiPanelOpen) return null
+
   return (
-    <motion.button
-      onClick={() => setAiPanelOpen(!aiPanelOpen)}
-      initial={false}
-      animate={{
-        right: aiPanelOpen ? 396 : 0,
-        borderRadius: aiPanelOpen ? '12px 0 0 12px' : '12px 0 0 12px',
-      }}
-      transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.97 }}
-      title={aiPanelOpen ? 'Close AI panel' : 'Open AI panel (A)'}
-      className="fixed top-1/2 -translate-y-1/2 z-[300] flex flex-col items-center justify-center gap-1.5 py-5 px-2 shadow-2xl"
+    <button
+      onClick={() => setAiPanelOpen(true)}
+      title="Open AI panel (A)"
+      className="fixed top-1/2 right-0 -translate-y-1/2 z-[300] flex flex-col items-center justify-center gap-1.5 py-5 px-2 shadow-2xl"
       style={{
-        background: aiPanelOpen
-          ? 'var(--bg-card)'
-          : 'linear-gradient(160deg, #7C5CFF, #6D4EF0)',
+        background: 'linear-gradient(160deg, #7C5CFF, #6D4EF0)',
+        borderRadius: '12px 0 0 12px',
         borderLeft: '1px solid var(--border)',
         borderTop: '1px solid var(--border)',
         borderBottom: '1px solid var(--border)',
-        boxShadow: aiPanelOpen
-          ? 'none'
-          : '0 0 24px rgba(124,92,255,0.35), -4px 0 16px rgba(0,0,0,0.25)',
+        boxShadow: '0 0 24px rgba(124,92,255,0.35), -4px 0 16px rgba(0,0,0,0.25)',
       }}
     >
-      {aiPanelOpen ? (
-        <ChevronRight size={13} style={{ color: 'var(--text-3)' }} />
-      ) : (
-        <>
-          <Brain size={14} className="text-white" />
-          <span
-            className="text-white font-medium"
-            style={{
-              fontSize: 9,
-              letterSpacing: '0.12em',
-              writingMode: 'vertical-rl',
-              textOrientation: 'mixed',
-              transform: 'rotate(180deg)',
-            }}
-          >
-            AI
-          </span>
-          {hasEmail && (
-            <span
-              className="w-1.5 h-1.5 rounded-full mt-1"
-              style={{ background: '#10b981', boxShadow: '0 0 6px rgba(16,185,129,0.6)' }}
-            />
-          )}
-        </>
+      <Brain size={14} className="text-white" />
+      <span
+        className="text-white font-medium"
+        style={{
+          fontSize: 9,
+          letterSpacing: '0.12em',
+          writingMode: 'vertical-rl',
+          textOrientation: 'mixed',
+          transform: 'rotate(180deg)',
+        }}
+      >
+        AI
+      </span>
+      {hasEmail && (
+        <span
+          className="w-1.5 h-1.5 rounded-full mt-1"
+          style={{ background: '#10b981', boxShadow: '0 0 6px rgba(16,185,129,0.6)' }}
+        />
       )}
-    </motion.button>
+    </button>
   )
 }
 
@@ -127,39 +113,26 @@ export function AnalysisPanel() {
 
   return (
     <>
-      {/* Floating trigger tab */}
+      {/* Floating trigger tab — hidden when panel is open */}
       <AITriggerButton />
 
-      <AnimatePresence>
-        {aiPanelOpen && (
-          <>
-            {/* Soft backdrop */}
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[290] pointer-events-none"
-              style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.25), transparent 60%)' }}
-            />
-
-            {/* Drawer */}
-            <motion.aside
-              key="drawer"
-              initial={{ x: '100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 z-[295] w-[380px] flex flex-col overflow-hidden"
-              style={{
-                background: 'color-mix(in srgb, var(--bg-card) 92%, transparent)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                borderLeft: '1px solid var(--border-medium)',
-                boxShadow: '-12px 0 48px rgba(0,0,0,0.3)',
-              }}
-            >
+      {/* In-flow panel: width transitions 0 → 380px, pushing main content */}
+      <div
+        className="shrink-0 overflow-hidden flex flex-col"
+        style={{
+          width: aiPanelOpen ? 380 : 0,
+          transition: 'width 300ms cubic-bezier(0.32, 0.72, 0, 1)',
+        }}
+      >
+        <aside
+          className="w-[380px] h-full flex flex-col overflow-hidden"
+          style={{
+            background: 'color-mix(in srgb, var(--bg-card) 96%, transparent)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderLeft: '1px solid var(--border-medium)',
+          }}
+        >
               {/* Header */}
               <div className="px-5 pt-5 pb-4 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
                 <div className="flex items-center justify-between mb-4">
@@ -277,10 +250,8 @@ export function AnalysisPanel() {
                   <span className="text-[9px]" style={{ color: 'var(--green)' }}>active</span>
                 </div>
               </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+        </aside>
+      </div>
     </>
   )
 }

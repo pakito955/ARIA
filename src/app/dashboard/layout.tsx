@@ -32,22 +32,26 @@ export default async function DashboardLayout({
         <Sidebar />
       </div>
 
-      {/* Main content area */}
-      <main
-        className="flex-1 overflow-hidden pb-16 md:pb-0 min-w-0 relative z-10"
-        style={{ background: '#0B0B0F' }}
-      >
-        <PageTransition>
-          {children}
-        </PageTransition>
-      </main>
+      {/* Main content + AI panel side by side */}
+      <div className="flex-1 flex overflow-hidden min-w-0">
+        <main
+          className="flex-1 overflow-hidden pb-16 md:pb-0 min-w-0 relative z-10"
+          style={{ background: '#0B0B0F' }}
+        >
+          <PageTransition>
+            {children}
+          </PageTransition>
+        </main>
+
+        {/* AI Panel — in-flow, pushes main content */}
+        <AnalysisPanel />
+      </div>
 
       <CommandPalette />
       <NotificationManager />
       <ToastContainer />
       <ComposeModal />
       <OnboardingFlow />
-      <AnalysisPanel />
       <KeyboardShortcuts />
 
       {/* Mobile bottom nav */}
