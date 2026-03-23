@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
 import { Paperclip, Zap, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { motion } from 'framer-motion'
 
 interface Email {
   id: string
@@ -87,10 +88,15 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
     : 'transparent'
 
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 0.995, y: -2 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
       onClick={() => setSelectedEmail(email.id)}
       className={cn(
-        'group relative flex gap-3 px-3 py-3 cursor-pointer transition-colors duration-150 mb-px',
+        'group relative flex gap-3 px-3 py-3 cursor-pointer transition-colors duration-200 mb-px',
         isSelected
           ? 'bg-[rgba(124,92,255,0.08)]'
           : selected
@@ -238,6 +244,6 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

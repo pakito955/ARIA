@@ -7,12 +7,12 @@
 ───────────────────────────────────────────────────────────── */
 :root,
 .dark {
-  /* Surfaces */
-  --bg-base:      #0B0B0F;
-  --bg-surface:   #12121A;
-  --bg-card:      #161622;
-  --bg-hover:     #1C1C28;
-  --bg-input:     #12121A;
+  /* Surfaces - Polished zinc palette */
+  --bg-base:      #09090B;
+  --bg-surface:   #121216;
+  --bg-card:      #18181B;
+  --bg-hover:     #27272A;
+  --bg-input:     #18181B;
 
   /* Borders */
   --border:        rgba(255, 255, 255, 0.06);

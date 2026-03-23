@@ -95,8 +95,8 @@ export function Sidebar() {
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className="flex flex-col h-full shrink-0 z-40 overflow-hidden"
       style={{
-        background: '#0B0B0F',
-        boxShadow: '1px 0 0 rgba(255,255,255,0.05)',
+        background: 'var(--bg-base)',
+        boxShadow: '1px 0 0 var(--border)',
       }}
     >
       {/* ── Logo + Bell ─────────────────────────────────────────── */}

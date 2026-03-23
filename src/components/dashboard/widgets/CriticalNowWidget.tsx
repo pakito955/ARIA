@@ -30,7 +30,13 @@ export function CriticalNowWidget() {
   const critical = statsData?.critical ?? 0
 
   return (
-    <div className="card-premium shimmer-highlight p-5 relative overflow-hidden h-full">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, scale: 1.01 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      className="card-premium shimmer-highlight p-5 relative overflow-hidden h-full"
+    >
       <div
         className="absolute top-0 right-0 w-48 h-full pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at top right, rgba(239,68,68,0.05), transparent 70%)' }}
@@ -97,6 +103,6 @@ export function CriticalNowWidget() {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   )
 }

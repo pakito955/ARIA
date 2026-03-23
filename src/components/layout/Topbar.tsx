@@ -39,7 +39,7 @@ export function Topbar() {
     : 'U'
 
   return (
-    <header className="flex items-center gap-4 px-5 border-b border-white/[0.055] bg-[#080810]/95 backdrop-blur-xl z-50">
+    <header className="flex items-center gap-4 px-5 border-b border-[var(--border)] bg-[#09090b]/80 backdrop-blur-xl z-50">
       {/* Logo */}
       <div className="flex items-center gap-2 font-cormorant text-[22px] font-light tracking-tight">
         <div className="w-2 h-2 rounded-full bg-[#e8c97a] shadow-[0_0_8px_#e8c97a] animate-pulse" />

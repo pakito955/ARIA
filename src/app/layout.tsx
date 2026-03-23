@@ -1,28 +1,8 @@
 import type { Metadata, Viewport } from 'next'
-import { Outfit, Inter, JetBrains_Mono } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import { Providers } from '@/components/Providers'
 import './globals.css'
-
-const outfit = Outfit({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-outfit',
-  display: 'swap',
-})
-
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-inter',
-  display: 'swap',
-})
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-mono',
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: 'ARIA · AI Executive Assistant',
@@ -37,17 +17,21 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#0B0B0F' },
+    { media: '(prefers-color-scheme: dark)', color: '#09090b' },
     { media: '(prefers-color-scheme: light)', color: '#f5f5f7' },
   ],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // dark class set server-side; ThemeProvider updates it on client
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${outfit.variable} ${inter.variable} ${jetbrainsMono.variable} font-inter antialiased`}
+        className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased`}
+        style={{
+          '--font-inter': 'var(--font-geist-sans)',
+          '--font-outfit': 'var(--font-geist-sans)',
+          '--font-mono': 'var(--font-geist-mono)',
+        } as React.CSSProperties}
       >
         <Providers>{children}</Providers>
       </body>
