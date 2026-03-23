@@ -29,14 +29,7 @@ export function MobileNav() {
   })
 
   return (
-    <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe"
-      style={{
-        background: 'color-mix(in srgb, var(--bg-card) 92%, transparent)',
-        backdropFilter: 'blur(20px)',
-        borderTop: '1px solid var(--border)',
-      }}
-    >
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe bg-card/95 backdrop-blur-md border-t border-border">
       <div className="flex items-center px-2">
         {MOBILE_NAV.map((item) => {
           const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
@@ -46,34 +39,29 @@ export function MobileNav() {
           return (
             <Link key={item.href} href={item.href} className="flex-1">
               <div className="flex flex-col items-center gap-1 py-3 relative">
-                {/* Active top indicator */}
                 {active && (
-                  <span
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[2px] rounded-full"
-                    style={{ background: 'var(--accent)' }}
-                  />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full bg-1" />
                 )}
 
                 <div className="relative">
                   <item.icon
                     size={22}
-                    strokeWidth={active ? 2.2 : 1.5}
-                    style={{ color: active ? 'var(--accent-text)' : 'var(--text-3)' }}
+                    strokeWidth={active ? 2.5 : 2}
+                    className={cn(active ? 'text-1' : 'text-3')}
                   />
                   {badge > 0 && (
                     <span
-                      className="absolute -top-1.5 -right-2 min-w-[15px] h-[15px] rounded-full text-[8px] font-bold flex items-center justify-center px-0.5 text-white"
-                      style={{ background: isCritical ? 'var(--red)' : 'var(--amber)' }}
+                      className={cn(
+                        "absolute -top-1.5 -right-2 min-w-[16px] h-[16px] rounded-full text-[9px] font-bold flex items-center justify-center px-0.5",
+                        isCritical ? "bg-accent text-white" : "bg-surface border border-border text-1"
+                      )}
                     >
                       {badge > 99 ? '99+' : badge}
                     </span>
                   )}
                 </div>
 
-                <span
-                  className="text-[9px] font-medium"
-                  style={{ color: active ? 'var(--accent-text)' : 'var(--text-3)' }}
-                >
+                <span className={cn("text-[10px] font-medium", active ? "text-1 font-bold" : "text-3")}>
                   {item.label}
                 </span>
               </div>

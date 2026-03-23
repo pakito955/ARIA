@@ -17,11 +17,8 @@ module.exports = {
         space: ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },
       colors: {
-        border: 'rgba(255,255,255,0.055)',
-        gold: '#e8c97a',
-        teal: '#4fd1c5',
-        rose: '#f4a0b5',
-        muted: '#8888aa',
+        border: 'var(--border)',
+        accent: 'var(--accent)',
       },
       animation: {
         'fade-in-up': 'fade-in-up 0.4s ease both',

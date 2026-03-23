@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
-import { Command, Bell, LogOut } from 'lucide-react'
+import { Command, Bell, LogOut, Zap } from 'lucide-react'
 import { VoiceCommand } from '@/components/VoiceCommand'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
@@ -40,52 +40,59 @@ export function Topbar() {
     : 'U'
 
   return (
-    <header className="flex items-center gap-4 px-5 border-b border-[var(--border)] bg-[#09090b]/80 backdrop-blur-xl z-50">
-      {/* Logo */}
-      <div className="flex items-center gap-2 font-cormorant text-[22px] font-light tracking-tight">
-        <div className="w-2 h-2 rounded-full bg-[#e8c97a] shadow-[0_0_8px_#e8c97a] animate-pulse" />
-        ARIA
+    <header className="flex items-center gap-4 px-5 border-b border-[var(--border)] bg-[var(--bg-base)]/90 backdrop-blur-xl z-50 h-16 shrink-0">
+      {/* Mobile Logo Only (Desktop handles logo in sidebar) */}
+      <div className="md:hidden flex items-center gap-2">
+        <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center bg-[#1A1A1A]">
+          <Zap size={14} className="text-white" strokeWidth={2.5} />
+        </div>
+        <span className="font-inter text-lg font-bold tracking-tight text-[#1A1A1A]">
+          Aria<span className="text-accent">.</span>
+        </span>
       </div>
 
-      {/* Status */}
-      <div className="flex items-center gap-1.5 text-[10px] tracking-[1.5px] uppercase text-[#4fd1c5]">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#4fd1c5] shadow-[0_0_6px_#4fd1c5]" />
-        Agent Active
+      {/* Desktop breadcrumb or status */}
+      <div className="hidden md:flex items-center gap-2">
+        <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-text-3 px-3 py-1 bg-surface border border-border rounded-full">
+          <span className="w-1.5 h-1.5 rounded-full bg-green" />
+          Agent Active
+        </div>
       </div>
 
       {/* Command palette hint */}
       <button
         onClick={() => setCommandOpen(true)}
-        className="hidden md:flex items-center gap-2 ml-4 px-3 py-1.5 rounded bg-white/[0.03] border border-white/[0.07] text-[var(--text-3)] hover:text-[var(--text-2)] hover:border-white/[0.11] transition-all text-xs"
+        className="hidden lg:flex items-center gap-2 ml-4 px-3 py-1.5 rounded-md bg-surface border border-border text-text-3 hover:text-text-1 hover:border-border-medium transition-colors text-xs"
       >
-        <Command size={11} />
+        <Command size={13} />
         <span>Quick actions</span>
-        <kbd className="ml-1 text-[9px] bg-white/[0.05] px-1.5 py-0.5 rounded font-mono">⌘K</kbd>
+        <kbd className="ml-1 text-[10px] bg-hover px-1.5 rounded font-mono font-medium text-text-2">⌘K</kbd>
       </button>
 
       <div className="ml-auto flex items-center gap-4">
         <VoiceCommand />
-        <span className="font-mono text-[11px] text-[var(--text-2)]">{time}</span>
+        <span className="font-mono text-[11px] font-medium text-text-3">{time}</span>
 
-        <button className="text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors">
-          <Bell size={15} />
+        <button className="text-text-3 hover:text-text-1 transition-colors relative">
+          <Bell size={16} strokeWidth={2} />
         </button>
 
         {/* User avatar */}
-        <div className="flex items-center gap-2 group cursor-pointer">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#e8c97a] to-[#f4a0b5] flex items-center justify-center text-[10px] font-semibold text-[#080810]">
+        <div className="flex items-center gap-2.5 group cursor-pointer pl-2 border-l border-border">
+          <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-[10px] font-bold text-white shrink-0">
             {initials}
           </div>
           {session?.user?.name && (
-            <span className="text-xs text-[var(--text-2)] hidden md:block">
+            <span className="text-[13px] font-medium text-text-1 hidden md:block">
               {session.user.name.split(' ')[0]}
             </span>
           )}
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--text-3)] hover:text-[#f4a0b5]"
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded bg-surface border border-border text-3 hover:text-red hover:border-red/30"
+            title="Sign out"
           >
-            <LogOut size={13} />
+            <LogOut size={13} strokeWidth={2} />
           </button>
         </div>
       </div>

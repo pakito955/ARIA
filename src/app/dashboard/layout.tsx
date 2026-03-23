@@ -22,12 +22,7 @@ export default async function DashboardLayout({
   if (!session?.user) redirect('/login')
 
   return (
-    <div className="h-screen flex overflow-hidden" style={{ background: '#0B0B0F' }}>
-      {/* Ambient gradient orbs */}
-      <div className="mesh-bg" />
-      {/* Film grain noise overlay */}
-      <div className="noise-overlay" />
-
+    <div className="h-screen flex overflow-hidden">
       {/* Desktop sidebar */}
       <div className="hidden md:block shrink-0 relative z-10">
         <Sidebar />
@@ -37,7 +32,6 @@ export default async function DashboardLayout({
       <div className="flex-1 flex overflow-hidden min-w-0">
         <main
           className="flex-1 overflow-hidden pb-16 md:pb-0 min-w-0 relative z-10"
-          style={{ background: '#0B0B0F' }}
         >
           <PageTransition>
             {children}

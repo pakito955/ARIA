@@ -245,8 +245,7 @@ export default function InboxPage() {
             initial={{ opacity: 0, y: -40 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -40 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-medium text-white shadow-2xl"
-            style={{ background: 'var(--accent)', boxShadow: '0 4px 20px rgba(124,92,255,0.35)' }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-bold text-white shadow-xl bg-accent"
           >
             ↑ {newEmailsCount} new email{newEmailsCount > 1 ? 's' : ''}
           </motion.div>
@@ -379,10 +378,10 @@ export default function InboxPage() {
               onClick={() => setFocusMode(!focusMode)}
               title={focusMode ? 'Exit focus mode (F)' : 'Focus mode (F)'}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] font-medium transition-all",
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-all",
                 focusMode 
-                  ? "bg-purple-500/20 text-purple-400 border border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]"
-                  : "bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--bg-hover)] hover:text-white"
+                  ? "bg-accent text-white shadow-md border border-accent"
+                  : "bg-surface border border-border-medium text-text-2 hover:bg-hover hover:text-text-1"
               )}
             >
               {focusMode ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
@@ -479,8 +478,7 @@ export default function InboxPage() {
                   </svg>
                 </div>
                 <div
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-                  style={{ background: 'var(--green)', boxShadow: '0 0 8px rgba(52,211,153,0.4)' }}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center bg-green border-2 border-card"
                 >
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path d="M2 5l2 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -617,8 +615,7 @@ export default function InboxPage() {
                 {analysis && (
                   <div className="mx-6 mt-5 p-4 rounded-xl border border-[var(--accent)] bg-[var(--accent)]/[0.04] relative overflow-hidden">
                     <div
-                      className="absolute right-0 top-0 w-32 h-full pointer-events-none"
-                      style={{ background: 'radial-gradient(ellipse at right, rgba(124,92,255,0.06), transparent 70%)' }}
+                      className="absolute right-0 top-0 w-32 h-full pointer-events-none bg-gradient-to-l from-white/30 to-transparent"
                     />
                     <div className="flex items-center gap-2 mb-3">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
@@ -675,7 +672,7 @@ export default function InboxPage() {
                           <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'var(--green-subtle)', border: '1px solid rgba(52,211,153,0.2)' }}
+                            className="flex items-center gap-2 p-3 rounded-md bg-green-subtle border border-green/20"
                           >
                             <CheckCircle size={14} className="text-[var(--green)]" />
                             <span className="text-[11px] text-[var(--green)]">Reply sent successfully</span>
@@ -792,8 +789,7 @@ export default function InboxPage() {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="mt-2 p-3 rounded-xl border border-[var(--amber)]/30 overflow-hidden"
-                          style={{ background: 'rgba(245,158,11,0.04)' }}
+                          className="mt-2 p-3 rounded-md border border-amber/30 bg-amber-subtle overflow-hidden"
                         >
                           <p className="text-[10px] uppercase tracking-[1.5px] text-[var(--amber)] mb-2">Set reminder</p>
                           <input
