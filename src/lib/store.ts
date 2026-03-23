@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { AppStore } from '@/types'
+import type { AppStore, BrainDumpResult } from '@/types'
 
 export const useAppStore = create<AppStore>()(
   persist(
@@ -54,6 +54,15 @@ export const useAppStore = create<AppStore>()(
 
       aiPanelOpen: false,
       setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
+
+      approvalQueueOpen: false,
+      setApprovalQueueOpen: (open) => set({ approvalQueueOpen: open }),
+
+      brainDumpMode: false,
+      setBrainDumpMode: (v) => set({ brainDumpMode: v }),
+
+      brainDumpResult: null,
+      setBrainDumpResult: (r) => set({ brainDumpResult: r }),
     }),
     {
       name: 'aria-ui-prefs',

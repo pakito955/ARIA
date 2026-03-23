@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
   const userId = user.id
 
   try {
-  const [unread, critical, tasks, waiting, integrations] = await Promise.all([
+  const db = prisma as any
+  const [unread, critical, tasks, waiting, integrations, drafts] = await Promise.all([
     prisma.email.count({ where: { userId, isRead: false } }),
     prisma.email.count({
       where: {
@@ -30,13 +31,14 @@ export async function GET(req: NextRequest) {
       where: { userId, isActive: true },
       select: { provider: true },
     }),
+    db.draftEmail.count({ where: { userId, status: 'PENDING' } }),
   ])
 
   const hasGmail = integrations.some((i) => i.provider === 'GMAIL')
   const hasOutlook = integrations.some((i) => i.provider === 'OUTLOOK')
 
   return NextResponse.json(
-    { unread, critical, tasks, waiting, gmail: hasGmail, outlook: hasOutlook, calendar: hasGmail || hasOutlook },
+    { unread, critical, tasks, waiting, drafts, gmail: hasGmail, outlook: hasOutlook, calendar: hasGmail || hasOutlook },
     { headers: { 'Cache-Control': 'private, max-age=15' } }
   )
   } catch {

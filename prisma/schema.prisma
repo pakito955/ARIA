@@ -44,6 +44,7 @@ model User {
   webhooks         Webhook[]
   knowledgeItems   KnowledgeItem[]
   contactNotes     ContactNote[]
+  draftEmails      DraftEmail[]
 
   @@map("users")
 }
@@ -471,12 +472,36 @@ model ContactNote {
   email     String
   note      String
   aiSummary String?
+  source    String   @default("MANUAL") // MANUAL | BRAIN_DUMP | AI_SUMMARY
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, email])
   @@map("contact_notes")
+}
+
+// ─── DRAFT EMAIL QUEUE ───────────────────────────────────────────────────────
+
+model DraftEmail {
+  id           String    @id @default(cuid())
+  userId       String
+  toEmail      String
+  subject      String
+  body         String
+  status       String    @default("PENDING")  // PENDING | APPROVED | REJECTED | SENT
+  source       String    @default("RULE")     // RULE | WEBHOOK | BRAIN_DUMP
+  triggerType  String?   // invoice_paid | lead_received | autoReply | etc.
+  triggerData  String?   // JSON blob of original payload / email context
+  ruleId       String?   // Which EmailRule created this
+  sourceEmailId String?  // The email that triggered the autoReply rule
+  sentAt       DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("draft_emails")
 }
 
 // ─── WEBHOOKS ────────────────────────────────────────────────────────────────

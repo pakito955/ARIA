@@ -8,6 +8,7 @@ import {
   ChevronLeft, Settings, LogOut, Command, CalendarDays,
   FileText, MailX, Layout, Filter,
   Send, AlarmClock, LayoutDashboard, BookOpen, Sparkles,
+  Newspaper, ClipboardList,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
@@ -26,14 +27,16 @@ const NAV_SECTIONS = [
   {
     label: 'Mail',
     items: [
-      { label: 'Inbox',      href: '/dashboard/inbox',       icon: Inbox,        badge: 'unread',  exact: false },
-      { label: 'Snoozed',    href: '/dashboard/waiting',     icon: AlarmClock,   badge: 'waiting', exact: false },
-      { label: 'Sent',       href: '/dashboard/sent',        icon: Send,         badge: null,      exact: false },
+      { label: 'Inbox',      href: '/dashboard/inbox',       icon: Inbox,         badge: 'unread',  exact: false },
+      { label: 'Snoozed',    href: '/dashboard/waiting',     icon: AlarmClock,    badge: 'waiting', exact: false },
+      { label: 'Sent',       href: '/dashboard/sent',        icon: Send,          badge: null,      exact: false },
+      { label: 'Queue',      href: '/dashboard/queue',       icon: ClipboardList, badge: 'drafts',  exact: false },
     ],
   },
   {
     label: 'Work',
     items: [
+      { label: 'Briefing',   href: '/dashboard/briefing',    icon: Newspaper,    badge: null,      exact: false },
       { label: 'Tasks',      href: '/dashboard/tasks',       icon: CheckSquare,  badge: 'tasks',   exact: false },
       { label: 'Calendar',   href: '/dashboard/calendar',    icon: CalendarDays, badge: null,      exact: false },
     ],

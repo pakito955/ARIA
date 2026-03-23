@@ -283,6 +283,83 @@ export interface ScheduledEmail {
   createdAt: string
 }
 
+// ─── Draft Email (Approval Queue) ────────────────────────────────────────────
+
+export interface DraftEmail {
+  id: string
+  userId: string
+  toEmail: string
+  subject: string
+  body: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SENT'
+  source: 'RULE' | 'WEBHOOK' | 'BRAIN_DUMP'
+  triggerType?: string
+  triggerData?: string
+  ruleId?: string
+  sourceEmailId?: string
+  sentAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// ─── Brain Dump ───────────────────────────────────────────────────────────────
+
+export interface BrainDumpResult {
+  tasks: Array<{
+    title: string
+    priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
+    dueDate?: string
+    description?: string
+  }>
+  contactNotes: Array<{
+    email: string
+    note: string
+  }>
+  draftEmails: Array<{
+    toEmail: string
+    subject: string
+    body: string
+  }>
+  summary: string
+}
+
+// ─── Morning Briefing ─────────────────────────────────────────────────────────
+
+export interface DailyBriefingData {
+  date: string
+  briefingText: string
+  agenda: AgendaItem[]
+  criticalEmails: Array<{ subject: string; from: string; priority: string }>
+  pendingTasks: Array<{ title: string; priority: string; dueDate?: string }>
+  pendingDrafts: number
+  contactNotes: Array<{ email: string; note: string; aiSummary?: string }>
+  knowledgeSummary: string
+}
+
+export interface AgendaItem {
+  id: string
+  title: string
+  startTime: string
+  endTime: string
+  participants: string[]
+  location?: string
+  meetingUrl?: string
+  prepNotes?: string
+}
+
+// ─── Webhook Trigger ──────────────────────────────────────────────────────────
+
+export interface WebhookPayload {
+  event: string          // e.g. 'invoice.paid', 'lead.created'
+  source?: string        // e.g. 'stripe', 'zapier'
+  customerEmail?: string
+  customerName?: string
+  amount?: number
+  currency?: string
+  description?: string
+  metadata?: Record<string, string>
+}
+
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
 export interface ToastItem {
@@ -337,4 +414,14 @@ export interface AppStore {
 
   aiPanelOpen: boolean
   setAiPanelOpen: (open: boolean) => void
+
+  // Approval Queue
+  approvalQueueOpen: boolean
+  setApprovalQueueOpen: (open: boolean) => void
+
+  // Brain Dump
+  brainDumpMode: boolean
+  setBrainDumpMode: (v: boolean) => void
+  brainDumpResult: import('./index').BrainDumpResult | null
+  setBrainDumpResult: (r: import('./index').BrainDumpResult | null) => void
 }
