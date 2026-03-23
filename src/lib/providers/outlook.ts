@@ -11,6 +11,7 @@ import type {
 
 export class OutlookProvider implements EmailProviderInterface {
   readonly provider = 'OUTLOOK' as const
+  private client: Client
   public newAccessToken: string | null = null
 
   constructor(
