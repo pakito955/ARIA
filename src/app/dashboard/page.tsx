@@ -1,14 +1,49 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { ArrowRight, Zap, AlertCircle, CheckCircle2, Clock, TrendingUp, Loader2, Flame, FileText, Bell, DollarSign } from 'lucide-react'
+import { Zap, Loader2, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
-import { VoiceBriefing } from '@/components/VoiceBriefing'
-import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
+import { useWidgetConfig } from '@/hooks/useWidgetConfig'
+import { getWidgetDef } from '@/lib/widgets'
+import { WidgetGallery } from '@/components/dashboard/WidgetGallery'
+
+// Widget components
+import { CriticalNowWidget } from '@/components/dashboard/widgets/CriticalNowWidget'
+import { NextActionWidget } from '@/components/dashboard/widgets/NextActionWidget'
+import { TodayTimelineWidget } from '@/components/dashboard/widgets/TodayTimelineWidget'
+import { DailyScoreWidget } from '@/components/dashboard/widgets/DailyScoreWidget'
+import { FollowupsWidget } from '@/components/dashboard/widgets/FollowupsWidget'
+import { InvoicesWidget } from '@/components/dashboard/widgets/InvoicesWidget'
+import { AiBriefingWidget } from '@/components/dashboard/widgets/AiBriefingWidget'
+import { EmailVolumeWidget } from '@/components/dashboard/widgets/EmailVolumeWidget'
+import { QuickActionsWidget } from '@/components/dashboard/widgets/QuickActionsWidget'
+import { TopSendersWidget } from '@/components/dashboard/widgets/TopSendersWidget'
+import { InboxProgressWidget } from '@/components/dashboard/widgets/InboxProgressWidget'
+import { ResponseTimeWidget } from '@/components/dashboard/widgets/ResponseTimeWidget'
+
+const WIDGET_MAP: Record<string, React.ComponentType> = {
+  'critical-now': CriticalNowWidget,
+  'next-action': NextActionWidget,
+  'today-timeline': TodayTimelineWidget,
+  'daily-score': DailyScoreWidget,
+  'followups': FollowupsWidget,
+  'invoices': InvoicesWidget,
+  'ai-briefing': AiBriefingWidget,
+  'email-volume': EmailVolumeWidget,
+  'quick-actions': QuickActionsWidget,
+  'top-senders': TopSendersWidget,
+  'inbox-progress': InboxProgressWidget,
+  'response-time': ResponseTimeWidget,
+}
+
+const COL_SPAN: Record<string, string> = {
+  '1/3': 'md:col-span-1',
+  '2/3': 'md:col-span-2',
+  'full': 'md:col-span-3',
+}
 
 // Typewriter hook
 function useTypewriter(text: string, speed = 28) {
@@ -37,16 +72,8 @@ function useTypewriter(text: string, speed = 28) {
 export default function DashboardPage() {
   const [wowDone, setWowDone] = useState(false)
   const [wowText, setWowText] = useState('')
-  const wowRef = useRef(false)
-
-  const { data: scoreData } = useQuery({
-    queryKey: ['score'],
-    queryFn: async () => {
-      const res = await fetch('/api/score')
-      if (!res.ok) return { score: 0, streak: 0 }
-      return res.json()
-    },
-  })
+  const [galleryOpen, setGalleryOpen] = useState(false)
+  const { config } = useWidgetConfig()
 
   const { data: statsData } = useQuery({
     queryKey: ['dashboard-stats'],
@@ -59,31 +86,11 @@ export default function DashboardPage() {
       const tasks = await tasksRes.json()
       return {
         unread: emails.data?.filter((e: any) => !e.isRead).length ?? 0,
-        total: emails.total ?? 0,
         critical: emails.data?.filter((e: any) => e.analysis?.priority === 'CRITICAL').length ?? 0,
         tasks: tasks.data?.length ?? 0,
-        criticalEmails: emails.data?.filter((e: any) => e.analysis?.priority === 'CRITICAL').slice(0, 3) ?? [],
-        recentEmails: emails.data?.slice(0, 3) ?? [],
       }
     },
-  })
-
-  const { data: followupData } = useQuery({
-    queryKey: ['dashboard-followups'],
-    queryFn: async () => {
-      const res = await fetch('/api/followup')
-      if (!res.ok) return null
-      return res.json()
-    },
-  })
-
-  const { data: invoiceData } = useQuery({
-    queryKey: ['dashboard-invoices'],
-    queryFn: async () => {
-      const res = await fetch('/api/invoices')
-      if (!res.ok) return null
-      return res.json()
-    },
+    staleTime: 30_000,
   })
 
   const { data: briefingData, refetch: refetchBriefing } = useQuery({
@@ -92,6 +99,7 @@ export default function DashboardPage() {
       const res = await fetch('/api/ai/briefing')
       return res.json()
     },
+    staleTime: 60_000 * 5,
   })
 
   const briefingMutation = useMutation({
@@ -102,13 +110,10 @@ export default function DashboardPage() {
     onSuccess: () => refetchBriefing(),
   })
 
-  // WOW moment: timer runs once on mount (not tied to statsData changes)
+  // WOW splash screen
   useEffect(() => {
     const shown = sessionStorage.getItem('aria-wow-shown')
-    if (shown) {
-      setWowDone(true)
-      return
-    }
+    if (shown) { setWowDone(true); return }
     const timer = setTimeout(() => {
       setWowDone(true)
       sessionStorage.setItem('aria-wow-shown', '1')
@@ -116,7 +121,6 @@ export default function DashboardPage() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Update splash text when data arrives
   useEffect(() => {
     if (sessionStorage.getItem('aria-wow-shown')) return
     const critical = statsData?.critical ?? 0
@@ -130,7 +134,6 @@ export default function DashboardPage() {
     setWowText(msg)
   }, [statsData])
 
-  // AI command strip message
   const critical = statsData?.critical ?? 0
   const unread = statsData?.unread ?? 0
   const commandMsg = critical > 0
@@ -139,19 +142,8 @@ export default function DashboardPage() {
     ? `${unread} unread messages. Your inbox is under control.`
     : `Inbox clear. ARIA is monitoring everything for you.`
 
-  const { displayed: commandDisplayed, done: commandDone } = useTypewriter(
-    wowDone ? commandMsg : '',
-    30
-  )
-
+  const { displayed: commandDisplayed, done: commandDone } = useTypewriter(wowDone ? commandMsg : '', 30)
   const today = format(new Date(), "EEEE, d. MMMM")
-
-  const CALENDAR_EVENTS = [
-    { time: '10:30', title: 'Team Standup', color: '#8b5cf6', note: 'In 45 min' },
-    { time: '14:00', title: 'Investor Call', color: '#f59e0b', note: 'Zoom · 45 min' },
-    { time: '15:00', title: 'Board Meeting', color: '#ef4444', note: 'Reply needed' },
-    { time: '17:00', title: 'Weekly Review', color: '#10b981', note: 'ARIA scheduled' },
-  ]
 
   return (
     <>
@@ -165,27 +157,20 @@ export default function DashboardPage() {
             className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[var(--bg-base)]"
           >
             <div className="relative">
-              {/* Glow orb */}
               <div
                 className="absolute inset-0 rounded-full blur-[80px] orb-float"
                 style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%)', width: 400, height: 400, top: -180, left: -190 }}
               />
-
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)' }}>
                   <Zap size={18} className="text-white" />
                 </div>
                 <span className="font-cormorant text-4xl font-light tracking-widest">ARIA</span>
               </div>
-
               <WowTypewriter text={wowText} />
-
               <div className="mt-8 flex gap-2 justify-center">
                 {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] typing-dot"
-                  />
+                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] typing-dot" />
                 ))}
               </div>
             </div>
@@ -201,7 +186,7 @@ export default function DashboardPage() {
         className="flex flex-col h-full"
       >
         {/* AI Command Strip */}
-        <div className="relative px-6 py-5 border-b border-[var(--border)] overflow-hidden">
+        <div className="relative px-6 py-5 border-b border-[var(--border)] overflow-hidden shrink-0">
           <div
             className="absolute inset-0 pointer-events-none"
             style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, transparent 60%)' }}
@@ -223,7 +208,18 @@ export default function DashboardPage() {
               <p className="text-[11px] text-[var(--text-3)] mt-1">{today}</p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {/* Customize button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setGalleryOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] text-[var(--text-2)] text-[11px] hover:border-[var(--accent)] hover:text-white transition-all"
+              >
+                <LayoutDashboard size={12} className="text-[var(--accent-text)]" />
+                Customize
+              </motion.button>
+
               {critical > 0 && (
                 <Link href="/dashboard/inbox?filter=critical">
                   <motion.button
@@ -232,7 +228,6 @@ export default function DashboardPage() {
                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-[12px] font-medium"
                   >
                     Focus now
-                    <ArrowRight size={13} />
                   </motion.button>
                 </Link>
               )}
@@ -242,364 +237,73 @@ export default function DashboardPage() {
                 disabled={briefingMutation.isPending}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] text-[var(--text-2)] text-[11px] hover:border-[var(--accent)] hover:text-white transition-all disabled:opacity-50"
               >
-                {briefingMutation.isPending ? (
-                  <Loader2 size={12} className="animate-spin text-[var(--accent-text)]" />
-                ) : (
-                  <Zap size={12} className="text-[var(--accent-text)]" />
-                )}
+                {briefingMutation.isPending
+                  ? <Loader2 size={12} className="animate-spin text-[var(--accent-text)]" />
+                  : <Zap size={12} className="text-[var(--accent-text)]" />
+                }
                 AI Briefing
               </button>
             </div>
           </div>
         </div>
 
-        {/* Bento Grid */}
+        {/* Widget Grid */}
         <div className="flex-1 overflow-y-auto p-3 md:p-5">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4" style={{ gridTemplateRows: 'auto' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 auto-rows-auto">
+            <AnimatePresence mode="popLayout">
+              {config.order.map((id, i) => {
+                const def = getWidgetDef(id)
+                const Component = WIDGET_MAP[id]
+                if (!def || !Component) return null
 
-            {/* Critical Now — spans 2/3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="md:col-span-2 card-premium shimmer-highlight p-5 relative overflow-hidden"
-            >
-              <div
-                className="absolute top-0 right-0 w-48 h-full pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse at top right, rgba(239,68,68,0.05), transparent 70%)' }}
-              />
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <AlertCircle size={14} className="text-[var(--red)]" />
-                  <span className="text-[9px] tracking-[2px] uppercase text-[var(--red)]">Critical Now</span>
-                </div>
-                {critical > 0 && (
-                  <span className="text-[9px] text-[var(--red)] px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,0.12)' }}>
-                    {critical} item{critical > 1 ? 's' : ''}
-                  </span>
-                )}
-              </div>
-
-              {critical === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 gap-2">
-                  <CheckCircle2 size={28} className="text-[var(--green)] opacity-60" />
-                  <p className="text-[12px] text-[var(--text-3)]">No critical items · You're on top of things</p>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {(statsData?.criticalEmails ?? []).map((email: any, i: number) => (
-                    <motion.div
-                      key={email.id}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 + i * 0.06 }}
-                      className="flex items-center gap-3 p-3 rounded-lg transition-all cursor-pointer"
-                      style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.15)' }}
-                    >
-                      <div className="w-1 h-8 rounded-full shrink-0" style={{ background: 'var(--red)' }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12.5px] font-medium text-[var(--text-1)] truncate">
-                          {email.fromName || email.fromEmail?.split('@')[0]}
-                        </p>
-                        <p className="text-[11px] text-[var(--text-2)] truncate">
-                          {email.analysis?.summary || email.subject}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Link href="/dashboard/inbox">
-                          <button className="px-2.5 py-1 rounded bg-[var(--accent)] text-white text-[10px] font-medium hover:bg-[var(--accent)] transition-colors">
-                            Reply
-                          </button>
-                        </Link>
-                        <button className="px-2.5 py-1 rounded border border-[var(--border)] text-[var(--text-2)] text-[10px] hover:border-white/20 transition-colors">
-                          Snooze
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              {/* Stats row at bottom */}
-              <div className="flex items-center gap-5 mt-5 pt-4 border-t border-[var(--border)]">
-                {[
-                  { n: statsData?.unread ?? 0, label: 'Unread', color: '#8b5cf6' },
-                  { n: statsData?.tasks ?? 0, label: 'Tasks', color: '#10b981' },
-                  { n: statsData?.critical ?? 0, label: 'Critical', color: '#ef4444' },
-                ].map((s, i) => (
-                  <div key={i} className="text-center">
-                    <p
-                      className="font-outfit text-4xl font-light tabular-nums"
-                      style={{
-                        color: s.color,
-                        textShadow: `0 0 20px ${s.color}40`,
-                      }}
-                    >
-                      <AnimatedNumber value={s.n} duration={900} />
-                    </p>
-                    <p className="text-[9px] uppercase tracking-[1.5px] mt-0.5" style={{ color: 'var(--text-3)' }}>{s.label}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Next Best Action — 1/3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="card-premium p-5 relative overflow-hidden flex flex-col"
-            >
-              <div
-                className="absolute bottom-0 right-0 w-32 h-32 pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.08), transparent 70%)' }}
-              />
-              <div className="flex items-center gap-2 mb-4">
-                <Zap size={13} className="text-[var(--accent-text)]" />
-                <span className="text-[9px] tracking-[2px] uppercase text-[var(--accent-text)]">Next Best Action</span>
-              </div>
-
-              <div className="flex-1">
-                {briefingData?.data?.content ? (
-                  <p className="text-[12px] text-[var(--text-1)] leading-relaxed line-clamp-6">
-                    {briefingData.data.content.replace(/<[^>]*>/g, '').slice(0, 200)}
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-[12px] text-[var(--text-2)] leading-relaxed">
-                      {critical > 0
-                        ? `Reply to ${statsData?.criticalEmails?.[0]?.fromName || 'critical sender'} — marked high priority.`
-                        : 'Your inbox is under control. Review pending tasks or schedule tomorrow.'}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <Link href={critical > 0 ? '/dashboard/inbox?filter=critical' : '/dashboard/tasks'}>
-                <motion.button
-                  whileHover={{ x: 3 }}
-                  className="flex items-center gap-1.5 text-[11px] text-[var(--accent-text)] mt-4 group"
-                >
-                  Open →
-                </motion.button>
-              </Link>
-            </motion.div>
-
-            {/* Today Timeline — 1/3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="card-premium p-5"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Clock size={13} className="text-[var(--amber)]" />
-                <span className="text-[9px] tracking-[2px] uppercase text-[var(--amber)]">Today Timeline</span>
-              </div>
-
-              <div className="relative pl-4">
-                <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-white/[0.06]" />
-                <div className="space-y-3.5">
-                  {CALENDAR_EVENTS.map((ev, i) => {
-                    const isPast = parseInt(ev.time) < new Date().getHours()
-                    return (
-                      <div key={i} className={cn('relative transition-opacity', isPast && 'opacity-35')}>
-                        <div
-                          className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full border-2 border-[var(--bg-card)]"
-                          style={{ background: ev.color }}
-                        />
-                        <p className="text-[9px] font-mono text-[var(--text-3)] mb-0.5">{ev.time}</p>
-                        <p className="text-[12px] text-[var(--text-1)]">{ev.title}</p>
-                        <p className="text-[10px]" style={{ color: ev.color }}>{ev.note}</p>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* AI Score — 1/3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.18 }}
-              className="card-premium p-5 flex flex-col items-center justify-center gap-2"
-            >
-              <p className="text-[9px] tracking-[2px] uppercase text-[var(--text-3)] self-start w-full">Daily Score</p>
-              {(() => {
-                const score = scoreData?.score ?? 0
-                const r = 28, circ = 2 * Math.PI * r
-                const offset = circ - (score / 100) * circ
-                const color = score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444'
                 return (
-                  <div className="relative flex items-center justify-center">
-                    <svg width="72" height="72" className="rotate-[-90deg]">
-                      <circle cx="36" cy="36" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
-                      <circle cx="36" cy="36" r={r} fill="none" stroke={color} strokeWidth="6"
-                        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-                        style={{ transition: 'stroke-dashoffset 1s ease' }}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="font-outfit text-2xl font-light text-white">{score}</span>
-                    </div>
-                  </div>
+                  <motion.div
+                    key={id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.94, y: -8 }}
+                    transition={{ delay: i * 0.04, duration: 0.3, layout: { duration: 0.3 } }}
+                    className={COL_SPAN[def.size]}
+                  >
+                    <Component />
+                  </motion.div>
                 )
-              })()}
-              {scoreData?.streak > 0 && (
-                <div className="flex items-center gap-1 text-[10px]" style={{ color: 'var(--amber)' }}>
-                  <Flame size={10} />
-                  {scoreData.streak}d streak
+              })}
+            </AnimatePresence>
+
+            {/* Empty state */}
+            {config.order.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="md:col-span-3 flex flex-col items-center justify-center py-24 gap-4"
+              >
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                >
+                  <LayoutDashboard size={24} className="text-[var(--text-3)]" />
                 </div>
-              )}
-              <Link href="/dashboard/report" className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>
-                <span className="flex items-center gap-1 hover:text-[var(--accent-text)] transition-colors">
-                  <FileText size={9} /> Weekly report
-                </span>
-              </Link>
-            </motion.div>
-
-            {/* Follow-ups Due — 1/3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.19 }}
-              className="card-premium p-5"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Bell size={13} className="text-[var(--amber)]" />
-                  <span className="text-[9px] tracking-[2px] uppercase text-[var(--amber)]">Follow-ups</span>
+                <div className="text-center">
+                  <p className="text-[14px] font-medium text-[var(--text-2)] mb-1">No widgets active</p>
+                  <p className="text-[12px] text-[var(--text-3)]">Click Customize to add widgets to your dashboard</p>
                 </div>
-                {(followupData?.total ?? 0) > 0 && (
-                  <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--amber)' }}>
-                    {followupData.total} pending
-                  </span>
-                )}
-              </div>
-
-              {!followupData || followupData.total === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6 gap-2">
-                  <CheckCircle2 size={22} className="text-[var(--green)] opacity-60" />
-                  <p className="text-[11px] text-[var(--text-3)] text-center">All followed up!</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {(followupData.overdue ?? []).slice(0, 2).map((r: any) => (
-                    <div key={r.id} className="flex items-start gap-2 p-2.5 rounded-lg" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}>
-                      <div className="w-1 h-full min-h-[28px] rounded-full shrink-0" style={{ background: 'var(--red)' }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11.5px] font-medium text-white truncate">{r.email?.subject || 'Email'}</p>
-                        <p className="text-[10px] text-[var(--red)]">Overdue</p>
-                      </div>
-                    </div>
-                  ))}
-                  {(followupData.upcoming ?? []).slice(0, 2 - Math.min(2, followupData.overdue?.length ?? 0)).map((r: any) => (
-                    <div key={r.id} className="flex items-start gap-2 p-2.5 rounded-lg" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)' }}>
-                      <div className="w-1 h-full min-h-[28px] rounded-full shrink-0" style={{ background: 'var(--amber)' }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11.5px] font-medium text-white truncate">{r.email?.subject || 'Email'}</p>
-                        <p className="text-[10px] text-[var(--amber)]">Upcoming</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <Link href="/dashboard/followups" className="block mt-3">
-                <span className="text-[10px] text-[var(--text-3)] hover:text-[var(--amber)] transition-colors flex items-center gap-1">
-                  View all <ArrowRight size={9} />
-                </span>
-              </Link>
-            </motion.div>
-
-            {/* Invoice Tracker — 1/3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.21 }}
-              className="card-premium p-5"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <DollarSign size={13} className="text-[var(--green)]" />
-                  <span className="text-[9px] tracking-[2px] uppercase text-[var(--green)]">Invoices</span>
-                </div>
-                {(invoiceData?.overdue ?? 0) > 0 && (
-                  <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,0.12)', color: 'var(--red)' }}>
-                    {invoiceData.overdue} overdue
-                  </span>
-                )}
-              </div>
-
-              {!invoiceData || invoiceData.total === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6 gap-2">
-                  <CheckCircle2 size={22} className="text-[var(--green)] opacity-60" />
-                  <p className="text-[11px] text-[var(--text-3)] text-center">No invoice emails found</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {(invoiceData.invoices ?? []).slice(0, 3).map((inv: any, i: number) => (
-                    <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11.5px] font-medium text-white truncate">{inv.fromName || inv.fromEmail}</p>
-                        {inv.amount && <p className="text-[10px] text-[var(--green)]">{inv.amount}</p>}
-                      </div>
-                      {inv.isOverdue && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--red)' }}>Late</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <Link href="/dashboard/inbox?filter=all" className="block mt-3">
-                <span className="text-[10px] text-[var(--text-3)] hover:text-[var(--green)] transition-colors flex items-center gap-1">
-                  View inbox <ArrowRight size={9} />
-                </span>
-              </Link>
-            </motion.div>
-
-            {/* AI Insight — 2/3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="md:col-span-2 card-premium shimmer-highlight p-5 relative overflow-hidden"
-            >
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.04) 0%, transparent 50%)' }}
-              />
-
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={13} className="text-[var(--accent-text)]" />
-                <span className="text-[9px] tracking-[2px] uppercase text-[var(--accent-text)]">AI Briefing</span>
-                {briefingMutation.isPending && (
-                  <div className="flex gap-1 ml-2">
-                    {[0, 1, 2].map((i) => (
-                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] typing-dot" />
-                    ))}
-                  </div>
-                )}
-                {briefingData?.data?.content && (
-                  <div className="ml-auto">
-                    <VoiceBriefing text={briefingData.data.content} />
-                  </div>
-                )}
-              </div>
-
-              <div
-                className="text-[12.5px] leading-[1.85] text-[var(--text-1)] max-h-[120px] overflow-hidden"
-                dangerouslySetInnerHTML={{
-                  __html: briefingData?.data?.content ||
-                    '<span style="color:var(--text-3)">Click <b style="color:var(--accent-text)">AI Briefing</b> to generate your morning analysis. ARIA will summarize all critical emails, pending tasks, and suggest actions for the day.</span>'
-                }}
-              />
-            </motion.div>
+                <button
+                  onClick={() => setGalleryOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-[12px] font-medium"
+                >
+                  <LayoutDashboard size={13} />
+                  Open Widget Gallery
+                </button>
+              </motion.div>
+            )}
           </div>
         </div>
       </motion.div>
+
+      {/* Widget Gallery modal */}
+      <WidgetGallery open={galleryOpen} onClose={() => setGalleryOpen(false)} />
     </>
   )
 }
