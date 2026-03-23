@@ -16,9 +16,14 @@ export function VoiceCommand() {
   const { selectedEmailId, setSelectedEmail, setComposeOpen } = useAppStore()
   const qc = useQueryClient()
 
-  if (!supportedSTT) return null
+  // Always render the mic icon so the user knows the feature exists
+  // if (!supportedSTT) return null
 
   const handleListen = () => {
+    if (!supportedSTT) {
+      toast.error('Tvoj pretrazivač ne podrzava glasovne komande. Molim te koristi Google Chrome ili Edge.', 'Nije podržano')
+      return
+    }
     if (isListening) return // Prevent multiple starts
     
     listen(async (text) => {
