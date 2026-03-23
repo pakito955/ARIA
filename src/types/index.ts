@@ -231,6 +231,15 @@ export interface BriefingJob {
   date: string
 }
 
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+export interface ToastItem {
+  id: string
+  type: 'success' | 'error' | 'info' | 'warning'
+  message: string
+  title?: string
+}
+
 // ─── Zustand Store Types ──────────────────────────────────────────────────────
 
 export interface AppStore {
@@ -260,4 +269,8 @@ export interface AppStore {
 
   newEmailsCount: number
   setNewEmailsCount: (n: number) => void
+
+  toasts: ToastItem[]
+  addToast: (toast: Omit<ToastItem, 'id'>) => void
+  removeToast: (id: string) => void
 }

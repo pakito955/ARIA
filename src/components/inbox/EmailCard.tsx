@@ -69,13 +69,20 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
     ? email.analysis.summary
     : email.bodyText?.slice(0, 80).replace(/\n/g, ' ')
 
+  const priorityStripColor =
+    priority === 'CRITICAL' ? 'var(--red)' :
+    priority === 'HIGH' ? 'var(--amber)' :
+    priority === 'MEDIUM' ? 'var(--accent)' :
+    null
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={!isSelected && !selected ? { y: -1 } : {}}
       transition={{ delay: index * 0.02, duration: 0.25, ease: 'easeOut' }}
       onClick={() => setSelectedEmail(email.id)}
-      className="group relative flex gap-3 px-3 py-3 cursor-pointer rounded-xl transition-all duration-200 mb-0.5"
+      className="group relative flex gap-3 px-3 py-3 cursor-pointer rounded-xl transition-colors duration-150 mb-0.5"
       style={{
         background: isSelected
           ? 'rgba(124,58,237,0.07)'
@@ -87,7 +94,11 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
           : selected
           ? '0 0 0 1px rgba(124,58,237,0.2)'
           : 'none',
-        borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
+        borderLeft: isSelected
+          ? '2px solid var(--accent)'
+          : priorityStripColor && !email.isRead
+          ? `2px solid ${priorityStripColor}`
+          : '2px solid transparent',
       }}
       onMouseEnter={(e) => {
         if (!isSelected && !selected) {

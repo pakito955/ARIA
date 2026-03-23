@@ -10,7 +10,8 @@ import { SnoozePickerModal } from '@/components/inbox/SnoozePickerModal'
 import { BulkActionBar } from '@/components/inbox/BulkActionBar'
 import { ThreadView } from '@/components/inbox/ThreadView'
 import { ContactPanel } from '@/components/inbox/ContactPanel'
-import { useAppStore } from '@/lib/store'
+import { EmailCardSkeleton } from '@/components/ui/Skeletons'
+import { useAppStore, toast } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useInboxKeyboard } from '@/hooks/useInboxKeyboard'
@@ -105,7 +106,11 @@ export default function InboxPage() {
       if (!res.ok) throw new Error('Send failed')
       return res.json()
     },
-    onSuccess: () => setSent(true),
+    onSuccess: () => {
+      setSent(true)
+      toast.success('Reply sent successfully', 'Email sent')
+    },
+    onError: () => toast.error('Failed to send reply. Try again.', 'Send error'),
   })
 
   const emails = emailsData?.data || []
@@ -132,9 +137,10 @@ export default function InboxPage() {
   }, [selectedEmailId, replyStyle, currentReply])
 
   const handleArchive = useCallback((id: string) => {
-    fetch(`/api/emails/${id}/archive`, { method: 'POST' }).then(() =>
+    fetch(`/api/emails/${id}/archive`, { method: 'POST' }).then(() => {
       qc.invalidateQueries({ queryKey: ['emails'] })
-    )
+      toast.success('Email archived')
+    })
   }, [qc])
 
   const handleReply = useCallback((id: string) => {
@@ -147,7 +153,7 @@ export default function InboxPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ emailId: id }),
-    })
+    }).then(() => toast.success('Task created from email', 'Task added'))
   }, [])
 
   const handleSnooze = useCallback((id: string) => {
@@ -328,13 +334,36 @@ export default function InboxPage() {
         {/* Email list */}
         <div className="flex-1 overflow-y-auto px-2 py-2">
           {isLoading ? (
-            <EmailListSkeleton />
+            <EmailCardSkeleton count={8} />
           ) : emails.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <span className="text-3xl opacity-10">✉</span>
-              <p className="text-[var(--text-3)] text-[12px]">
-                {searchQuery ? 'No results found' : 'Inbox is empty'}
-              </p>
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <div className="relative">
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                >
+                  <svg width="26" height="22" viewBox="0 0 26 22" fill="none">
+                    <rect x="1" y="1" width="24" height="20" rx="3" stroke="var(--border-medium)" strokeWidth="1.5"/>
+                    <path d="M1 5l12 8 12-8" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                  style={{ background: 'var(--green)', boxShadow: '0 0 8px rgba(34,197,94,0.4)' }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 5l2 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-[13px] font-medium text-[var(--text-1)] mb-1">
+                  {searchQuery ? 'No results' : emailFilter === 'all' ? 'Inbox is clear' : `No ${emailFilter} emails`}
+                </p>
+                <p className="text-[11px] text-[var(--text-3)]">
+                  {searchQuery ? `Nothing matching "${searchQuery}"` : 'ARIA is watching for new messages'}
+                </p>
+              </div>
             </div>
           ) : (
             emails.map((email: any, i: number) => (
@@ -648,16 +677,6 @@ export default function InboxPage() {
       </div>
     </div>
     </>
-  )
-}
-
-function EmailListSkeleton() {
-  return (
-    <div className="space-y-2 px-1">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-[88px] rounded-xl skeleton" />
-      ))}
-    </div>
   )
 }
 

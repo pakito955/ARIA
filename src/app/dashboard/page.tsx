@@ -8,6 +8,7 @@ import { ArrowRight, Zap, AlertCircle, CheckCircle2, Clock, TrendingUp, Loader2,
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { VoiceBriefing } from '@/components/VoiceBriefing'
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 
 // Typewriter hook
 function useTypewriter(text: string, speed = 28) {
@@ -315,7 +316,9 @@ export default function DashboardPage() {
                         color: s.color,
                         textShadow: `0 0 20px ${s.color}40`,
                       }}
-                    >{s.n}</p>
+                    >
+                      <AnimatedNumber value={s.n} duration={900} />
+                    </p>
                     <p className="text-[9px] uppercase tracking-[1.5px] mt-0.5" style={{ color: 'var(--text-3)' }}>{s.label}</p>
                   </div>
                 ))}

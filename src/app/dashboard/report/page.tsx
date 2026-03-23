@@ -1,7 +1,10 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { Loader2, Download, TrendingUp, Mail, Zap, CheckCircle } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Download, TrendingUp, Mail, Zap, CheckCircle } from 'lucide-react'
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
+import { ReportSkeleton } from '@/components/ui/Skeletons'
 
 export default function WeeklyReportPage() {
   const { data, isLoading } = useQuery({
@@ -14,8 +17,18 @@ export default function WeeklyReportPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 size={20} className="animate-spin" style={{ color: 'var(--accent-text)' }} />
+      <div className="flex flex-col h-full">
+        <div className="px-6 py-5 border-b border-[var(--border)] flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-2.5 w-24 skeleton rounded-full" />
+            <div className="h-7 w-56 skeleton rounded-lg" />
+            <div className="h-2 w-32 skeleton rounded-full" />
+          </div>
+          <div className="w-28 h-8 skeleton rounded-xl" />
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <ReportSkeleton />
+        </div>
       </div>
     )
   }
@@ -49,15 +62,18 @@ export default function WeeklyReportPage() {
         {/* Stats grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[
-            { label: 'Emails handled', value: stats?.totalEmails ?? 0, icon: Mail, color: '#8b5cf6' },
-            { label: 'Critical emails', value: stats?.criticalEmails ?? 0, icon: TrendingUp, color: '#ef4444' },
-            { label: 'AI analyses', value: stats?.analyses ?? 0, icon: Zap, color: '#4fd1c5' },
-            { label: 'Tasks created', value: stats?.tasksCreated ?? 0, icon: CheckCircle, color: '#f59e0b' },
-            { label: 'Tasks completed', value: stats?.tasksCompleted ?? 0, icon: CheckCircle, color: '#10b981' },
-            { label: 'Hours saved', value: `${stats?.timeSaved ?? 0}h`, icon: TrendingUp, color: '#10b981' },
+            { label: 'Emails handled', value: stats?.totalEmails ?? 0, icon: Mail, color: '#8b5cf6', suffix: '' },
+            { label: 'Critical emails', value: stats?.criticalEmails ?? 0, icon: TrendingUp, color: '#ef4444', suffix: '' },
+            { label: 'AI analyses', value: stats?.analyses ?? 0, icon: Zap, color: '#4fd1c5', suffix: '' },
+            { label: 'Tasks created', value: stats?.tasksCreated ?? 0, icon: CheckCircle, color: '#f59e0b', suffix: '' },
+            { label: 'Tasks completed', value: stats?.tasksCompleted ?? 0, icon: CheckCircle, color: '#10b981', suffix: '' },
+            { label: 'Hours saved', value: stats?.timeSaved ?? 0, icon: TrendingUp, color: '#10b981', suffix: 'h' },
           ].map((s, i) => (
-            <div
+            <motion.div
               key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
               className="p-4 rounded-2xl"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
             >
@@ -67,9 +83,11 @@ export default function WeeklyReportPage() {
               >
                 <s.icon size={14} style={{ color: s.color }} />
               </div>
-              <p className="text-[28px] font-outfit font-light" style={{ color: s.color }}>{s.value}</p>
+              <p className="text-[28px] font-outfit font-light" style={{ color: s.color }}>
+                <AnimatedNumber value={s.value} suffix={s.suffix} />
+              </p>
               <p className="text-[11px] text-[var(--text-3)] mt-0.5">{s.label}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
 
@@ -88,9 +106,12 @@ export default function WeeklyReportPage() {
                         <span className="text-white font-mono shrink-0">{s.count}</span>
                       </div>
                       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-hover)' }}>
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{ width: `${(s.count / max) * 100}%`, background: 'var(--accent)' }}
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(s.count / max) * 100}%` }}
+                          transition={{ duration: 0.7, ease: 'easeOut', delay: 0.2 + i * 0.08 }}
+                          className="h-full rounded-full"
+                          style={{ background: 'var(--accent)' }}
                         />
                       </div>
                     </div>
@@ -143,7 +164,7 @@ export default function WeeklyReportPage() {
         >
           <p className="text-[8px] tracking-[2.5px] uppercase text-[var(--green)] mb-3">Weekly ROI Estimate</p>
           <p className="font-outfit text-4xl font-light text-white mb-1">
-            €{Math.round((stats?.timeSaved ?? 0) * 50)}
+            €<AnimatedNumber value={Math.round((stats?.timeSaved ?? 0) * 50)} duration={1500} />
           </p>
           <p className="text-[11px] text-[var(--text-3)]">value generated at €50/h · {stats?.timeSaved ?? 0}h saved this week</p>
         </div>

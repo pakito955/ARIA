@@ -28,4 +28,27 @@ export const useAppStore = create<AppStore>((set) => ({
 
   newEmailsCount: 0,
   setNewEmailsCount: (n) => set({ newEmailsCount: n }),
+
+  toasts: [],
+  addToast: (t) =>
+    set((state) => ({
+      toasts: [
+        ...state.toasts.slice(-4),
+        { ...t, id: Math.random().toString(36).slice(2, 9) },
+      ],
+    })),
+  removeToast: (id) =>
+    set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
 }))
+
+// Convenience helper — call from anywhere without hooks
+export const toast = {
+  success: (message: string, title?: string) =>
+    useAppStore.getState().addToast({ type: 'success', message, title }),
+  error: (message: string, title?: string) =>
+    useAppStore.getState().addToast({ type: 'error', message, title }),
+  info: (message: string, title?: string) =>
+    useAppStore.getState().addToast({ type: 'info', message, title }),
+  warning: (message: string, title?: string) =>
+    useAppStore.getState().addToast({ type: 'warning', message, title }),
+}

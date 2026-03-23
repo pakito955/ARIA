@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Star, Mail, Clock, CheckCircle, Loader2 } from 'lucide-react'
+import { X, Star, Mail, Clock, CheckCircle } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { formatDistanceToNow, format } from 'date-fns'
 
@@ -73,8 +73,11 @@ export function ContactPanel() {
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
             className="fixed right-0 top-0 bottom-0 z-50 w-80 flex flex-col overflow-hidden"
             style={{
-              background: 'var(--bg-card)',
-              borderLeft: '1px solid var(--border)',
+              background: 'color-mix(in srgb, var(--bg-card) 80%, transparent)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              borderLeft: '1px solid var(--border-medium)',
+              boxShadow: '-8px 0 48px rgba(0,0,0,0.35)',
             }}
           >
             {/* Header */}
@@ -90,8 +93,36 @@ export function ContactPanel() {
             </div>
 
             {isLoading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <Loader2 size={18} className="animate-spin" style={{ color: 'var(--accent-text)' }} />
+              <div className="flex-1 p-5 space-y-5">
+                {/* Identity skeleton */}
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-2xl skeleton shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 w-28 skeleton rounded-full" />
+                    <div className="h-2.5 w-36 skeleton rounded-full" />
+                    <div className="h-5 w-16 skeleton rounded-full mt-1" />
+                  </div>
+                </div>
+                {/* Stats skeleton */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="p-3 rounded-xl space-y-2 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                      <div className="w-3 h-3 skeleton rounded-full mx-auto" />
+                      <div className="h-5 w-8 skeleton rounded mx-auto" />
+                      <div className="h-2 w-10 skeleton rounded-full mx-auto" />
+                    </div>
+                  ))}
+                </div>
+                {/* History skeleton */}
+                <div className="space-y-2">
+                  <div className="h-2.5 w-20 skeleton rounded-full" />
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="p-3 rounded-xl space-y-1.5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                      <div className="h-3 skeleton rounded-full" style={{ width: `${70 + i * 10}%` }} />
+                      <div className="h-2 w-16 skeleton rounded-full" />
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto p-5 space-y-5">

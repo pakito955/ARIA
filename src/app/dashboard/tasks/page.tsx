@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Check, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
+import { toast } from '@/lib/store'
+import { TaskItemSkeleton } from '@/components/ui/Skeletons'
 
 export default function TasksPage() {
   const qc = useQueryClient()
@@ -45,6 +47,7 @@ export default function TasksPage() {
       qc.invalidateQueries({ queryKey: ['tasks'] })
       setNewTask('')
       setAdding(false)
+      toast.success('Task added', 'New task')
     },
   })
 
@@ -118,9 +121,27 @@ export default function TasksPage() {
         {/* Active tasks */}
         <Section title="Active" count={today.length}>
           {isLoading ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-12 rounded skeleton" />
-            ))
+            <TaskItemSkeleton count={4} />
+          ) : today.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-10 gap-3"
+            >
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              >
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                  <rect x="1" y="1" width="20" height="20" rx="4" stroke="var(--border-medium)" strokeWidth="1.5"/>
+                  <path d="M7 11l3 3 5-5" stroke="var(--green)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="text-center">
+                <p className="text-[13px] font-medium text-[var(--text-1)] mb-0.5">All caught up!</p>
+                <p className="text-[11px] text-[var(--text-3)]">No active tasks right now</p>
+              </div>
+            </motion.div>
           ) : (
             today.map((task: any, i: number) => (
               <TaskItem
@@ -179,8 +200,9 @@ function TaskItem({ task, index, onToggle }: any) {
     <motion.div
       initial={{ opacity: 0, x: -6 }}
       animate={{ opacity: 1, x: 0 }}
+      whileHover={{ x: 2 }}
       transition={{ delay: index * 0.05 }}
-      className="flex items-start gap-3 p-2.5 rounded bg-[var(--bg-card)] hover:bg-[#121224] transition-colors cursor-pointer group"
+      className="flex items-start gap-3 p-2.5 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer group"
       onClick={onToggle}
     >
       <div className={cn(

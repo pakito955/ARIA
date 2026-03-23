@@ -5,6 +5,8 @@ import { MobileNav } from '@/components/layout/MobileNav'
 import { AnalysisPanel } from '@/components/analysis/AnalysisPanel'
 import { CommandPalette } from '@/components/CommandPalette'
 import { NotificationManager } from '@/components/NotificationManager'
+import { PageTransition } from '@/components/layout/PageTransition'
+import { ToastContainer } from '@/components/ui/Toast'
 
 export default async function DashboardLayout({
   children,
@@ -27,8 +29,10 @@ export default async function DashboardLayout({
       </div>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto grid-bg pb-16 md:pb-0 min-w-0 relative z-10">
-        {children}
+      <main className="flex-1 overflow-hidden grid-bg pb-16 md:pb-0 min-w-0 relative z-10">
+        <PageTransition>
+          {children}
+        </PageTransition>
       </main>
 
       {/* Right AI panel — desktop only */}
@@ -38,6 +42,7 @@ export default async function DashboardLayout({
 
       <CommandPalette />
       <NotificationManager />
+      <ToastContainer />
 
       {/* Mobile bottom nav */}
       <MobileNav />
