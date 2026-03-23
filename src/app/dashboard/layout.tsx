@@ -37,16 +37,12 @@ export default async function DashboardLayout({
         </PageTransition>
       </main>
 
-      {/* Right AI panel — desktop only */}
-      <div className="hidden lg:block w-[280px] xl:w-[300px] shrink-0 relative z-10">
-        <AnalysisPanel />
-      </div>
-
       <CommandPalette />
       <NotificationManager />
       <ToastContainer />
       <ComposeModal />
       <OnboardingFlow />
+      <AnalysisPanel />
 
       {/* Mobile bottom nav */}
       <MobileNav />

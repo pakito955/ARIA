@@ -327,4 +327,7 @@ export interface AppStore {
 
   smartSearchMode: boolean
   setSmartSearchMode: (v: boolean) => void
+
+  aiPanelOpen: boolean
+  setAiPanelOpen: (open: boolean) => void
 }

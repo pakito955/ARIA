@@ -48,6 +48,9 @@ export const useAppStore = create<AppStore>((set) => ({
 
   smartSearchMode: false,
   setSmartSearchMode: (v) => set({ smartSearchMode: v }),
+
+  aiPanelOpen: false,
+  setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
 }))
 
 // Convenience helper — call from anywhere without hooks
