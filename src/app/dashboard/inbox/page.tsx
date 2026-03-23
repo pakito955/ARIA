@@ -635,6 +635,11 @@ export default function InboxPage() {
                   </div>
                 )}
 
+                {/* Meeting Booking Banner */}
+                {analysis?.meetingDetected && (
+                  <MeetingBooking emailId={selectedEmail.id} />
+                )}
+
                 {/* AI Actions */}
                 {analysis && (
                   <div className="mx-6 mt-4">
@@ -771,12 +776,7 @@ export default function InboxPage() {
                       >
                         ✨ Smart Reply
                       </button>
-                      {analysis.meetingDetected && (
-                        <button className="flex items-center gap-1.5 px-3 py-1.5 border border-[#f59e0b]/20 text-[var(--amber)] text-[10.5px] rounded-lg hover:border-[#f59e0b]/35 transition-all bg-[#f59e0b]/05">
-                          <Calendar size={11} />
-                          Schedule Meeting
-                        </button>
-                      )}
+                      {/* The MeetingBooking banner is rendered below */}
                     </div>
 
                     {/* Follow-up picker */}
