@@ -171,42 +171,49 @@ export class GmailProvider implements EmailProviderInterface {
     })
 
     const threads = list.data.threads || []
-    const result: Thread[] = []
+    if (!threads.length) return []
 
-    for (const t of threads) {
-      const thread = await this.gmail().users.threads.get({
-        userId: 'me',
-        id: t.id!,
-        format: 'metadata',
-        metadataHeaders: ['Subject', 'From', 'Date'],
+    // Parallel fetch — eliminates N+1
+    const threadDetails = await Promise.all(
+      threads.map((t) =>
+        this.gmail().users.threads.get({
+          userId: 'me',
+          id: t.id!,
+          format: 'metadata',
+          metadataHeaders: ['Subject', 'From', 'Date'],
+        }).catch(() => null)
+      )
+    )
+
+    return threadDetails
+      .filter(Boolean)
+      .map((thread) => {
+        const msgs = thread!.data.messages || []
+        const lastMsg = msgs[msgs.length - 1]
+        const headers = lastMsg?.payload?.headers || []
+        const getHeader = (name: string) =>
+          headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value || ''
+
+        const participants = [
+          ...new Set(
+            msgs.map((m) => {
+              const from = m.payload?.headers?.find(
+                (h) => h.name?.toLowerCase() === 'from'
+              )?.value || ''
+              return extractEmail(from)
+            })
+          ),
+        ].filter(Boolean)
+
+        return {
+          id: thread!.data.id!,
+          externalId: thread!.data.id!,
+          subject: getHeader('Subject') || '(No subject)',
+          participants,
+          messageCount: msgs.length,
+          lastEmailAt: new Date(parseInt(lastMsg?.internalDate || '0')),
+        }
       })
-
-      const msgs = thread.data.messages || []
-      const lastMsg = msgs[msgs.length - 1]
-      const headers = lastMsg?.payload?.headers || []
-      const getHeader = (name: string) =>
-        headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value || ''
-
-      const participants = [
-        ...new Set(msgs.map((m) => {
-          const from = m.payload?.headers?.find(
-            (h) => h.name?.toLowerCase() === 'from'
-          )?.value || ''
-          return extractEmail(from)
-        })),
-      ].filter(Boolean)
-
-      result.push({
-        id: t.id!,
-        externalId: t.id!,
-        subject: getHeader('Subject') || '(No subject)',
-        participants,
-        messageCount: msgs.length,
-        lastEmailAt: new Date(parseInt(lastMsg?.internalDate || '0')),
-      })
-    }
-
-    return result
   }
 
   async getHistoryId(): Promise<string> {

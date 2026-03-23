@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, SlidersHorizontal, RefreshCw, ChevronDown, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip, Inbox, RefreshCcw, Maximize2, Minimize2, AlertTriangle, User, Bell, BrainCircuit } from 'lucide-react'
+import { Search, SlidersHorizontal, RefreshCw, Send, Copy, Calendar, CheckCircle, Loader2, ArrowLeft, Paperclip, Inbox, Maximize2, Minimize2, User, Bell, BrainCircuit, Circle, CalendarDays, CheckSquare, Star, AlertCircle, ChevronDown, AlertTriangle, RefreshCcw } from 'lucide-react'
 import { EmailCard } from '@/components/inbox/EmailCard'
 import { TriageMode } from '@/components/TriageMode'
 import { SnoozePickerModal } from '@/components/inbox/SnoozePickerModal'
@@ -18,12 +18,12 @@ import { useInboxKeyboard } from '@/hooks/useInboxKeyboard'
 import { format, formatDistanceToNow } from 'date-fns'
 
 const FILTERS = [
-  { key: 'all', label: 'All' },
-  { key: 'unread', label: 'Unread' },
-  { key: 'critical', label: '🔴 Critical' },
-  { key: 'meeting', label: '📅 Meetings' },
-  { key: 'task', label: '✓ Tasks' },
-  { key: 'starred', label: '⭐ Starred' },
+  { key: 'all',      label: 'All',      Icon: Inbox },
+  { key: 'unread',   label: 'Unread',   Icon: Circle },
+  { key: 'critical', label: 'Critical', Icon: AlertCircle },
+  { key: 'meeting',  label: 'Meetings', Icon: CalendarDays },
+  { key: 'task',     label: 'Tasks',    Icon: CheckSquare },
+  { key: 'starred',  label: 'Starred',  Icon: Star },
 ] as const
 
 export default function InboxPage() {
@@ -59,6 +59,8 @@ export default function InboxPage() {
 
   const debouncedSearch = useDebounce(searchQuery, 300)
 
+  const [syncForced, setSyncForced] = useState(false)
+
   const { data: emailsData, isLoading, refetch } = useQuery({
     queryKey: ['emails', emailFilter, debouncedSearch, sort],
     queryFn: async () => {
@@ -67,11 +69,14 @@ export default function InboxPage() {
         sort,
         limit: '50',
         ...(debouncedSearch && { search: debouncedSearch }),
+        ...(syncForced && { sync: 'true' }),
       })
+      setSyncForced(false)
       const res = await fetch(`/api/emails?${params}`)
-      if (!res.ok) throw new Error('Failed to fetch')
+      if (!res.ok) throw new Error('Failed to fetch emails')
       return res.json()
     },
+    staleTime: 30_000,
   })
 
   const { data: emailDetail } = useQuery({
@@ -159,11 +164,15 @@ export default function InboxPage() {
   })
 
   const handleArchive = useCallback((id: string) => {
-    fetch(`/api/emails/${id}/archive`, { method: 'POST' }).then(() => {
-      qc.invalidateQueries({ queryKey: ['emails'] })
-      toast.success('Email archived')
-    })
-  }, [qc])
+    fetch(`/api/emails/${id}/archive`, { method: 'POST' })
+      .then((res) => {
+        if (!res.ok) throw new Error('Archive failed')
+        qc.invalidateQueries({ queryKey: ['emails'] })
+        if (selectedEmailId === id) setSelectedEmail(null)
+        toast.success('Email archived')
+      })
+      .catch(() => toast.error('Failed to archive email'))
+  }, [qc, selectedEmailId, setSelectedEmail])
 
   const handleReply = useCallback((id: string) => {
     setSelectedEmail(id)
@@ -303,7 +312,8 @@ export default function InboxPage() {
               {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
             </button>
             <button
-              onClick={() => refetch()}
+              onClick={() => { setSyncForced(true); refetch() }}
+              title="Sync inbox"
               className="p-2 rounded-xl text-[var(--text-3)] hover:text-[var(--text-2)] hover:bg-[var(--bg-hover)] transition-all"
             >
               <RefreshCw size={13} />
@@ -325,7 +335,7 @@ export default function InboxPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={smartSearch ? 'Ask ARIA anything about your emails…' : 'Search emails…'}
-              className="flex-1 bg-transparent text-[12px] text-white placeholder:text-[var(--text-3)] outline-none"
+              className="flex-1 bg-transparent text-[12px] text-[var(--text-1)] placeholder:text-[var(--text-3)] outline-none"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="text-[var(--text-3)] text-xs hover:text-[var(--text-2)]">✕</button>
@@ -347,20 +357,24 @@ export default function InboxPage() {
 
         {/* Filters */}
         <div className="flex items-center gap-1 px-3 py-2 border-b border-[var(--border)] overflow-x-auto">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setEmailFilter(f.key)}
-              className={cn(
-                'px-2.5 py-1 rounded-lg text-[10.5px] whitespace-nowrap transition-all shrink-0',
-                emailFilter === f.key
-                  ? 'bg-[var(--accent)]/12 text-[var(--accent-text)] border border-[var(--accent)]'
-                  : 'text-[var(--text-2)] hover:text-white hover:bg-[var(--bg-hover)]'
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
+          {FILTERS.map((f) => {
+            const active = emailFilter === f.key
+            return (
+              <button
+                key={f.key}
+                onClick={() => setEmailFilter(f.key)}
+                className={cn(
+                  'flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] whitespace-nowrap transition-all shrink-0',
+                  active
+                    ? 'bg-[var(--accent)]/12 text-[var(--accent-text)] border border-[var(--accent)]'
+                    : 'text-[var(--text-2)] hover:text-[var(--text-1)] hover:bg-[var(--bg-hover)] border border-transparent'
+                )}
+              >
+                <f.Icon size={9} />
+                {f.label}
+              </button>
+            )
+          })}
 
           <button
             onClick={() => setSort(sort === 'newest' ? 'priority' : 'newest')}
@@ -475,7 +489,7 @@ export default function InboxPage() {
               <div className="px-6 py-5 border-b border-[var(--border)]">
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-[15px] font-medium text-white leading-snug mb-2">
+                    <h2 className="text-[15px] font-medium text-[var(--text-1)] leading-snug mb-2">
                       {selectedEmail.subject}
                     </h2>
                     <div className="flex items-center gap-3">

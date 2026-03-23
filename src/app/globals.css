@@ -81,13 +81,20 @@
   --green:  #16a34a;
   --blue:   #2563eb;
 
-  --red-subtle:   rgba(220, 38,  38,  0.08);
-  --amber-subtle: rgba(217, 119, 6,   0.08);
-  --green-subtle: rgba(22,  163, 74,  0.08);
+  --red-subtle:   rgba(220, 38,  38,  0.07);
+  --amber-subtle: rgba(217, 119, 6,   0.07);
+  --green-subtle: rgba(22,  163, 74,  0.07);
 
   --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.08);
   --shadow-lg:  0 12px 40px rgba(0, 0, 0, 0.1);
+
+  /* Light mode glow — lighter than dark */
+  --glow-violet: 0 0 0 1px rgba(124, 58, 237, 0.2), 0 4px 16px rgba(124, 58, 237, 0.1);
+  --glow-violet-strong: 0 0 0 1px rgba(124, 58, 237, 0.3), 0 8px 24px rgba(124, 58, 237, 0.14);
+  --glow-red:    0 0 0 1px rgba(220, 38, 38, 0.15), 0 4px 12px rgba(220, 38, 38, 0.08);
+  --glow-amber:  0 0 0 1px rgba(217, 119, 6, 0.15), 0 4px 12px rgba(217, 119, 6, 0.08);
+  --glow-green:  0 0 0 1px rgba(22, 163, 74, 0.15), 0 4px 12px rgba(22, 163, 74, 0.08);
 
   --grid-color: rgba(0, 0, 0, 0.025);
 }

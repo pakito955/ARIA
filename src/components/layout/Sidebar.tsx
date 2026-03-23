@@ -41,7 +41,8 @@ export function Sidebar() {
       if (!res.ok) return null
       return res.json()
     },
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
   })
 
   useEffect(() => {

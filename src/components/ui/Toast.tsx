@@ -68,7 +68,7 @@ function ToastItem({ toast }: { toast: { id: string; type: 'success' | 'error' |
 
       <div className="flex-1 min-w-0">
         {toast.title && (
-          <p className="text-[12px] font-semibold text-white mb-0.5">{toast.title}</p>
+          <p className="text-[12px] font-semibold mb-0.5" style={{ color: 'var(--text-1)' }}>{toast.title}</p>
         )}
         <p className="text-[11.5px] leading-relaxed" style={{ color: 'var(--text-2)' }}>
           {toast.message}

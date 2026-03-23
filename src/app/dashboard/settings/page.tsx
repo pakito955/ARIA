@@ -9,6 +9,7 @@ import {
   Clock, MessageSquare, FileText, Inbox,
 } from 'lucide-react'
 import { VipContactManager } from '@/components/settings/VipContactManager'
+import { ExtensionTokenManager } from '@/components/settings/ExtensionTokenManager'
 import { useTheme } from '@/lib/theme'
 import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
@@ -610,12 +611,17 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* ── 9. VIP Contacts ── */}
+      {/* ── 9. Chrome Extension Tokens ── */}
+      <section className={card} style={cardStyle}>
+        <ExtensionTokenManager />
+      </section>
+
+      {/* ── 10. VIP Contacts ── */}
       <section className={card} style={cardStyle}>
         <VipContactManager />
       </section>
 
-      {/* ── 10. Account info ── */}
+      {/* ── 11. Account info ── */}
       <section className={card} style={cardStyle}>
         <SectionHeader
           icon={Eye}

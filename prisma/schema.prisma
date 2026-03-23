@@ -36,6 +36,7 @@ model User {
   emailTemplates   EmailTemplate[]
   followupReminders FollowupReminder[]
   scheduledEmails  ScheduledEmail[]
+  extensionTokens  ExtensionToken[]
 
   @@map("users")
 }
@@ -327,6 +328,21 @@ model ScheduledEmail {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("scheduled_emails")
+}
+
+// ─── EXTENSION TOKENS ────────────────────────────────────────────────
+
+model ExtensionToken {
+  id         String    @id @default(cuid())
+  userId     String
+  token      String    @unique
+  label      String    @default("Chrome Extension")
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("extension_tokens")
 }
 
 // ─── SETTINGS ────────────────────────────────────────────────────────

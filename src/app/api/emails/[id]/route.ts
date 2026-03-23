@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { decrypt, encrypt } from '@/lib/encryption'
+import { GmailProvider } from '@/lib/providers/gmail'
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteCtx = { params: Promise<{ id: string }> }
+
+export async function GET(req: NextRequest, { params }: RouteCtx) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -21,28 +22,66 @@ export async function GET(
 
   if (!email) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+  // Mark as read without blocking the response
   if (!email.isRead) {
-    await prisma.email.update({ where: { id }, data: { isRead: true } })
+    prisma.email.update({ where: { id }, data: { isRead: true } }).catch(() => {})
+    // Also mark on provider in the background
+    markReadOnProvider(session.user.id, email.externalId, email.provider).catch(() => {})
   }
 
-  return NextResponse.json({ data: email })
+  return NextResponse.json({ data: { ...email, isRead: true } })
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: RouteCtx) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const body = await req.json()
-  const allowed = ['isRead', 'isStarred', 'isSnoozed', 'snoozeUntil']
-  const updates: any = {}
-  for (const key of allowed) {
+  const body = await req.json().catch(() => ({}))
+
+  const ALLOWED_FIELDS = ['isRead', 'isStarred', 'isSnoozed', 'snoozeUntil'] as const
+  const updates: Record<string, unknown> = {}
+  for (const key of ALLOWED_FIELDS) {
     if (key in body) updates[key] = body[key]
   }
 
-  await prisma.email.updateMany({ where: { id, userId: session.user.id }, data: updates })
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+  }
+
+  const updated = await prisma.email.updateMany({
+    where: { id, userId: session.user.id },
+    data: updates,
+  })
+
+  if (updated.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json({ success: true })
 }
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+async function getGmailProvider(userId: string) {
+  const integration = await prisma.integration.findFirst({
+    where: { userId, provider: 'GMAIL', isActive: true },
+  })
+  if (!integration) return null
+
+  const gmail = new GmailProvider(
+    decrypt(integration.accessToken),
+    integration.refreshToken ? decrypt(integration.refreshToken) : undefined,
+    async (newToken) => {
+      await prisma.integration.update({
+        where: { id: integration.id },
+        data: { accessToken: encrypt(newToken) },
+      })
+    }
+  )
+  return gmail
+}
+
+async function markReadOnProvider(userId: string, externalId: string, provider: string) {
+  if (provider !== 'GMAIL') return
+  const gmail = await getGmailProvider(userId)
+  await gmail?.markAsRead(externalId)
+}
+
