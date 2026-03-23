@@ -237,7 +237,7 @@ export default function InboxPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -40 }}
             className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-medium text-white shadow-2xl"
-            style={{ background: 'var(--accent)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}
+            style={{ background: 'var(--accent)', boxShadow: '0 4px 20px rgba(217,119,87,0.4)' }}
           >
             ↑ {newEmailsCount} new email{newEmailsCount > 1 ? 's' : ''}
           </motion.div>
@@ -541,7 +541,7 @@ export default function InboxPage() {
                   <div className="mx-6 mt-5 p-4 rounded-xl border border-[var(--accent)] bg-[var(--accent)]/[0.04] relative overflow-hidden">
                     <div
                       className="absolute right-0 top-0 w-32 h-full pointer-events-none"
-                      style={{ background: 'radial-gradient(ellipse at right, rgba(139,92,246,0.06), transparent 70%)' }}
+                      style={{ background: 'radial-gradient(ellipse at right, rgba(217,119,87,0.06), transparent 70%)' }}
                     />
                     <div className="flex items-center gap-2 mb-3">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />

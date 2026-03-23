@@ -58,8 +58,8 @@ export function VoiceBriefing({ text, className }: VoiceBriefingProps) {
       className={cn(
         'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10.5px] transition-all border',
         speaking
-          ? 'bg-[#8b5cf6]/15 border-[#8b5cf6]/30 text-[#a78bfa]'
-          : 'border-white/[0.06] text-[#4a4a6a] hover:text-[#8888aa] hover:border-white/[0.1]',
+          ? 'bg-[#D97757]/15 border-[#D97757]/30 text-[#F0A98A]'
+          : 'border-white/[0.06] text-[#5a4a3a] hover:text-[#8888aa] hover:border-white/[0.1]',
         className
       )}
     >
@@ -69,7 +69,7 @@ export function VoiceBriefing({ text, className }: VoiceBriefingProps) {
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ repeat: Infinity, duration: 0.8 }}
           >
-            <Volume2 size={12} className="text-[#8b5cf6]" />
+            <Volume2 size={12} className="text-[#D97757]" />
           </motion.div>
           <span>Stop</span>
           <div className="flex gap-0.5 ml-1">
@@ -78,7 +78,7 @@ export function VoiceBriefing({ text, className }: VoiceBriefingProps) {
                 key={i}
                 animate={{ height: ['4px', '12px', '4px'] }}
                 transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.15 }}
-                className="w-0.5 bg-[#8b5cf6] rounded-full"
+                className="w-0.5 bg-[#D97757] rounded-full"
               />
             ))}
           </div>

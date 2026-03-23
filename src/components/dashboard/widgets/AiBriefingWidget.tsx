@@ -26,7 +26,7 @@ export function AiBriefingWidget() {
     <div className="card-premium shimmer-highlight p-5 relative overflow-hidden h-full">
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.04) 0%, transparent 50%)' }}
+        style={{ background: 'linear-gradient(135deg, rgba(217,119,87,0.04) 0%, transparent 50%)' }}
       />
 
       <div className="flex items-center gap-2 mb-4">

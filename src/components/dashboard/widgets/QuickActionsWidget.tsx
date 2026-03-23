@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useAppStore } from '@/lib/store'
 
 const ACTIONS = [
-  { label: 'AI Compose', icon: Sparkles, color: '#8b5cf6', action: 'compose', href: null },
+  { label: 'AI Compose', icon: Sparkles, color: '#D97757', action: 'compose', href: null },
   { label: 'Triage', icon: Inbox, color: '#f59e0b', action: null, href: '/dashboard/inbox' },
   { label: 'Templates', icon: FileText, color: '#10b981', action: null, href: '/dashboard/templates' },
   { label: 'Follow-ups', icon: Bell, color: '#ef4444', action: null, href: '/dashboard/followups' },

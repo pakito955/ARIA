@@ -127,7 +127,7 @@ export function CommandPalette() {
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className="fixed left-1/2 top-[18vh] z-[101] -translate-x-1/2 w-full max-w-[540px] px-4"
           >
-            <div className="glass rounded-2xl shadow-[0_32px_64px_rgba(0,0,0,0.5),0_0_0_1px_rgba(139,92,246,0.15)] overflow-hidden">
+            <div className="glass rounded-2xl shadow-[0_32px_64px_rgba(0,0,0,0.5),0_0_0_1px_rgba(217,119,87,0.15)] overflow-hidden">
               {/* Input */}
               <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border)]">
                 <Search size={15} className="text-[var(--accent-text)] shrink-0" />

@@ -85,7 +85,7 @@ export function CriticalNowWidget() {
       {/* Stats row */}
       <div className="flex items-center gap-5 mt-5 pt-4 border-t border-[var(--border)]">
         {[
-          { n: statsData?.unread ?? 0, label: 'Unread', color: '#8b5cf6' },
+          { n: statsData?.unread ?? 0, label: 'Unread', color: '#D97757' },
           { n: statsData?.tasks ?? 0, label: 'Tasks', color: '#10b981' },
           { n: statsData?.critical ?? 0, label: 'Critical', color: '#ef4444' },
         ].map((s, i) => (

@@ -93,8 +93,8 @@ export function ExtensionTokenManager() {
     <div>
       {/* Header */}
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(168,85,247,0.1)' }}>
-          <Chrome size={16} style={{ color: '#a855f7' }} />
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(232,137,95,0.1)' }}>
+          <Chrome size={16} style={{ color: '#E8895F' }} />
         </div>
         <div>
           <h2 className="text-[15px] font-semibold" style={{ color: 'var(--text-1)' }}>Chrome Extension</h2>
@@ -106,11 +106,11 @@ export function ExtensionTokenManager() {
       {newToken && (
         <div
           className="mb-4 p-4 rounded-xl space-y-3"
-          style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.25)' }}
+          style={{ background: 'rgba(232,137,95,0.08)', border: '1px solid rgba(232,137,95,0.25)' }}
         >
           <div className="flex items-center gap-2">
-            <AlertCircle size={13} style={{ color: '#a855f7' }} />
-            <p className="text-[12px] font-medium" style={{ color: '#a855f7' }}>
+            <AlertCircle size={13} style={{ color: '#E8895F' }} />
+            <p className="text-[12px] font-medium" style={{ color: '#E8895F' }}>
               Copy this token now — it won't be shown again
             </p>
           </div>
@@ -131,7 +131,7 @@ export function ExtensionTokenManager() {
             <button
               onClick={copyToken}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-medium transition-colors"
-              style={{ background: copied ? 'var(--green-subtle)' : 'rgba(168,85,247,0.15)', color: copied ? 'var(--green)' : '#a855f7' }}
+              style={{ background: copied ? 'var(--green-subtle)' : 'rgba(232,137,95,0.15)', color: copied ? 'var(--green)' : '#E8895F' }}
             >
               {copied ? <Check size={12} /> : <Copy size={12} />}
               {copied ? 'Copied!' : 'Copy'}
@@ -157,8 +157,8 @@ export function ExtensionTokenManager() {
               className="flex items-center gap-3 p-3 rounded-xl"
               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
             >
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(168,85,247,0.1)' }}>
-                <Chrome size={12} style={{ color: '#a855f7' }} />
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(232,137,95,0.1)' }}>
+                <Chrome size={12} style={{ color: '#E8895F' }} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-medium truncate" style={{ color: 'var(--text-1)' }}>{t.label}</p>
@@ -199,7 +199,7 @@ export function ExtensionTokenManager() {
             onClick={() => createMut.mutate(labelInput || 'Chrome Extension')}
             disabled={createMut.isPending}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium shrink-0 transition-opacity"
-            style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7', opacity: createMut.isPending ? 0.6 : 1 }}
+            style={{ background: 'rgba(232,137,95,0.15)', color: '#E8895F', opacity: createMut.isPending ? 0.6 : 1 }}
           >
             {createMut.isPending ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
             Generate Token

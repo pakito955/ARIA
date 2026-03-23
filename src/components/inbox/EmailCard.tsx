@@ -36,7 +36,7 @@ interface Props {
 }
 
 function avatarColor(email: string): string {
-  const colors = ['#7c3aed', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#6366f1', '#14b8a6']
+  const colors = ['#D97757', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#6366f1', '#14b8a6']
   let hash = 0
   for (let i = 0; i < email.length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash)
   return colors[Math.abs(hash) % colors.length]
@@ -85,14 +85,14 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
       className="group relative flex gap-3 px-3 py-3 cursor-pointer rounded-xl transition-colors duration-150 mb-0.5"
       style={{
         background: isSelected
-          ? 'rgba(124,58,237,0.07)'
+          ? 'rgba(217,119,87,0.07)'
           : selected
           ? 'var(--accent-subtle)'
           : 'transparent',
         boxShadow: isSelected
-          ? '0 0 0 1px rgba(124,58,237,0.25), 0 4px 20px rgba(124,58,237,0.12)'
+          ? '0 0 0 1px rgba(217,119,87,0.25), 0 4px 20px rgba(217,119,87,0.12)'
           : selected
-          ? '0 0 0 1px rgba(124,58,237,0.2)'
+          ? '0 0 0 1px rgba(217,119,87,0.2)'
           : 'none',
         borderLeft: isSelected
           ? '2px solid var(--accent)'
@@ -104,7 +104,7 @@ export function EmailCard({ email, index = 0, onAnalyze, analyzing, selected = f
         if (!isSelected && !selected) {
           const el = e.currentTarget as HTMLElement
           el.style.background = 'var(--bg-hover)'
-          el.style.boxShadow = '0 0 0 1px rgba(124,58,237,0.08), 0 2px 12px rgba(0,0,0,0.2)'
+          el.style.boxShadow = '0 0 0 1px rgba(217,119,87,0.08), 0 2px 12px rgba(0,0,0,0.2)'
         }
       }}
       onMouseLeave={(e) => {

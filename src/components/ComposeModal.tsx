@@ -118,7 +118,7 @@ export function ComposeModal() {
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
                 border: '1px solid var(--border-medium)',
-                boxShadow: '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.12)',
+                boxShadow: '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(217,119,87,0.12)',
               }}
             >
               {/* Header */}

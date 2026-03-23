@@ -4,7 +4,7 @@ import { Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const CALENDAR_EVENTS = [
-  { time: '10:30', title: 'Team Standup', color: '#8b5cf6', note: 'In 45 min' },
+  { time: '10:30', title: 'Team Standup', color: '#D97757', note: 'In 45 min' },
   { time: '14:00', title: 'Investor Call', color: '#f59e0b', note: 'Zoom · 45 min' },
   { time: '15:00', title: 'Board Meeting', color: '#ef4444', note: 'Reply needed' },
   { time: '17:00', title: 'Weekly Review', color: '#10b981', note: 'ARIA scheduled' },

@@ -39,19 +39,19 @@ export function ResponseTimeWidget() {
   return (
     <div className="card-premium p-5 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
-        <Clock size={13} className="text-[#a855f7]" />
-        <span className="text-[9px] tracking-[2px] uppercase" style={{ color: '#a855f7' }}>Response Time</span>
+        <Clock size={13} className="text-[#E8895F]" />
+        <span className="text-[9px] tracking-[2px] uppercase" style={{ color: '#E8895F' }}>Response Time</span>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center gap-2">
         <div className="relative flex items-center justify-center">
           <div
             className="absolute inset-0 rounded-full blur-[30px] opacity-20"
-            style={{ background: '#a855f7', width: 100, height: 100, transform: 'translate(-50%,-50%)', top: '50%', left: '50%' }}
+            style={{ background: '#E8895F', width: 100, height: 100, transform: 'translate(-50%,-50%)', top: '50%', left: '50%' }}
           />
           <p
             className="font-outfit text-5xl font-light tabular-nums"
-            style={{ color: '#a855f7', textShadow: '0 0 30px rgba(168,85,247,0.4)' }}
+            style={{ color: '#E8895F', textShadow: '0 0 30px rgba(232,137,95,0.4)' }}
           >
             {displayTime}
           </p>

@@ -78,8 +78,8 @@ export function Sidebar() {
         <div
           className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 relative"
           style={{
-            background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
-            boxShadow: '0 0 12px rgba(124,58,237,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
+            background: 'linear-gradient(135deg, #D97757, #B85C35)',
+            boxShadow: '0 0 12px rgba(217,119,87,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
           }}
         >
           <Zap size={14} className="text-white" strokeWidth={2.5} />
@@ -110,7 +110,7 @@ export function Sidebar() {
             'flex items-center rounded-xl text-white text-[12px] font-medium transition-all w-full',
             sidebarCollapsed ? 'justify-center p-2.5' : 'gap-2 px-3 py-2.5'
           )}
-          style={{ background: 'var(--accent)', boxShadow: '0 0 14px rgba(124,58,237,0.3)' }}
+          style={{ background: 'var(--accent)', boxShadow: '0 0 14px rgba(217,119,87,0.3)' }}
         >
           <Sparkles size={14} strokeWidth={2} className="shrink-0" />
           <AnimatePresence>

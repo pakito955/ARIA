@@ -23,7 +23,7 @@ function AnimatedNumber({ target, suffix = '', prefix = '' }: { target: number; 
   return <span>{prefix}{current}{suffix}</span>
 }
 
-function Sparkline({ data, color = '#8b5cf6' }: { data: number[]; color?: string }) {
+function Sparkline({ data, color = '#D97757' }: { data: number[]; color?: string }) {
   const max = Math.max(...data)
   const min = Math.min(...data)
   const range = max - min || 1
@@ -79,8 +79,8 @@ export default function AnalyticsPage() {
         categories: [
           { label: 'Task', value: 38, color: '#10b981' },
           { label: 'Meeting', value: 22, color: '#f59e0b' },
-          { label: 'Info', value: 28, color: '#8b5cf6' },
-          { label: 'Spam', value: 12, color: '#4a4a6a' },
+          { label: 'Info', value: 28, color: '#D97757' },
+          { label: 'Spam', value: 12, color: '#5a4a3a' },
         ],
         topSenders: [],
         heatmap: null,
@@ -102,7 +102,7 @@ export default function AnalyticsPage() {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
   const METRICS = [
-    { label: 'Emails handled', value: data?.emailsThisWeek ?? 0, suffix: '', unit: 'this month', color: '#8b5cf6', icon: Mail, sparkData: [20, 35, 28, 42, 38, 51, 47] },
+    { label: 'Emails handled', value: data?.emailsThisWeek ?? 0, suffix: '', unit: 'this month', color: '#D97757', icon: Mail, sparkData: [20, 35, 28, 42, 38, 51, 47] },
     { label: 'Time saved', value: data?.timeSaved ?? 0, suffix: 'h', unit: 'this month', color: '#10b981', icon: Clock, sparkData: [0.8, 1.2, 2.1, 1.8, 3.2, 3.8, 4.2] },
     { label: 'Response rate', value: data?.responseRate ?? 0, suffix: '%', unit: 'average', color: '#f59e0b', icon: TrendingUp, sparkData: [78, 82, 85, 88, 90, 92, 94] },
     { label: 'AI actions taken', value: data?.aiActions ?? 0, suffix: '', unit: 'total', color: '#4fd1c5', icon: Zap, sparkData: [8, 14, 22, 31, 45, 67, 128] },
@@ -130,9 +130,9 @@ export default function AnalyticsPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             className="md:col-span-2 relative overflow-hidden rounded-2xl border border-[var(--accent)] p-6"
-            style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(10,10,22,0.95) 60%)' }}
+            style={{ background: 'linear-gradient(135deg, rgba(217,119,87,0.08) 0%, rgba(10,10,22,0.95) 60%)' }}
           >
-            <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%)' }} />
+            <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(217,119,87,0.12), transparent 70%)' }} />
             <p className="text-[9px] tracking-[2.5px] uppercase text-[var(--accent-text)] mb-2">This month, ARIA saved you</p>
             <p className="font-outfit text-6xl font-light text-white mb-1">
               <AnimatedNumber target={data?.timeSaved ? Math.round(data.timeSaved * 10) / 10 : 42} suffix="h" />
@@ -208,8 +208,8 @@ export default function AnalyticsPage() {
                     transition={{ delay: 0.3 + i * 0.06, ease: 'easeOut', duration: 0.5 }}
                     className="w-full rounded-md"
                     style={{
-                      background: isToday ? 'linear-gradient(180deg, #8b5cf6, #6d28d9)' : 'rgba(255,255,255,0.06)',
-                      boxShadow: isToday ? '0 0 12px rgba(139,92,246,0.3)' : 'none',
+                      background: isToday ? 'linear-gradient(180deg, #D97757, #C4663D)' : 'rgba(255,255,255,0.06)',
+                      boxShadow: isToday ? '0 0 12px rgba(217,119,87,0.3)' : 'none',
                     }}
                   />
                   <span className={cn('text-[9px]', isToday ? 'text-[var(--accent-text)]' : 'text-[var(--text-3)]')}>{days[i]}</span>
@@ -245,7 +245,7 @@ export default function AnalyticsPage() {
                           style={{
                             background: intensity < 0.05
                               ? 'rgba(255,255,255,0.04)'
-                              : `rgba(139,92,246,${0.08 + intensity * 0.82})`,
+                              : `rgba(217,119,87,${0.08 + intensity * 0.82})`,
                           }}
                         />
                       )

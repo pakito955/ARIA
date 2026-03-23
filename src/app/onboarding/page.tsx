@@ -13,7 +13,7 @@ const STEPS = [
     title: 'Connect Gmail',
     subtitle: 'ARIA needs access to your inbox',
     icon: Mail,
-    color: '#8b5cf6',
+    color: '#D97757',
   },
   {
     id: 2,
@@ -75,19 +75,19 @@ export default function OnboardingPage() {
       {/* Ambient glow */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(139,92,246,0.08), transparent 60%)' }}
+        style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(217,119,87,0.08), transparent 60%)' }}
       />
 
       <div className="relative z-10 w-full max-w-lg mx-4">
         {/* Logo */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] flex items-center justify-center glow-violet">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D97757] to-[#C4663D] flex items-center justify-center glow-violet">
               <Zap size={18} className="text-white" />
             </div>
             <span className="font-cormorant text-4xl font-light tracking-widest">ARIA</span>
           </div>
-          <p className="text-[12px] text-[#4a4a6a]">Let's get you set up in 3 steps</p>
+          <p className="text-[12px] text-[#5a4a3a]">Let's get you set up in 3 steps</p>
         </div>
 
         {/* Steps indicator */}
@@ -99,8 +99,8 @@ export default function OnboardingPage() {
                 step > s.id
                   ? 'bg-[#10b981] text-white'
                   : step === s.id
-                  ? 'bg-[#8b5cf6] text-white glow-violet'
-                  : 'bg-white/[0.05] text-[#4a4a6a] border border-white/[0.06]'
+                  ? 'bg-[#D97757] text-white glow-violet'
+                  : 'bg-white/[0.05] text-[#5a4a3a] border border-white/[0.06]'
               )}>
                 {step > s.id ? <Check size={14} /> : s.id}
               </div>
@@ -128,9 +128,9 @@ export default function OnboardingPage() {
               <>
                 <div
                   className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center"
-                  style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)' }}
+                  style={{ background: 'rgba(217,119,87,0.12)', border: '1px solid rgba(217,119,87,0.2)' }}
                 >
-                  <Mail size={24} className="text-[#8b5cf6]" />
+                  <Mail size={24} className="text-[#D97757]" />
                 </div>
                 <h2 className="font-cormorant text-3xl font-light mb-2">Connect your Gmail</h2>
                 <p className="text-[12px] text-[#8888aa] mb-6 leading-relaxed">
@@ -156,7 +156,7 @@ export default function OnboardingPage() {
                 <button
                   onClick={handleConnectGmail}
                   disabled={loading}
-                  className="w-full py-3.5 bg-[#8b5cf6] text-white text-[13px] font-medium rounded-xl hover:bg-[#7c3aed] transition-colors flex items-center justify-center gap-2 glow-violet disabled:opacity-60"
+                  className="w-full py-3.5 bg-[#D97757] text-white text-[13px] font-medium rounded-xl hover:bg-[#D97757] transition-colors flex items-center justify-center gap-2 glow-violet disabled:opacity-60"
                 >
                   {loading ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
                   {loading ? 'Connecting…' : 'Connect Gmail'}
@@ -230,7 +230,7 @@ export default function OnboardingPage() {
 
                 <div className="grid grid-cols-3 gap-3 mb-8">
                   {[
-                    { label: 'Emails read', value: '✓', color: '#8b5cf6' },
+                    { label: 'Emails read', value: '✓', color: '#D97757' },
                     { label: 'Prioritized', value: '✓', color: '#10b981' },
                     { label: 'Briefing ready', value: '✓', color: '#f59e0b' },
                   ].map((item, i) => (
@@ -240,14 +240,14 @@ export default function OnboardingPage() {
                       style={{ background: `${item.color}0a`, borderColor: `${item.color}20` }}
                     >
                       <p className="text-lg mb-1" style={{ color: item.color }}>{item.value}</p>
-                      <p className="text-[9px] text-[#4a4a6a] uppercase tracking-wider">{item.label}</p>
+                      <p className="text-[9px] text-[#5a4a3a] uppercase tracking-wider">{item.label}</p>
                     </div>
                   ))}
                 </div>
 
                 <button
                   onClick={() => router.push('/dashboard')}
-                  className="w-full py-3.5 bg-[#8b5cf6] text-white text-[13px] font-medium rounded-xl hover:bg-[#7c3aed] transition-colors flex items-center justify-center gap-2 glow-violet"
+                  className="w-full py-3.5 bg-[#D97757] text-white text-[13px] font-medium rounded-xl hover:bg-[#D97757] transition-colors flex items-center justify-center gap-2 glow-violet"
                 >
                   Enter ARIA
                   <ArrowRight size={15} />

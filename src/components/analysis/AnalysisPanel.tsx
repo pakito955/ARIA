@@ -34,13 +34,13 @@ export function AITriggerButton() {
       style={{
         background: aiPanelOpen
           ? 'var(--bg-card)'
-          : 'linear-gradient(160deg, #7c3aed, #5b21b6)',
+          : 'linear-gradient(160deg, #D97757, #B85C35)',
         borderLeft: '1px solid var(--border)',
         borderTop: '1px solid var(--border)',
         borderBottom: '1px solid var(--border)',
         boxShadow: aiPanelOpen
           ? 'none'
-          : '0 0 24px rgba(124,58,237,0.35), -4px 0 16px rgba(0,0,0,0.25)',
+          : '0 0 24px rgba(217,119,87,0.35), -4px 0 16px rgba(0,0,0,0.25)',
       }}
     >
       {aiPanelOpen ? (
@@ -167,8 +167,8 @@ export function AnalysisPanel() {
                     <div
                       className="w-7 h-7 rounded-lg flex items-center justify-center"
                       style={{
-                        background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
-                        boxShadow: '0 0 12px rgba(124,58,237,0.35)',
+                        background: 'linear-gradient(135deg, #D97757, #B85C35)',
+                        boxShadow: '0 0 12px rgba(217,119,87,0.35)',
                       }}
                     >
                       <Sparkles size={12} className="text-white" />
@@ -204,7 +204,7 @@ export function AnalysisPanel() {
                           background: active ? 'var(--accent)' : 'var(--bg-surface)',
                           color: active ? 'white' : 'var(--text-3)',
                           border: active ? 'none' : '1px solid var(--border)',
-                          boxShadow: active ? '0 4px 12px rgba(124,58,237,0.3)' : 'none',
+                          boxShadow: active ? '0 4px 12px rgba(217,119,87,0.3)' : 'none',
                         }}
                       >
                         <Icon size={11} />
@@ -293,13 +293,13 @@ function EmptyState() {
       <div className="relative">
         <div
           className="absolute inset-0 rounded-2xl blur-[32px] opacity-25"
-          style={{ background: 'radial-gradient(circle, #7c3aed, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, #D97757, transparent 70%)' }}
         />
         <div
           className="relative w-16 h-16 rounded-2xl flex items-center justify-center"
           style={{
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(91,33,182,0.08))',
-            border: '1px solid rgba(124,58,237,0.25)',
+            background: 'linear-gradient(135deg, rgba(217,119,87,0.15), rgba(91,33,182,0.08))',
+            border: '1px solid rgba(217,119,87,0.25)',
           }}
         >
           <Brain size={26} style={{ color: 'var(--accent-text)' }} strokeWidth={1.25} />
@@ -315,7 +315,7 @@ function EmptyState() {
 
       <div className="w-full space-y-2 pt-2">
         {[
-          { icon: Brain, label: 'AI priority scoring', color: '#8b5cf6' },
+          { icon: Brain, label: 'AI priority scoring', color: '#D97757' },
           { icon: Send, label: 'Smart reply suggestions', color: '#10b981' },
           { icon: Calendar, label: 'Meeting detection', color: '#f59e0b' },
         ].map(({ icon: Icon, label, color }) => (
@@ -343,7 +343,7 @@ function EmptyState() {
 const PRIORITY_CONFIG = {
   CRITICAL: { color: 'var(--red)', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)' },
   HIGH:     { color: 'var(--amber)', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)' },
-  MEDIUM:   { color: 'var(--accent-text)', bg: 'var(--accent-subtle)', border: 'rgba(124,58,237,0.2)' },
+  MEDIUM:   { color: 'var(--accent-text)', bg: 'var(--accent-subtle)', border: 'rgba(217,119,87,0.2)' },
   LOW:      { color: 'var(--text-3)', bg: 'var(--bg-surface)', border: 'var(--border)' },
 }
 
@@ -369,8 +369,8 @@ function AnalysisTab({ analysis, onAnalyze, loading }: any) {
           disabled={loading}
           className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-[12px] font-medium text-white disabled:opacity-50"
           style={{
-            background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
-            boxShadow: '0 4px 16px rgba(124,58,237,0.3)',
+            background: 'linear-gradient(135deg, #D97757, #B85C35)',
+            boxShadow: '0 4px 16px rgba(217,119,87,0.3)',
           }}
         >
           {loading ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
@@ -466,8 +466,8 @@ function AnalysisTab({ analysis, onAnalyze, loading }: any) {
         <div
           className="p-4 rounded-xl relative overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(91,33,182,0.04))',
-            border: '1px solid rgba(124,58,237,0.2)',
+            background: 'linear-gradient(135deg, rgba(217,119,87,0.08), rgba(91,33,182,0.04))',
+            border: '1px solid rgba(217,119,87,0.2)',
           }}
         >
           <p className="text-[9px] uppercase tracking-[1.5px] mb-2" style={{ color: 'var(--accent-text)' }}>Suggested Action</p>
@@ -611,7 +611,7 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
           onClick={onAnalyze}
           disabled={loading}
           className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-[12px] font-medium text-white disabled:opacity-50"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', boxShadow: '0 4px 16px rgba(124,58,237,0.3)' }}
+          style={{ background: 'linear-gradient(135deg, #D97757, #B85C35)', boxShadow: '0 4px 16px rgba(217,119,87,0.3)' }}
         >
           {loading ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
           {loading ? 'Generating…' : 'Generate Replies'}
@@ -667,7 +667,7 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
               background: style === key ? 'var(--accent)' : 'var(--bg-surface)',
               color: style === key ? 'white' : 'var(--text-3)',
               border: style === key ? 'none' : '1px solid var(--border)',
-              boxShadow: style === key ? '0 4px 12px rgba(124,58,237,0.25)' : 'none',
+              boxShadow: style === key ? '0 4px 12px rgba(217,119,87,0.25)' : 'none',
             }}
           >
             {label}
@@ -739,7 +739,7 @@ function ReplyTab({ analysis, emailId, onAnalyze, loading }: any) {
           onClick={() => sendMutation.mutate(editedReply)}
           disabled={sendMutation.isPending}
           className="flex-1 py-2.5 rounded-xl flex items-center justify-center gap-2 text-[12px] font-medium text-white disabled:opacity-50"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}
+          style={{ background: 'linear-gradient(135deg, #D97757, #B85C35)', boxShadow: '0 4px 14px rgba(217,119,87,0.3)' }}
         >
           {sendMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
           {sendMutation.isPending ? 'Sending…' : 'Send'}

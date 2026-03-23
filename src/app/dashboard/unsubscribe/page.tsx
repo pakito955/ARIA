@@ -8,7 +8,7 @@ import { toast } from '@/lib/store'
 import { formatDistanceToNow } from 'date-fns'
 
 function avatarColor(email: string): string {
-  const colors = ['#7c3aed', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#6366f1']
+  const colors = ['#D97757', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#6366f1']
   let hash = 0
   for (let i = 0; i < email.length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash)
   return colors[Math.abs(hash) % colors.length]

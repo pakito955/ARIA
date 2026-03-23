@@ -20,9 +20,9 @@ const CONFIG = {
   },
   info: {
     icon: Info,
-    color: '#c4b5fd',
-    bg: 'rgba(124,58,237,0.08)',
-    border: 'rgba(124,58,237,0.18)',
+    color: '#F0A98A',
+    bg: 'rgba(217,119,87,0.08)',
+    border: 'rgba(217,119,87,0.18)',
   },
   warning: {
     icon: AlertTriangle,
