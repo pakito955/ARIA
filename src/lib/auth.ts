@@ -1,8 +1,10 @@
 import NextAuth from 'next-auth'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import Google from 'next-auth/providers/google'
+import Credentials from 'next-auth/providers/credentials'
 import { prisma } from './prisma'
 import { encrypt } from './encryption'
+import { testImapConnection, detectServerConfig } from './providers/imap'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -32,6 +34,80 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
       },
     }),
+    Credentials({
+      name: 'IMAP',
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        const { email, password } = credentials as Record<string, string>
+        if (!email || !password) return null
+
+        const config = detectServerConfig(email)
+        if (!config) {
+          throw new Error("Pružalac usluge nije prepoznat. Molimo koristite Gmail ili Outlook OAuth.")
+        }
+
+        try {
+          // Dry-run connection verify
+          await testImapConnection({
+            email,
+            password,
+            imapHost: config.imapHost,
+            imapPort: config.imapPort,
+            useSsl: config.useSsl
+          })
+
+          // Find or create user
+          let user = await prisma.user.findUnique({ where: { email } })
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                email,
+                name: email.split('@')[0],
+              }
+            })
+          }
+
+          // Create/Update Integration so background sync works
+          await (prisma as any).integration.upsert({
+            where: {
+              userId_provider_email: {
+                userId: user.id,
+                provider: 'IMAP',
+                email,
+              }
+            },
+            create: {
+              userId: user.id,
+              provider: 'IMAP',
+              email,
+              encryptedPassword: encrypt(password),
+              imapHost: config.imapHost,
+              imapPort: config.imapPort,
+              smtpHost: config.smtpHost,
+              smtpPort: config.smtpPort,
+              useSsl: config.useSsl,
+              isActive: true,
+            },
+            update: {
+              encryptedPassword: encrypt(password),
+              isActive: true,
+            }
+          })
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          }
+        } catch (err) {
+          console.error("[Auth] IMAP Login failed:", err)
+          return null
+        }
+      }
+    })
   ],
   callbacks: {
     async jwt({ token, user, account }) {
