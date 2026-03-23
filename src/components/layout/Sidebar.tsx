@@ -7,7 +7,7 @@ import {
   Inbox, CheckSquare, Clock, BarChart3, Zap,
   ChevronLeft, Settings, LogOut, Command, CalendarDays,
   Sun, Moon, FileText, Bell, MailX, Layout, Sparkles, Filter,
-  Send, AlarmClock,
+  Send, AlarmClock, LayoutDashboard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
@@ -19,6 +19,12 @@ import { NotificationBell } from '@/components/notifications/NotificationBell'
 
 // Nav structure with section groupings
 const NAV_SECTIONS = [
+  {
+    label: 'OVERVIEW',
+    items: [
+      { label: 'Dashboard',  href: '/dashboard',             icon: LayoutDashboard, badge: null, exact: true },
+    ],
+  },
   {
     label: 'MAIL',
     items: [
