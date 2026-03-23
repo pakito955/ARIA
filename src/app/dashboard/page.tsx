@@ -159,7 +159,7 @@ export default function DashboardPage() {
             <div className="relative">
               <div
                 className="absolute inset-0 rounded-full blur-[80px] orb-float"
-                style={{ background: 'radial-gradient(circle, rgba(124,92,255,0.12), transparent 70%)', width: 400, height: 400, top: -180, left: -190 }}
+                style={{ background: 'radial-gradient(circle, var(--accent-subtle), transparent 70%)', width: 400, height: 400, top: -180, left: -190 }}
               />
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)' }}>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
         <div className="relative px-6 py-5 border-b border-[var(--border)] overflow-hidden shrink-0">
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: 'linear-gradient(135deg, rgba(124,92,255,0.06) 0%, transparent 60%)' }}
+            style={{ background: 'linear-gradient(135deg, var(--accent-subtle) 0%, transparent 60%)' }}
           />
           <div className="flex items-center justify-between relative">
             <div className="flex-1">
@@ -198,7 +198,7 @@ export default function DashboardPage() {
                 <span className="text-[9px] tracking-[2.5px] uppercase text-[var(--accent-text)]">ARIA · Command</span>
               </div>
               <div className="flex items-start gap-1">
-                <p className="text-[15px] text-white/90 max-w-lg leading-snug">
+                <p className="text-[15px] text-[var(--text-1)] max-w-lg leading-snug">
                   {commandDisplayed}
                   {!commandDone && (
                     <span className="inline-block w-0.5 h-4 bg-[var(--accent)] ml-0.5 animate-pulse align-middle" />
@@ -214,7 +214,7 @@ export default function DashboardPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setGalleryOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] text-[var(--text-2)] text-[11px] hover:border-[var(--accent)] hover:text-white transition-all"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] text-[var(--text-2)] text-[11px] hover:border-[var(--accent)] hover:text-[var(--text-1)] transition-all"
               >
                 <LayoutDashboard size={12} className="text-[var(--accent-text)]" />
                 Customize
@@ -235,7 +235,7 @@ export default function DashboardPage() {
               <button
                 onClick={() => briefingMutation.mutate()}
                 disabled={briefingMutation.isPending}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] text-[var(--text-2)] text-[11px] hover:border-[var(--accent)] hover:text-white transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] text-[var(--text-2)] text-[11px] hover:border-[var(--accent)] hover:text-[var(--text-1)] transition-all disabled:opacity-50"
               >
                 {briefingMutation.isPending
                   ? <Loader2 size={12} className="animate-spin text-[var(--accent-text)]" />

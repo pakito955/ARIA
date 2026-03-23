@@ -6,8 +6,7 @@
    ARIA 2.0 DESIGN TOKENS — Warm Light Minimalist (Based on Reference)
 ───────────────────────────────────────────────────────────── */
 :root,
-.light,
-.dark {
+.light {
   /* Surfaces */
   --bg-base:      #F6F6F3;
   --bg-surface:   #FFFFFF;
@@ -31,6 +30,10 @@
   --accent-subtle: rgba(242, 78, 30, 0.08);
   --accent-text:   #F24E1E;
 
+  /* Logo mark — intentionally inverted for contrast */
+  --logo-bg:      #1A1A1A;
+  --logo-bg-text: #FFFFFF;
+
   /* Status */
   --red:    #E03131;
   --amber:  #F08C00;
@@ -46,6 +49,45 @@
   --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.06);
   --shadow-lg:  0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Dark mode tokens (future-ready) ───────────────────────────────────────── */
+.dark {
+  --bg-base:      #0B0B0F;
+  --bg-surface:   #111116;
+  --bg-card:      #16161C;
+  --bg-hover:     #1E1E26;
+  --bg-input:     #111116;
+
+  --border:        #242430;
+  --border-medium: #32323F;
+  --border-focus:  #E5E5E0;
+
+  --text-1: #EEEEF0;
+  --text-2: #A0A0AA;
+  --text-3: #5A5A68;
+
+  --accent:        #F24E1E;
+  --accent-hover:  #FF6B3D;
+  --accent-subtle: rgba(242, 78, 30, 0.12);
+  --accent-text:   #FF6B3D;
+
+  --logo-bg:      #EEEEF0;
+  --logo-bg-text: #0B0B0F;
+
+  --red:    #FF6B6B;
+  --amber:  #FFB347;
+  --green:  #51CF66;
+  --blue:   #4DABF7;
+
+  --red-subtle:   rgba(255, 107, 107, 0.12);
+  --amber-subtle: rgba(255, 179, 71, 0.12);
+  --green-subtle: rgba(81, 207, 102, 0.12);
+  --blue-subtle:  rgba(77, 171, 247, 0.12);
+
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg:  0 12px 24px rgba(0, 0, 0, 0.5);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -78,7 +120,7 @@
 
   /* Selection */
   ::selection {
-    background: rgba(242, 78, 30, 0.2);
+    background: var(--accent-subtle);
     color: var(--text-1);
   }
 }
@@ -130,8 +172,8 @@
 
   /* Solid Black Button Default */
   .btn-primary {
-    background: #111111;
-    color: #FFFFFF;
+    background: var(--logo-bg);
+    color: var(--logo-bg-text);
     border-radius: 99px;
     font-weight: 500;
     padding: 0.5rem 1rem;
@@ -222,6 +264,32 @@
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
 }
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes orb-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes pulse-violet {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(242, 78, 30, 0.3); }
+  50%       { opacity: 0.7; box-shadow: 0 0 0 4px rgba(242, 78, 30, 0); }
+}
+
+@keyframes typing-dot-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30%            { transform: translateY(-4px); }
+}
+
+.orb-float     { animation: orb-float 6s ease-in-out infinite; }
+.pulse-violet  { animation: pulse-violet 2s ease-in-out infinite; }
+.typing-dot    { animation: typing-dot-bounce 1.2s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
 button:active:not(:disabled) {
   transform: scale(0.97);

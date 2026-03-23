@@ -19,6 +19,14 @@ module.exports = {
       colors: {
         border: 'var(--border)',
         accent: 'var(--accent)',
+        'text-1': 'var(--text-1)',
+        'text-2': 'var(--text-2)',
+        'text-3': 'var(--text-3)',
+        'bg-base': 'var(--bg-base)',
+        'bg-surface': 'var(--bg-surface)',
+        'bg-card': 'var(--bg-card)',
+        'bg-hover': 'var(--bg-hover)',
+        'bg-input': 'var(--bg-input)',
       },
       animation: {
         'fade-in-up': 'fade-in-up 0.4s ease both',

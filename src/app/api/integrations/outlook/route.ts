@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { encrypt } from '@/lib/encryption'
 import { scheduleEmailSync } from '@/lib/queue'
@@ -22,8 +22,8 @@ const SCOPES = [
 
 // GET /api/integrations/outlook → returns OAuth URL
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     redirect_uri: REDIRECT_URI,
     scope: SCOPES,
     response_mode: 'query',
-    state: session.user.id,
+    state: user.id,
   })
 
   const url = `https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/authorize?${params}`
@@ -42,13 +42,13 @@ export async function GET(req: NextRequest) {
 
 // DELETE → disconnect
 export async function DELETE(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   await prisma.integration.updateMany({
-    where: { userId: session.user.id, provider: 'OUTLOOK' },
+    where: { userId: user.id, provider: 'OUTLOOK' },
     data: { isActive: false },
   })
 

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
-import { auth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { encrypt } from '@/lib/encryption'
 import { scheduleEmailSync } from '@/lib/queue'
@@ -24,8 +24,8 @@ function getOAuth2Client() {
 
 // GET /api/integrations/gmail → returns OAuth URL
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     access_type: 'offline',
     scope: SCOPES,
     prompt: 'consent',
-    state: session.user.id,
+    state: user.id,
   })
 
   return NextResponse.json({ url })
@@ -42,13 +42,13 @@ export async function GET(req: NextRequest) {
 
 // DELETE /api/integrations/gmail → disconnect
 export async function DELETE(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   await prisma.integration.updateMany({
-    where: { userId: session.user.id, provider: 'GMAIL' },
+    where: { userId: user.id, provider: 'GMAIL' },
     data: { isActive: false },
   })
 

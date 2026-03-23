@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { z } from 'zod'
 
 // In-memory draft store (per user+email). In production this would be persisted to DB.
@@ -12,8 +12,8 @@ const saveSchema = z.object({
 })
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'emailId required' }, { status: 400 })
   }
 
-  const key = `${session.user.id}:${emailId}`
+  const key = `${user.id}:${emailId}`
   const draft = draftStore.get(key)
 
   if (!draft) {
@@ -33,8 +33,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { emailId, draftText, style } = body.data
-  const key = `${session.user.id}:${emailId}`
+  const key = `${user.id}:${emailId}`
 
   draftStore.set(key, {
     draftText,

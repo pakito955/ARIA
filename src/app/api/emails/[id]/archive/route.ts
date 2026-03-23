@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { decrypt, encrypt } from '@/lib/encryption'
 import { GmailProvider } from '@/lib/providers/gmail'
@@ -8,11 +8,11 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const userId = session.user.id
+  const userId = user.id
 
   const email = await prisma.email.findFirst({
     where: { id, userId },

@@ -110,8 +110,8 @@ export function Sidebar() {
         )}
       >
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center bg-[#1A1A1A]">
-            <Zap size={14} className="text-white" strokeWidth={2.5} />
+          <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center" style={{ background: 'var(--logo-bg)', color: 'var(--logo-bg-text)' }}>
+            <Zap size={14} strokeWidth={2.5} />
           </div>
           <AnimatePresence>
             {!sidebarCollapsed && (
@@ -120,7 +120,7 @@ export function Sidebar() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -6 }}
                 transition={{ duration: 0.15 }}
-                className="font-inter text-lg font-bold tracking-tight text-[#1A1A1A] whitespace-nowrap"
+                className="font-inter text-lg font-bold tracking-tight text-[var(--text-1)] whitespace-nowrap"
               >
                 Aria<span className="text-accent">.</span>
               </motion.span>
@@ -261,7 +261,7 @@ export function Sidebar() {
             sidebarCollapsed ? 'justify-center p-2' : 'gap-3 px-2 py-2'
           )}
         >
-          <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-[#111111] text-white shrink-0">
+          <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: 'var(--logo-bg)', color: 'var(--logo-bg-text)' }}>
             {initials}
           </div>
           <AnimatePresence>

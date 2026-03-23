@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { decrypt, encrypt } from '@/lib/encryption'
 import { GmailProvider } from '@/lib/providers/gmail'
@@ -8,8 +8,8 @@ import { GmailProvider } from '@/lib/providers/gmail'
 const SYNC_INTERVAL_MS = 3 * 60 * 1000 // 3 minutes
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const sort = searchParams.get('sort') || 'newest'
   const forceSync = searchParams.get('sync') === 'true'
 
-  const userId = session.user.id
+  const userId = user.id
 
   // ── 1. Background sync — only if stale (non-blocking) ──────────────
   const integration = await prisma.integration.findFirst({

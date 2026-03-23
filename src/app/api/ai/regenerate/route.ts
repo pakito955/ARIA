@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { complete } from '@/lib/anthropic'
 import { z } from 'zod'
@@ -17,8 +17,8 @@ const STYLE_PROMPTS: Record<string, string> = {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   const { emailId, style, instructions } = body.data
 
   const email = await prisma.email.findFirst({
-    where: { id: emailId, userId: session.user.id },
+    where: { id: emailId, userId: user.id },
     include: { analysis: true },
   })
 

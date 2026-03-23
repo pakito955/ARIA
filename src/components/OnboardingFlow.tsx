@@ -66,9 +66,9 @@ export function OnboardingFlow() {
     const done = localStorage.getItem('aria-onboarding-done')
     if (done) return
 
-    // Show onboarding if no emails synced yet
+    // Show onboarding if no email integration is connected
     if (stats !== undefined) {
-      if (!stats || stats.totalEmails === 0) {
+      if (!stats || (!stats.gmail && !stats.outlook)) {
         const timer = setTimeout(() => setVisible(true), 1200)
         return () => clearTimeout(timer)
       }

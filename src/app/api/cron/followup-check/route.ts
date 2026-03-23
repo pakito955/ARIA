@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { auth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/authOrToken'
 
 // Called by Vercel cron — checks follow-up reminders and creates notifications
 // NOTE: This route uses new Prisma models (Notification, followUpAt) that require
@@ -8,8 +8,8 @@ import { auth } from '@/lib/auth'
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
   if (authHeader && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    const session = await auth()
-    if (!session?.user?.id) {
+    const user = await getAuthUser(req)
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
   }

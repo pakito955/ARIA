@@ -1,14 +1,14 @@
-import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) {
+export async function GET(req: NextRequest) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Not logged in' }, { status: 401 })
   }
 
-  const userId = session.user.id
+  const userId = user.id
 
   try {
     const [integrations, emailCount, user] = await Promise.all([

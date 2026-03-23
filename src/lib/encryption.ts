@@ -12,6 +12,7 @@ function getKey(): Buffer {
 }
 
 export function encrypt(plaintext: string): string {
+  if (!plaintext) throw new Error('encrypt: plaintext must be a non-empty string')
   const key = getKey()
   const iv = randomBytes(IV_LENGTH)
   const cipher = createCipheriv(ALGORITHM, key, iv)
@@ -26,6 +27,7 @@ export function encrypt(plaintext: string): string {
 }
 
 export function decrypt(ciphertext: string): string {
+  if (!ciphertext) throw new Error('decrypt: ciphertext must be a non-empty string')
   const key = getKey()
   const data = Buffer.from(ciphertext, 'base64')
 

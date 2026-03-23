@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { startOfWeek, eachDayOfInterval, endOfWeek, format, subDays } from 'date-fns'
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const userId = session.user.id
+  const userId = user.id
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
   const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 })
   const thirtyDaysAgo = subDays(new Date(), 30)

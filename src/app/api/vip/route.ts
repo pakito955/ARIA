@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -13,14 +13,14 @@ const deleteSchema = z.object({
   email: z.string().email(),
 })
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) {
+export async function GET(req: NextRequest) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const contacts = await prisma.vipContact.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     orderBy: { createdAt: 'desc' },
   })
 
@@ -28,8 +28,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -41,9 +41,9 @@ export async function POST(req: NextRequest) {
   const { email, name, reason } = body.data
 
   const contact = await prisma.vipContact.upsert({
-    where: { userId_email: { userId: session.user.id, email } },
+    where: { userId_email: { userId: user.id, email } },
     create: {
-      userId: session.user.id,
+      userId: user.id,
       email,
       name,
       reason,
@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -71,7 +71,7 @@ export async function DELETE(req: NextRequest) {
   const { email } = body.data
 
   await prisma.vipContact.deleteMany({
-    where: { userId: session.user.id, email },
+    where: { userId: user.id, email },
   })
 
   return NextResponse.json({ success: true })

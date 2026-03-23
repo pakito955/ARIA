@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -9,8 +9,8 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { emailIds, action } = body.data
-  const userId = session.user.id
+  const userId = user.id
 
   // Verify all emails belong to this user
   const count = await prisma.email.count({

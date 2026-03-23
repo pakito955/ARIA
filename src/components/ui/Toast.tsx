@@ -8,27 +8,27 @@ import { useAppStore } from '@/lib/store'
 const CONFIG = {
   success: {
     icon: CheckCircle2,
-    color: '#22c55e',
-    bg: 'rgba(34,197,94,0.08)',
-    border: 'rgba(34,197,94,0.18)',
+    color: 'var(--green)',
+    bg: 'var(--green-subtle)',
+    border: 'rgba(47,158,68,0.2)',
   },
   error: {
     icon: XCircle,
-    color: '#ef4444',
-    bg: 'rgba(239,68,68,0.08)',
-    border: 'rgba(239,68,68,0.18)',
+    color: 'var(--red)',
+    bg: 'var(--red-subtle)',
+    border: 'rgba(224,49,49,0.2)',
   },
   info: {
     icon: Info,
-    color: '#A78BFA',
-    bg: 'rgba(124,92,255,0.08)',
-    border: 'rgba(124,92,255,0.18)',
+    color: 'var(--accent)',
+    bg: 'var(--accent-subtle)',
+    border: 'rgba(242,78,30,0.2)',
   },
   warning: {
     icon: AlertTriangle,
-    color: '#f59e0b',
-    bg: 'rgba(245,158,11,0.08)',
-    border: 'rgba(245,158,11,0.18)',
+    color: 'var(--amber)',
+    bg: 'var(--amber-subtle)',
+    border: 'rgba(240,140,0,0.2)',
   },
 }
 

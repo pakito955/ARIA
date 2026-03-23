@@ -36,7 +36,8 @@ export function NotificationManager() {
       const res = await fetch('/api/emails?filter=critical&limit=10')
       return res.json()
     },
-    refetchInterval: 60_000, // check every minute
+    refetchInterval: 60_000,
+    staleTime: 60_000,
   })
 
   useEffect(() => {

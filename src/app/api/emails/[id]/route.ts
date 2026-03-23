@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { decrypt, encrypt } from '@/lib/encryption'
 import { GmailProvider } from '@/lib/providers/gmail'
@@ -7,13 +7,13 @@ import { GmailProvider } from '@/lib/providers/gmail'
 type RouteCtx = { params: Promise<{ id: string }> }
 
 export async function GET(req: NextRequest, { params }: RouteCtx) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
 
   const email = await prisma.email.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
     include: {
       analysis: true,
       tasks: { select: { id: true, title: true, status: true, priority: true } },
@@ -26,15 +26,15 @@ export async function GET(req: NextRequest, { params }: RouteCtx) {
   if (!email.isRead) {
     prisma.email.update({ where: { id }, data: { isRead: true } }).catch(() => {})
     // Also mark on provider in the background
-    markReadOnProvider(session.user.id, email.externalId, email.provider).catch(() => {})
+    markReadOnProvider(user.id, email.externalId, email.provider).catch(() => {})
   }
 
   return NextResponse.json({ data: { ...email, isRead: true } })
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteCtx) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user2 = await getAuthUser(req)
+  if (!user2) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const body = await req.json().catch(() => ({}))
@@ -50,7 +50,7 @@ export async function PATCH(req: NextRequest, { params }: RouteCtx) {
   }
 
   const updated = await prisma.email.updateMany({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user2.id },
     data: updates,
   })
 

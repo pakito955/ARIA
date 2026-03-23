@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { decrypt, encrypt } from '@/lib/encryption'
 import { GmailProvider } from '@/lib/providers/gmail'
@@ -8,26 +8,26 @@ import { startOfDay, endOfDay } from 'date-fns'
 import type { CalendarEvent, Priority, TaskStatus } from '@/types'
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const today = startOfDay(new Date())
   const cached = await prisma.briefing.findUnique({
-    where: { userId_date: { userId: session.user.id, date: today } },
+    where: { userId_date: { userId: user.id, date: today } },
   })
 
   return NextResponse.json({ data: cached ?? null, cached: !!cached })
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const userId = session.user.id
+  const userId = user.id
   const now = new Date()
   const today = startOfDay(now)
   const todayEnd = endOfDay(now)

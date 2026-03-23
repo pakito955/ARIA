@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { generateFollowUp } from '@/agents/followUpAgent'
 import { decrypt } from '@/lib/encryption'
@@ -10,14 +10,14 @@ import { z } from 'zod'
 const schema = z.object({ emailId: z.string() })
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = schema.safeParse(await req.json())
   if (!body.success) return NextResponse.json({ error: 'emailId required' }, { status: 400 })
 
   const email = await prisma.email.findFirst({
-    where: { id: body.data.emailId, userId: session.user.id },
+    where: { id: body.data.emailId, userId: user.id },
   })
   if (!email) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
   // Send via provider
   const integration = await prisma.integration.findFirst({
-    where: { userId: session.user.id, provider: email.provider, isActive: true },
+    where: { userId: user.id, provider: email.provider, isActive: true },
   })
   if (!integration) return NextResponse.json({ error: 'No integration' }, { status: 400 })
 

@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 
 // GET: list pending follow-ups
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(req: NextRequest) {
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const reminders = await prisma.followupReminder.findMany({
-    where: { userId: session.user.id, isDone: false },
+    where: { userId: user.id, isDone: false },
     orderBy: { dueAt: 'asc' },
     include: {
       email: {
@@ -32,15 +32,15 @@ export async function GET() {
 
 // POST: create follow-up reminder
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { emailId, daysUntilFollowup = 3, note } = await req.json()
   if (!emailId) return NextResponse.json({ error: 'emailId required' }, { status: 400 })
 
   // Verify email belongs to user
   const email = await prisma.email.findFirst({
-    where: { id: emailId, userId: session.user.id },
+    where: { id: emailId, userId: user.id },
   })
   if (!email) return NextResponse.json({ error: 'Email not found' }, { status: 404 })
 
@@ -49,12 +49,12 @@ export async function POST(req: NextRequest) {
 
   // Upsert — replace existing reminder for same email
   await prisma.followupReminder.deleteMany({
-    where: { emailId, userId: session.user.id, isDone: false },
+    where: { emailId, userId: user.id, isDone: false },
   })
 
   const reminder = await prisma.followupReminder.create({
     data: {
-      userId: session.user.id,
+      userId: user.id,
       emailId,
       dueAt,
       note: note || null,
@@ -66,12 +66,12 @@ export async function POST(req: NextRequest) {
 
 // PATCH: mark done
 export async function PATCH(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await req.json()
   await prisma.followupReminder.updateMany({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
     data: { isDone: true },
   })
 

@@ -1,57 +1,66 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { AppStore } from '@/types'
 
-export const useAppStore = create<AppStore>((set) => ({
-  selectedEmailId: null,
-  setSelectedEmail: (id) => set({ selectedEmailId: id }),
+export const useAppStore = create<AppStore>()(
+  persist(
+    (set) => ({
+      selectedEmailId: null,
+      setSelectedEmail: (id) => set({ selectedEmailId: id }),
 
-  commandOpen: false,
-  setCommandOpen: (open) => set({ commandOpen: open }),
+      commandOpen: false,
+      setCommandOpen: (open) => set({ commandOpen: open }),
 
-  sidebarCollapsed: false,
-  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      sidebarCollapsed: false,
+      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
 
-  rightPanel: 'analysis',
-  setRightPanel: (panel) => set({ rightPanel: panel }),
+      rightPanel: 'analysis',
+      setRightPanel: (panel) => set({ rightPanel: panel }),
 
-  searchQuery: '',
-  setSearchQuery: (q) => set({ searchQuery: q }),
+      searchQuery: '',
+      setSearchQuery: (q) => set({ searchQuery: q }),
 
-  emailFilter: 'all',
-  setEmailFilter: (f) => set({ emailFilter: f }),
+      emailFilter: 'all',
+      setEmailFilter: (f) => set({ emailFilter: f }),
 
-  focusMode: false,
-  setFocusMode: (v) => set({ focusMode: v }),
+      focusMode: false,
+      setFocusMode: (v) => set({ focusMode: v }),
 
-  contactPanelEmail: null,
-  setContactPanelEmail: (email) => set({ contactPanelEmail: email }),
+      contactPanelEmail: null,
+      setContactPanelEmail: (email) => set({ contactPanelEmail: email }),
 
-  newEmailsCount: 0,
-  setNewEmailsCount: (n) => set({ newEmailsCount: n }),
+      newEmailsCount: 0,
+      setNewEmailsCount: (n) => set({ newEmailsCount: n }),
 
-  toasts: [],
-  addToast: (t) =>
-    set((state) => ({
-      toasts: [
-        ...state.toasts.slice(-4),
-        { ...t, id: Math.random().toString(36).slice(2, 9) },
-      ],
-    })),
-  removeToast: (id) =>
-    set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+      toasts: [],
+      addToast: (t) =>
+        set((state) => ({
+          toasts: [
+            ...state.toasts.slice(-4),
+            { ...t, id: Math.random().toString(36).slice(2, 9) },
+          ],
+        })),
+      removeToast: (id) =>
+        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
 
-  composeOpen: false,
-  setComposeOpen: (open) => set({ composeOpen: open }),
+      composeOpen: false,
+      setComposeOpen: (open) => set({ composeOpen: open }),
 
-  batchMode: false,
-  setBatchMode: (v) => set({ batchMode: v }),
+      batchMode: false,
+      setBatchMode: (v) => set({ batchMode: v }),
 
-  smartSearchMode: false,
-  setSmartSearchMode: (v) => set({ smartSearchMode: v }),
+      smartSearchMode: false,
+      setSmartSearchMode: (v) => set({ smartSearchMode: v }),
 
-  aiPanelOpen: false,
-  setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
-}))
+      aiPanelOpen: false,
+      setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
+    }),
+    {
+      name: 'aria-ui-prefs',
+      partialize: (state) => ({ sidebarCollapsed: state.sidebarCollapsed }),
+    }
+  )
+)
 
 // Convenience helper — call from anywhere without hooks
 export const toast = {

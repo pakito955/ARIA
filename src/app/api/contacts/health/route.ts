@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
   const contactEmail = searchParams.get('email')
@@ -17,14 +17,14 @@ export async function GET(req: NextRequest) {
   const [recent, previous] = await Promise.all([
     prisma.email.count({
       where: {
-        userId: session.user.id,
+        userId: user.id,
         fromEmail: contactEmail,
         receivedAt: { gte: thirtyDaysAgo },
       },
     }),
     prisma.email.count({
       where: {
-        userId: session.user.id,
+        userId: user.id,
         fromEmail: contactEmail,
         receivedAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo },
       },

@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(req: NextRequest) {
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const scheduled = await prisma.scheduledEmail.findMany({
-    where: { userId: session.user.id, status: 'PENDING' },
+    where: { userId: user.id, status: 'PENDING' },
     orderBy: { scheduledAt: 'asc' },
   })
 
@@ -15,8 +15,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { toEmail, subject, body, scheduledAt, replyToId } = await req.json()
   if (!toEmail || !subject || !body || !scheduledAt) {
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   const scheduled = await prisma.scheduledEmail.create({
     data: {
-      userId: session.user.id,
+      userId: user.id,
       toEmail,
       subject,
       body,
@@ -38,12 +38,12 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await req.json()
   await prisma.scheduledEmail.updateMany({
-    where: { id, userId: session.user.id, status: 'PENDING' },
+    where: { id, userId: user.id, status: 'PENDING' },
     data: { status: 'CANCELLED' },
   })
 

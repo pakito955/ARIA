@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { decrypt, encrypt } from '@/lib/encryption'
 import { GmailProvider } from '@/lib/providers/gmail'
@@ -26,8 +26,8 @@ async function getGmailProvider(userId: string) {
 
 // GET /api/calendar/events — fetch upcoming events from Google Calendar
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = req.nextUrl
   const from = searchParams.get('from') ? new Date(searchParams.get('from')!) : new Date()
@@ -35,13 +35,13 @@ export async function GET(req: NextRequest) {
     ? new Date(searchParams.get('to')!)
     : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
-  const { gmail } = await getGmailProvider(session.user.id)
+  const { gmail } = await getGmailProvider(user.id)
 
   if (!gmail) {
     // Return DB-cached events if no integration
     const cached = await prisma.calendarEvent.findMany({
       where: {
-        userId: session.user.id,
+        userId: user.id,
         startTime: { gte: from },
         endTime: { lte: to },
       },
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
     const events = await gmail.getCalendarEvents(from, to)
 
     // Upsert into local DB for offline availability (best-effort)
-    const userId = session.user!.id!
+    const userId = user.id
     await Promise.all(
       events.map((ev) => {
         const eventId = ev.externalId || ev.id
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
 
     // Fall back to DB cache on error
     const cached = await prisma.calendarEvent.findMany({
-      where: { userId: session.user.id, startTime: { gte: from }, endTime: { lte: to } },
+      where: { userId: user.id, startTime: { gte: from }, endTime: { lte: to } },
       orderBy: { startTime: 'asc' },
     })
     return NextResponse.json({ events: cached, source: 'cache', warning: msg })
@@ -103,8 +103,8 @@ export async function GET(req: NextRequest) {
 
 // POST /api/calendar/events — create a new calendar event
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json().catch(() => ({}))
   const { title, description, startTime, endTime, participants = [] } = body
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'endTime must be after startTime' }, { status: 400 })
   }
 
-  const userId = session.user!.id!
+  const userId = user.id
   const { gmail } = await getGmailProvider(userId)
 
   if (!gmail) {

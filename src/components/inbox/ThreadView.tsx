@@ -97,6 +97,7 @@ export function ThreadView({ emailId }: { emailId: string }) {
       return res.json()
     },
     enabled: !!emailId,
+    staleTime: 30_000,
   })
 
   const messages = data?.data || []

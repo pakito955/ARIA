@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ email: string }> }
 ) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const userId = session.user.id
+  const userId = user.id
   const { email: rawEmail } = await params
   const contactEmail = decodeURIComponent(rawEmail)
 

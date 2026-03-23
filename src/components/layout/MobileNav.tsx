@@ -40,7 +40,7 @@ export function MobileNav() {
             <Link key={item.href} href={item.href} className="flex-1">
               <div className="flex flex-col items-center gap-1 py-3 relative">
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full bg-1" />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full" style={{ background: 'var(--accent)' }} />
                 )}
 
                 <div className="relative">

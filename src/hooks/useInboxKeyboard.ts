@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAppStore } from '@/lib/store'
+import { useAppStore, toast } from '@/lib/store'
 import { useQueryClient } from '@tanstack/react-query'
 
 export function useInboxKeyboard(emails: any[]) {
@@ -89,7 +89,7 @@ export function useInboxKeyboard(emails: any[]) {
             'F    Toggle focus mode',
             'Esc  Exit focus mode',
           ]
-          alert('⌨ ARIA Keyboard Shortcuts\n\n' + shortcuts.join('\n'))
+          toast.info(shortcuts.join('  ·  '), 'Keyboard Shortcuts')
           break
         }
       }

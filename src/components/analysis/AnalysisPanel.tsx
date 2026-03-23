@@ -83,6 +83,7 @@ export function AnalysisPanel() {
       return res.json()
     },
     enabled: !!selectedEmailId,
+    staleTime: 30_000,
   })
 
   const analyzeMutation = useMutation({

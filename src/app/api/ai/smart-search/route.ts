@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { completeJSON } from '@/lib/anthropic'
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { query } = await req.json()
   if (!query?.trim()) return NextResponse.json({ emails: [] })
@@ -43,7 +43,7 @@ Examples:
   )
 
   // Build Prisma where clause
-  const where: Record<string, unknown> = { userId: session.user.id }
+  const where: Record<string, unknown> = { userId: user.id }
 
   if (filters.isUnread === true) where.isRead = false
   if (filters.fromDomain) where.fromEmail = { contains: filters.fromDomain }

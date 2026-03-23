@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
   const format = searchParams.get('format') || 'json' // json | csv
 
   // Get all unique senders with stats
   const emails = await prisma.email.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     select: {
       fromEmail: true,
       fromName: true,
@@ -23,13 +23,13 @@ export async function GET(req: NextRequest) {
   })
 
   const vips = await prisma.vipContact.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     select: { email: true },
   })
   const vipSet = new Set(vips.map((v) => v.email))
 
   const tasks = await prisma.task.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     select: { email: { select: { fromEmail: true } }, status: true },
   })
 

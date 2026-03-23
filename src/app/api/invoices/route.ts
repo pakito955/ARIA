@@ -1,14 +1,14 @@
-import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(req: NextRequest) {
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const emails = await prisma.email.findMany({
     where: {
-      userId: session.user.id,
+      userId: user.id,
       OR: [
         { analysis: { category: 'INVOICE' } },
         { analysis: { amount: { not: null } } },

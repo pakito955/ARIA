@@ -43,10 +43,10 @@ export function Topbar() {
     <header className="flex items-center gap-4 px-5 border-b border-[var(--border)] bg-[var(--bg-base)]/90 backdrop-blur-xl z-50 h-16 shrink-0">
       {/* Mobile Logo Only (Desktop handles logo in sidebar) */}
       <div className="md:hidden flex items-center gap-2">
-        <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center bg-[#1A1A1A]">
-          <Zap size={14} className="text-white" strokeWidth={2.5} />
+        <div className="w-8 h-8 rounded shrink-0 flex items-center justify-center" style={{ background: 'var(--logo-bg)', color: 'var(--logo-bg-text)' }}>
+          <Zap size={14} strokeWidth={2.5} />
         </div>
-        <span className="font-inter text-lg font-bold tracking-tight text-[#1A1A1A]">
+        <span className="font-inter text-lg font-bold tracking-tight" style={{ color: 'var(--text-1)' }}>
           Aria<span className="text-accent">.</span>
         </span>
       </div>
@@ -79,7 +79,7 @@ export function Topbar() {
 
         {/* User avatar */}
         <div className="flex items-center gap-2.5 group cursor-pointer pl-2 border-l border-border">
-          <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: 'var(--logo-bg)', color: 'var(--logo-bg-text)' }}>
             {initials}
           </div>
           {session?.user?.name && (

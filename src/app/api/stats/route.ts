@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const userId = session.user.id
+  const userId = user.id
 
+  try {
   const [unread, critical, tasks, waiting, integrations] = await Promise.all([
     prisma.email.count({ where: { userId, isRead: false } }),
     prisma.email.count({
@@ -38,4 +39,7 @@ export async function GET(req: NextRequest) {
     { unread, critical, tasks, waiting, gmail: hasGmail, outlook: hasOutlook, calendar: hasGmail || hasOutlook },
     { headers: { 'Cache-Control': 'private, max-age=15' } }
   )
+  } catch {
+    return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 })
+  }
 }

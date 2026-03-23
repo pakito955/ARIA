@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(req: NextRequest) {
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // Find likely newsletters/marketing emails
   const newsletters = await prisma.email.findMany({
     where: {
-      userId: session.user.id,
+      userId: user.id,
       OR: [
         { analysis: { category: 'NEWSLETTER' } },
         { analysis: { category: 'SPAM' } },
@@ -73,9 +73,9 @@ export async function GET() {
 }
 
 // POST: mark sender as unsubscribed (archive all their emails)
-export async function POST(req: Request) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function POST(req: NextRequest) {
+  const user = await getAuthUser(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { fromEmail } = await req.json()
   if (!fromEmail) return NextResponse.json({ error: 'fromEmail required' }, { status: 400 })
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
   // Archive all emails from this sender
   const result = await prisma.email.updateMany({
     where: {
-      userId: session.user.id,
+      userId: user.id,
       fromEmail,
     },
     data: {

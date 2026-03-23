@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
 import { classifyEmail } from '@/agents/classificationAgent'
 import { generateReplies } from '@/agents/replyAgent'
@@ -8,8 +8,8 @@ import { z } from 'zod'
 const schema = z.object({ emailId: z.string() })
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const user = await getAuthUser(req)
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   const { emailId } = body.data
 
   const email = await prisma.email.findFirst({
-    where: { id: emailId, userId: session.user.id },
+    where: { id: emailId, userId: user.id },
     include: { analysis: true },
   })
 
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   const saved = await prisma.aIAnalysis.create({
     data: {
       emailId,
-      userId: session.user.id,
+      userId: user.id,
       priority: analysis.priority,
       category: analysis.category,
       intent: analysis.intent,
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       where: { id: `email-task-${emailId}` },
       create: {
         id: `email-task-${emailId}`,
-        userId: session.user.id,
+        userId: user.id,
         emailId,
         title: analysis.taskText,
         priority: analysis.priority,

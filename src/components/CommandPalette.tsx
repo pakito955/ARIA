@@ -81,10 +81,10 @@ export function CommandPalette() {
   useEffect(() => {
     if (!commandOpen) return
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown') {
+      if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
         e.preventDefault()
         setSelected((s) => Math.min(s + 1, filtered.length - 1))
-      } else if (e.key === 'ArrowUp') {
+      } else if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
         e.preventDefault()
         setSelected((s) => Math.max(s - 1, 0))
       } else if (e.key === 'Enter') {
@@ -127,7 +127,7 @@ export function CommandPalette() {
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className="fixed left-1/2 top-[18vh] z-[101] -translate-x-1/2 w-full max-w-[540px] px-4"
           >
-            <div className="glass rounded-2xl shadow-[0_32px_64px_rgba(0,0,0,0.5),0_0_0_1px_rgba(124,92,255,0.15)] overflow-hidden">
+            <div className="glass rounded-2xl shadow-[0_32px_64px_rgba(0,0,0,0.5),0_0_0_1px_rgba(242,78,30,0.15)] overflow-hidden">
               {/* Input */}
               <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border)]">
                 <Search size={15} className="text-[var(--accent-text)] shrink-0" />
@@ -136,7 +136,7 @@ export function CommandPalette() {
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setSelected(0) }}
                   placeholder="What do you want to do?"
-                  className="flex-1 bg-transparent text-[14px] text-white placeholder:text-[var(--text-3)] outline-none"
+                  className="flex-1 bg-transparent text-[14px] text-[var(--text-1)] placeholder:text-[var(--text-3)] outline-none"
                 />
                 <kbd className="text-[9px] bg-white/[0.05] text-[var(--text-3)] px-2 py-1 rounded-md font-mono">ESC</kbd>
               </div>
@@ -149,7 +149,7 @@ export function CommandPalette() {
                     {RECENTS.map((r, i) => (
                       <button
                         key={i}
-                        className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] border border-[var(--border)] text-[var(--text-2)] hover:text-white hover:border-[var(--accent)] transition-all"
+                        className="text-[10px] px-2.5 py-1 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-2)] hover:text-[var(--text-1)] hover:border-[var(--accent)] transition-all"
                       >
                         {r}
                       </button>
