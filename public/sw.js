@@ -1,10 +1,7 @@
-const CACHE_NAME = 'aria-v1'
-const STATIC_ASSETS = ['/', '/dashboard', '/dashboard/inbox']
+const CACHE_NAME = 'aria-v2'
+const STATIC_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.svg', '.ico', '.woff', '.woff2', '.ttf']
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  )
   self.skipWaiting()
 })
 
@@ -18,8 +15,10 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
-  // Network first for API calls
-  if (event.request.url.includes('/api/')) {
+  const url = new URL(event.request.url)
+
+  // API calls — always network, no caching
+  if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(event.request).catch(() =>
         new Response(JSON.stringify({ error: 'Offline', cached: true }), {
@@ -30,18 +29,35 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Cache first for static assets
+  // Static assets (images, fonts) — cache first, network fallback
+  const isStaticAsset = STATIC_EXTENSIONS.some((ext) => url.pathname.endsWith(ext))
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached
+        return fetch(event.request).then((response) => {
+          if (response.status === 200) {
+            const clone = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          }
+          return response
+        })
+      })
+    )
+    return
+  }
+
+  // HTML pages & JS/CSS — network first, cache fallback (offline only)
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached
-      return fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
         if (response.status === 200) {
           const clone = response.clone()
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
         }
         return response
       })
-    })
+      .catch(() => caches.match(event.request))
   )
 })
 
