@@ -34,7 +34,14 @@ const syncWorker = new Worker<EmailSyncJob>(
     if (integration.provider === 'GMAIL') {
       provider = new GmailProvider(accessToken, refreshToken)
     } else {
-      provider = new OutlookProvider(accessToken)
+      provider = new OutlookProvider(accessToken, refreshToken, async (newToken) => {
+        const { encrypt } = await import('@/lib/encryption');
+        const { prisma } = await import('@/lib/prisma');
+        await prisma.integration.update({
+          where: { id: integrationId },
+          data: { accessToken: encrypt(newToken) },
+        });
+      })
     }
 
     const emails = await provider.fetchEmails({

@@ -11,12 +11,43 @@ import type {
 
 export class OutlookProvider implements EmailProviderInterface {
   readonly provider = 'OUTLOOK' as const
-  private client: Client
+  public newAccessToken: string | null = null
 
-  constructor(accessToken: string) {
+  constructor(
+    private accessToken: string,
+    private refreshToken?: string,
+    private onTokenRefresh?: (newToken: string) => void
+  ) {
     this.client = Client.init({
-      authProvider: (done) => done(null, accessToken),
+      authProvider: (done) => done(null, this.newAccessToken || this.accessToken),
     })
+  }
+
+  async refreshAccessToken(clientId: string, clientSecret: string, tenantId = 'common') {
+    if (!this.refreshToken) return;
+    
+    try {
+      const res = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          grant_type: 'refresh_token',
+          refresh_token: this.refreshToken,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to refresh Outlook token');
+      
+      const data = await res.json();
+      if (data.access_token) {
+        this.newAccessToken = data.access_token;
+        this.onTokenRefresh?.(data.access_token);
+      }
+    } catch (error) {
+      console.error('[Outlook] Error refreshing token:', error);
+    }
   }
 
   // ─── Emails ──────────────────────────────────────────────────────────────────
