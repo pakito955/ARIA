@@ -42,6 +42,10 @@ export default function InboxPage() {
   const [followupNote, setFollowupNote] = useState('')
   const [followupEmailId, setFollowupEmailId] = useState<string | null>(null)
   const [showSmartReply, setShowSmartReply] = useState(false)
+  const [regenerateModal, setRegenerateModal] = useState(false)
+  const [regenerateInstructions, setRegenerateInstructions] = useState('')
+  const [isRegenerating, setIsRegenerating] = useState(false)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
   const qc = useQueryClient()
 
   // Real-time sync via SSE
@@ -269,6 +273,69 @@ export default function InboxPage() {
             onConfirm={handleSnoozeConfirm}
             onClose={() => setSnoozeEmailId(null)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Regenerate Modal — replaces window.prompt() */}
+      <AnimatePresence>
+        {regenerateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.6)' }}
+            onClick={() => setRegenerateModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="card p-5 w-full max-w-sm mx-4"
+            >
+              <p className="text-[var(--text-1)] font-medium text-sm mb-3">Regenerate Reply</p>
+              <textarea
+                autoFocus
+                value={regenerateInstructions}
+                onChange={(e) => setRegenerateInstructions(e.target.value)}
+                placeholder="Instructions (optional) — e.g. make it shorter, more formal..."
+                className="input-base w-full p-2.5 text-sm resize-none h-20 mb-3"
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => { setRegenerateModal(false); setRegenerateInstructions('') }}
+                  className="btn-ghost px-3 py-1.5 text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={isRegenerating}
+                  onClick={async () => {
+                    if (!selectedEmail) return
+                    setIsRegenerating(true)
+                    try {
+                      const r = await fetch('/api/ai/regenerate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ emailId: selectedEmail.id, style: replyStyle, instructions: regenerateInstructions }),
+                      })
+                      const d = await r.json()
+                      if (d.reply) setEditedReply(d.reply)
+                    } finally {
+                      setIsRegenerating(false)
+                      setRegenerateModal(false)
+                      setRegenerateInstructions('')
+                    }
+                  }}
+                  className="btn-primary px-4 py-1.5 text-sm flex items-center gap-1.5"
+                >
+                  {isRegenerating ? <Loader2 size={13} className="animate-spin" /> : <RefreshCcw size={13} />}
+                  {isRegenerating ? 'Generating…' : 'Regenerate'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -624,28 +691,26 @@ export default function InboxPage() {
                                 {sendMutation.isPending ? 'Sending…' : 'Send Reply'}
                               </button>
                               <button
-                                onClick={() => {
-                                  fetch('/api/ai/draft', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ emailId: selectedEmail.id, draftText: editedReply, style: replyStyle }),
-                                  })
+                                onClick={async () => {
+                                  setIsSavingDraft(true)
+                                  try {
+                                    await fetch('/api/ai/draft', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ emailId: selectedEmail.id, draftText: editedReply, style: replyStyle }),
+                                    })
+                                  } finally {
+                                    setIsSavingDraft(false)
+                                  }
                                 }}
-                                className="flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] text-[var(--text-2)] text-[11px] rounded-lg hover:border-[var(--border-medium)] hover:text-white transition-all"
+                                disabled={isSavingDraft}
+                                className="flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] text-[var(--text-2)] text-[11px] rounded-lg hover:border-[var(--border-medium)] hover:text-white transition-all disabled:opacity-50"
                               >
+                                {isSavingDraft ? <Loader2 size={11} className="animate-spin" /> : null}
                                 Save Draft
                               </button>
                               <button
-                                onClick={() => {
-                                  const instr = window.prompt('Regenerate instructions (optional):') ?? ''
-                                  fetch('/api/ai/regenerate', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ emailId: selectedEmail.id, style: replyStyle, instructions: instr }),
-                                  })
-                                    .then((r) => r.json())
-                                    .then((d) => { if (d.reply) setEditedReply(d.reply) })
-                                }}
+                                onClick={() => setRegenerateModal(true)}
                                 className="flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] text-[var(--text-2)] text-[11px] rounded-lg hover:border-[var(--border-medium)] hover:text-white transition-all"
                               >
                                 <RefreshCcw size={11} />
