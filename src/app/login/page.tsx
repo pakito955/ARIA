@@ -4,7 +4,7 @@ import { signIn } from 'next-auth/react'
 import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, Zap, Mail, Calendar } from 'lucide-react'
+import { Loader2, Zap, Mail, Calendar, Shield } from 'lucide-react'
 
 function ErrorBanner() {
   const searchParams = useSearchParams()
@@ -13,33 +13,33 @@ function ErrorBanner() {
 
   const messages: Record<string, string> = {
     OAuthCallback: 'OAuth sign-in failed. Please try again.',
-    OAuthSignin: 'Could not start sign-in. Please try again.',
-    Callback: 'Authentication callback failed.',
-    Default: `Authentication error: ${error}`,
+    OAuthSignin:   'Could not start sign-in. Please try again.',
+    Callback:      'Authentication callback failed.',
+    Default:       `Authentication error: ${error}`,
   }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap"
+      className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-medium whitespace-nowrap"
       style={{
-        background: 'var(--red-subtle)',
-        color: 'var(--red)',
-        border: '1px solid rgba(248,113,113,0.25)',
-        boxShadow: 'var(--glow-red)',
+        background: 'rgba(255, 107, 107, 0.10)',
+        color: '#FF6B6B',
+        border: '1px solid rgba(255, 107, 107, 0.20)',
       }}
     >
-      <span className="text-sm">!</span>
+      <span>⚠</span>
       {messages[error] || messages.Default}
     </motion.div>
   )
 }
 
 const FEATURES = [
-  { Icon: Zap,      label: 'AI Analysis' },
+  { Icon: Zap,      label: 'AI Triage' },
   { Icon: Mail,     label: 'Gmail + Outlook' },
   { Icon: Calendar, label: 'Auto Schedule' },
+  { Icon: Shield,   label: 'Encrypted' },
 ]
 
 export default function LoginPage() {
@@ -68,88 +68,149 @@ export default function LoginPage() {
       } else {
         await signIn(provider, { callbackUrl: '/dashboard' })
       }
-    } catch (e) {
-      setError('Prijavljivanje nije uspjelo. Pokušajte ponovo.')
+    } catch {
+      setError('Sign-in failed. Please try again.')
       setLoadingProvider(null)
     }
   }
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center relative overflow-hidden text-[#1A1A1A]"
-      style={{ background: '#F6F6F3' }} // Updated to Light Minimalist background
+      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
+      style={{ background: '#09090F' }}
     >
-      {/* Subtle ambient gradient orbs - light mode version */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: '-15%',
-          right: '-8%',
-          width: 700,
-          height: 700,
-          background: 'radial-gradient(ellipse, rgba(124,92,255,0.03) 0%, transparent 60%)',
-        }}
-      />
-
-      <div className="absolute inset-0 opacity-[0.03] select-none pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
+      {/* ── Ambient background ─────────────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Top-right violet glow */}
+        <div
+          className="absolute"
+          style={{
+            top: '-20%', right: '-10%',
+            width: 900, height: 900,
+            background: 'radial-gradient(ellipse, rgba(124, 92, 255, 0.07) 0%, transparent 55%)',
+          }}
+        />
+        {/* Bottom-left warm glow */}
+        <div
+          className="absolute"
+          style={{
+            bottom: '-20%', left: '-10%',
+            width: 700, height: 700,
+            background: 'radial-gradient(ellipse, rgba(242, 78, 30, 0.06) 0%, transparent 55%)',
+          }}
+        />
+        {/* Center accent glow */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: 500, height: 500,
+            background: 'radial-gradient(ellipse, rgba(242, 78, 30, 0.03) 0%, transparent 60%)',
+          }}
+        />
+        {/* Subtle grid */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 0.5px, transparent 0.5px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
+      </div>
 
       <Suspense><ErrorBanner /></Suspense>
 
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-[400px] mx-4"
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 w-full max-w-[380px] mx-5"
       >
-        {/* Card */}
+        {/* ── Status chip ──────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="flex justify-center mb-7"
+        >
+          <div
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-medium tracking-wide"
+            style={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              color: 'rgba(255, 255, 255, 0.40)',
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: '#51CF66', boxShadow: '0 0 6px rgba(81,207,102,0.6)' }}
+            />
+            AI systems operational
+          </div>
+        </motion.div>
+
+        {/* ── Card ─────────────────────────────────────────── */}
         <div
-          className="bg-white border border-[#E5E5E0] px-10 py-12"
-          style={{ borderRadius: 24, boxShadow: '0 4px 24px rgba(0,0,0,0.02)' }}
+          style={{
+            background: '#FAFAFA',
+            borderRadius: 22,
+            padding: '44px 40px 40px',
+            boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)',
+          }}
         >
           {/* Logo */}
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.45 }}
-            className="flex flex-col items-center mb-10"
+            transition={{ delay: 0.12, duration: 0.4 }}
+            className="flex flex-col items-center mb-9"
           >
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
+              className="w-12 h-12 flex items-center justify-center mb-4"
               style={{
                 background: 'var(--accent)',
-                boxShadow: '0 8px 16px rgba(124,92,255,0.15)',
+                borderRadius: 14,
+                boxShadow: '0 8px 24px rgba(242, 78, 30, 0.32)',
               }}
             >
-              <Zap size={24} className="text-white" strokeWidth={2.5} />
+              <Zap size={20} className="text-white" strokeWidth={2.5} />
             </div>
-            <h1 className="font-outfit text-4xl font-light tracking-[-0.02em] text-[#1A1A1A]">
-              Aria.
+            <h1
+              style={{
+                fontFamily: 'var(--font-inter)',
+                fontSize: 30,
+                fontWeight: 300,
+                letterSpacing: '-0.04em',
+                color: '#0A0A0F',
+                lineHeight: 1,
+                margin: 0,
+              }}
+            >
+              Aria<span style={{ color: 'var(--accent)' }}>.</span>
             </h1>
-            <p className="text-[13px] mt-2 text-[#71717A]">
+            <p style={{ fontSize: 12, color: '#999', marginTop: 7, letterSpacing: '0.01em' }}>
               Your AI-powered executive assistant
             </p>
           </motion.div>
 
+          {/* Auth forms */}
           <AnimatePresence mode="wait">
             {authMode === 'PROVIDERS' ? (
               <motion.div
                 key="providers"
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
+                exit={{ opacity: 0, x: 8 }}
+                transition={{ duration: 0.2 }}
                 className="space-y-3"
               >
-                <AuthButton
-                  provider="google"
+                <ProviderButton
                   label="Continue with Google"
                   loading={loadingProvider === 'google'}
                   disabled={loadingProvider !== null}
                   onClick={() => handleLogin('google')}
                   icon={<GoogleIcon />}
                 />
-
-                <AuthButton
-                  provider="azure-ad"
+                <ProviderButton
                   label="Continue with Microsoft"
                   loading={loadingProvider === 'azure-ad'}
                   disabled={loadingProvider !== null}
@@ -157,72 +218,91 @@ export default function LoginPage() {
                   icon={<MicrosoftIcon />}
                 />
 
-                <div className="flex items-center gap-4 py-2">
-                  <div className="flex-1 h-px bg-[#E5E5E0]" />
-                  <span className="text-[10px] uppercase tracking-[2px] font-medium text-[#A1A1AA]">
-                    OR
+                <div className="flex items-center gap-3 py-1">
+                  <div className="flex-1 h-px" style={{ background: '#EBEBEB' }} />
+                  <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', color: '#C0C0C0', textTransform: 'uppercase' }}>
+                    or
                   </span>
-                  <div className="flex-1 h-px bg-[#E5E5E0]" />
+                  <div className="flex-1 h-px" style={{ background: '#EBEBEB' }} />
                 </div>
 
                 <button
                   onClick={() => setAuthMode('IMAP')}
-                  className="w-full h-12 flex items-center justify-center gap-3 rounded-xl text-[13px] font-medium transition-all hover:bg-[#F6F6F3] border border-[#E5E5E0]"
+                  className="w-full h-11 flex items-center justify-center gap-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 hover:bg-[#F0F0F0]"
+                  style={{ border: '1px solid #E5E5E0', color: '#777', background: 'transparent' }}
                 >
-                  <Mail size={16} className="text-[#A1A1AA]" />
-                  Continue with IMAP/SMTP
+                  <Mail size={14} style={{ color: '#AAA' }} />
+                  Use IMAP / SMTP
                 </button>
               </motion.div>
             ) : (
               <motion.div
                 key="credentials"
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 8 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-4"
+                exit={{ opacity: 0, x: -8 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-3"
               >
                 <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-medium text-[#71717A] ml-1">Email Address</label>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 500, color: '#888', display: 'block', marginBottom: 5 }}>
+                      Email Address
+                    </label>
                     <input
                       type="email"
                       value={credentials.email}
                       onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
                       placeholder="you@company.com"
-                      className="w-full h-12 px-4 rounded-xl text-[13px] border border-[#E5E5E0] focus:border-[#7C5CFF] outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl text-[13px] outline-none transition-all duration-150 focus:border-[#1A1A1A] focus:shadow-[0_0_0_3px_rgba(0,0,0,0.05)]"
+                      style={{ border: '1px solid #E5E5E0', background: '#FFF', color: '#1A1A1A' }}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-medium text-[#71717A] ml-1">App Password</label>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 500, color: '#888', display: 'block', marginBottom: 5 }}>
+                      App Password
+                    </label>
                     <input
                       type="password"
                       value={credentials.password}
                       onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
                       placeholder="••••••••••••"
-                      className="w-full h-12 px-4 rounded-xl text-[13px] border border-[#E5E5E0] focus:border-[#7C5CFF] outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl text-[13px] outline-none transition-all duration-150 focus:border-[#1A1A1A] focus:shadow-[0_0_0_3px_rgba(0,0,0,0.05)]"
+                      style={{ border: '1px solid #E5E5E0', background: '#FFF', color: '#1A1A1A' }}
                     />
                   </div>
                 </div>
 
                 {error && (
-                  <p className="text-[11px] text-[#F24E1E] ml-1 text-center bg-[#F24E1E]/5 py-2 rounded-lg border border-[#F24E1E]/10">
+                  <p
+                    className="text-center py-2 px-3 rounded-xl text-[12px]"
+                    style={{
+                      background: 'rgba(242, 78, 30, 0.06)',
+                      color: 'var(--accent)',
+                      border: '1px solid rgba(242, 78, 30, 0.12)',
+                    }}
+                  >
                     {error}
                   </p>
                 )}
 
-                <div className="flex gap-2.5 pt-2">
+                <div className="flex gap-2.5 pt-1">
                   <button
                     onClick={() => { setAuthMode('PROVIDERS'); setError(null) }}
-                    className="flex-1 h-12 rounded-xl text-[13px] font-medium border border-[#E5E5E0] hover:bg-[#F6F6F3] transition-all"
+                    className="flex-1 h-11 rounded-xl text-[13px] font-medium transition-all duration-150 hover:bg-[#F0F0F0]"
+                    style={{ border: '1px solid #E5E5E0', color: '#666', background: 'transparent' }}
                   >
                     Back
                   </button>
                   <button
                     onClick={() => handleLogin('credentials')}
                     disabled={loadingProvider !== null || !credentials.email || !credentials.password}
-                    className="flex-[2] h-12 bg-[#1A1A1A] text-white rounded-xl text-[13px] font-medium transition-all hover:bg-black disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-[2] h-11 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2 transition-all duration-150 hover:opacity-90 active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ background: '#0A0A0F', color: '#FFF' }}
                   >
-                    {loadingProvider === 'credentials' ? <Loader2 size={16} className="animate-spin" /> : null}
+                    {loadingProvider === 'credentials' && (
+                      <Loader2 size={14} className="animate-spin" />
+                    )}
                     {loadingProvider === 'credentials' ? 'Verifying…' : 'Sign In'}
                   </button>
                 </div>
@@ -231,37 +311,33 @@ export default function LoginPage() {
           </AnimatePresence>
 
           {/* Fine print */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.35 }}
-            className="text-center text-[11px] mt-8 text-[#A1A1AA]"
-          >
+          <p className="text-center mt-8" style={{ fontSize: 11, color: '#C0C0C0' }}>
             By continuing you agree to our{' '}
-            <a href="#" className="text-[#1A1A1A] hover:underline font-medium">Terms</a>
+            <a href="#" style={{ color: '#999', textDecorationLine: 'underline' }}>Terms</a>
             {' '}&amp;{' '}
-            <a href="#" className="text-[#1A1A1A] hover:underline font-medium">Privacy Policy</a>
-          </motion.p>
+            <a href="#" style={{ color: '#999', textDecorationLine: 'underline' }}>Privacy</a>
+          </p>
         </div>
 
-        {/* Feature chips - hidden on mobile for cleaner login */}
+        {/* ── Feature chips ─────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 grid grid-cols-3 gap-3"
+          transition={{ delay: 0.3 }}
+          className="mt-6 flex justify-center gap-2.5 flex-wrap"
         >
           {FEATURES.map((f) => (
             <div
               key={f.label}
-              className="py-3 px-2 rounded-xl text-center border border-[#E5E5E0] bg-white/50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              style={{
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.07)',
+                color: 'rgba(255, 255, 255, 0.30)',
+              }}
             >
-              <div className="mb-1.5 flex justify-center">
-                <f.Icon size={14} className="text-[#1A1A1A]" />
-              </div>
-              <p className="text-[10px] font-medium text-[#71717A]">
-                {f.label}
-              </p>
+              <f.Icon size={11} />
+              <span style={{ fontSize: 11, fontWeight: 500 }}>{f.label}</span>
             </div>
           ))}
         </motion.div>
@@ -272,8 +348,7 @@ export default function LoginPage() {
 
 // ── Sub-components ──────────────────────────────────────────────────────────
 
-interface AuthButtonProps {
-  provider: string
+interface ProviderButtonProps {
   label: string
   icon: React.ReactNode
   loading: boolean
@@ -281,20 +356,21 @@ interface AuthButtonProps {
   onClick: () => void
 }
 
-function AuthButton({ label, icon, loading, disabled, onClick }: AuthButtonProps) {
+function ProviderButton({ label, icon, loading, disabled, onClick }: ProviderButtonProps) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[13px] font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-hover)]"
+      className="w-full h-11 flex items-center justify-center gap-3 rounded-xl text-[13px] font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F4F4F4] active:scale-[0.98]"
       style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border-medium)',
-        color: 'var(--text-1)',
+        background: '#FFFFFF',
+        border: '1px solid #E5E5E0',
+        color: '#1A1A1A',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}
     >
       {loading
-        ? <Loader2 size={16} className="animate-spin" style={{ color: 'var(--accent-text)' }} />
+        ? <Loader2 size={15} className="animate-spin" style={{ color: 'var(--accent)' }} />
         : icon
       }
       {loading ? 'Signing in…' : label}

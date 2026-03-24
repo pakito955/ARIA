@@ -176,10 +176,10 @@ export function Sidebar() {
                     <div
                       title={sidebarCollapsed ? item.label : undefined}
                       className={cn(
-                        'relative flex items-center rounded-md cursor-pointer transition-colors duration-150',
+                        'relative flex items-center rounded-md cursor-pointer transition-all duration-150',
                         sidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-1.5 min-h-[32px]',
                         active
-                          ? 'bg-hover text-1 font-medium'
+                          ? 'bg-[var(--accent-subtle)] text-[var(--accent-text)] font-medium'
                           : 'text-3 hover:bg-hover hover:text-1'
                       )}
                     >

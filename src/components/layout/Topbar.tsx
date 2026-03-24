@@ -53,8 +53,15 @@ export function Topbar() {
 
       {/* Desktop breadcrumb or status */}
       <div className="hidden md:flex items-center gap-2">
-        <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-text-3 px-3 py-1 bg-surface border border-border rounded-full">
-          <span className="w-1.5 h-1.5 rounded-full bg-green" />
+        <div
+          className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full"
+          style={{
+            background: 'var(--green-subtle)',
+            border: '1px solid rgba(47, 158, 68, 0.2)',
+            color: 'var(--green)',
+          }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full status-live-green" />
           Agent Active
         </div>
       </div>

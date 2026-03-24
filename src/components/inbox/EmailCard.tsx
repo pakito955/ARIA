@@ -69,7 +69,7 @@ export const EmailCard = memo(function EmailCard({ email, index = 0, onAnalyze, 
     : email.bodyText?.slice(0, 80).replace(/\n/g, ' ')
 
   const selectedClass = isSelected
-    ? 'bg-surface border-border shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+    ? 'bg-surface border-border-medium shadow-[0_2px_12px_rgba(0,0,0,0.06)]'
     : 'border-transparent bg-transparent hover:bg-hover'
 
   const massSelectedClass = selected ? 'bg-accent-subtle border-accent/20' : ''
@@ -89,7 +89,7 @@ export const EmailCard = memo(function EmailCard({ email, index = 0, onAnalyze, 
 
       {/* Unread indicator dot */}
       {!email.isRead && !isSelected && (
-        <div className="absolute left-[8px] top-1/2 -translate-y-1/2 w-[6px] h-[6px] rounded-full bg-accent" />
+        <div className="absolute left-[6px] top-1/2 -translate-y-1/2 w-[5px] h-[5px] rounded-full" style={{ background: 'var(--accent)', boxShadow: '0 0 5px rgba(242,78,30,0.45)' }} />
       )}
 
       {/* Avatar / Checkbox */}

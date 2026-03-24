@@ -181,7 +181,11 @@ export default function DashboardPage() {
         <div className="relative px-6 py-5 border-b border-[var(--border)] overflow-hidden shrink-0">
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: 'linear-gradient(135deg, var(--accent-subtle) 0%, transparent 60%)' }}
+            style={{ background: 'linear-gradient(135deg, rgba(242,78,30,0.055) 0%, transparent 50%)' }}
+          />
+          <div
+            className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, var(--accent-subtle), transparent 60%)' }}
           />
           <div className="flex items-center justify-between relative">
             <div className="flex-1">
@@ -217,7 +221,7 @@ export default function DashboardPage() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-[12px] font-medium"
+                    className="btn-accent flex items-center gap-2 px-4 py-2 text-[12px]"
                   >
                     Focus now
                   </motion.button>
