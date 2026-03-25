@@ -77,10 +77,12 @@ function ThreadMessage({ msg, isSelected, index }: { msg: any; isSelected: boole
                   ⚡ {msg.analysis.summary}
                 </div>
               )}
-              <pre className="text-[11.5px] text-[var(--text-2)] leading-relaxed whitespace-pre-wrap font-space">
-                {msg.bodyText?.slice(0, 1500)}
-                {(msg.bodyText?.length || 0) > 1500 && '\n\n[Message truncated…]'}
-              </pre>
+              <p className="text-[12px] text-[var(--text-2)] leading-[1.75] whitespace-pre-wrap break-words">
+                {msg.bodyText?.slice(0, 3000)}
+                {(msg.bodyText?.length || 0) > 3000 && (
+                  <span className="text-[var(--text-3)] italic"> …[truncated]</span>
+                )}
+              </p>
             </div>
           </motion.div>
         )}

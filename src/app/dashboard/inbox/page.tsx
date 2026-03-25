@@ -35,7 +35,7 @@ export default function InboxPage() {
   const newEmailsCount = useAppStore((s) => s.newEmailsCount)
   const setNewEmailsCount = useAppStore((s) => s.setNewEmailsCount)
   const [sort, setSort] = useState<'newest' | 'priority'>('newest')
-  const [originalExpanded, setOriginalExpanded] = useState(false)
+  const [originalExpanded, setOriginalExpanded] = useState(true)
   const [replyStyle, setReplyStyle] = useState<'short' | 'professional' | 'friendly'>('professional')
   const [editedReply, setEditedReply] = useState('')
   const [sent, setSent] = useState(false)
@@ -151,10 +151,11 @@ export default function InboxPage() {
 
   const currentReply = replies[replyStyle]
 
-  // Sync editedReply when email or reply style changes
+  // Sync editedReply when email or reply style changes; reset original expand on new email
   useEffect(() => {
     setEditedReply(currentReply)
     setShowSmartReply(false)
+    setOriginalExpanded(true)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEmailId, replyStyle, currentReply])
 
@@ -570,81 +571,170 @@ export default function InboxPage() {
               transition={{ duration: 0.2 }}
               className="flex-1 flex flex-col overflow-hidden"
             >
-              {/* Email header */}
-              <div className="px-6 py-5 border-b border-[var(--border)]">
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-[15px] font-medium text-[var(--text-1)] leading-snug mb-2">
-                      {selectedEmail.subject}
-                    </h2>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setContactPanelEmail(selectedEmail.fromEmail)}
-                        className="flex items-center gap-1 text-[11px] text-[var(--text-2)] hover:text-[var(--accent-text)] transition-colors group"
-                        title="View contact intelligence"
-                      >
-                        <User size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                        {selectedEmail.fromName || selectedEmail.fromEmail}
-                      </button>
-                      <span className="text-[10px] text-[var(--text-3)]">
-                        {selectedEmail.fromEmail !== selectedEmail.fromName && `<${selectedEmail.fromEmail}>`}
+              {/* ── Email header ─────────────────────────────────── */}
+              <div className="px-6 pt-5 pb-4 border-b border-[var(--border)] space-y-3">
+                {/* Subject + AI badge */}
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-[16px] font-semibold text-[var(--text-1)] leading-snug tracking-tight flex-1 min-w-0">
+                    {selectedEmail.subject || '(no subject)'}
+                  </h2>
+                  <div className="shrink-0 flex items-center gap-2">
+                    {analysis ? (
+                      <span className={cn(
+                        'flex items-center gap-1.5 text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full border font-medium',
+                        analysis.priority === 'CRITICAL'
+                          ? 'bg-[var(--red)]/10 text-[var(--red)] border-[var(--red)]/30'
+                          : analysis.priority === 'HIGH'
+                          ? 'bg-[var(--amber)]/10 text-[var(--amber)] border-[var(--amber)]/30'
+                          : 'bg-[var(--accent)]/10 text-[var(--accent-text)] border-[var(--accent)]/30'
+                      )}>
+                        <span className="w-1 h-1 rounded-full bg-current" />
+                        {analysis.priority}
                       </span>
-                      <span className="text-[10px] text-[var(--text-3)] font-mono ml-auto">
-                        {format(new Date(selectedEmail.receivedAt), 'MMM d, HH:mm')}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {analysis && (
-                      <span className="flex items-center gap-1.5 text-[9px] bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)] px-2.5 py-1 rounded-full">
-                        <span className="w-1 h-1 rounded-full bg-[var(--accent)]" />
-                        AI Analyzed
-                      </span>
-                    )}
-                    {!analysis && (
+                    ) : (
                       <button
                         onClick={() => analyzeMutation.mutate(selectedEmail.id)}
                         disabled={analyzeMutation.isPending}
-                        className="flex items-center gap-1.5 text-[10px] bg-[var(--accent)] text-white px-3 py-1.5 rounded-lg hover:bg-[var(--accent)] transition-colors disabled:opacity-60"
+                        className="flex items-center gap-1.5 text-[10px] bg-[var(--accent)] text-white px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60"
                       >
-                        {analyzeMutation.isPending
-                          ? <Loader2 size={10} className="animate-spin" />
-                          : '⚡'
-                        }
-                        {analyzeMutation.isPending ? 'Analyzing…' : 'Analyze with AI'}
+                        {analyzeMutation.isPending ? <Loader2 size={10} className="animate-spin" /> : '⚡'}
+                        {analyzeMutation.isPending ? 'Analyzing…' : 'Analyze'}
                       </button>
                     )}
                   </div>
                 </div>
-              </div>
 
-              {/* Scrollable content */}
-              <div className="flex-1 overflow-y-auto">
-                {/* AI Summary — always visible */}
-                {analysis && (
-                  <div className="mx-6 mt-5 p-4 rounded-xl border border-[var(--accent)] bg-[var(--accent)]/[0.04] relative overflow-hidden">
-                    <div
-                      className="absolute right-0 top-0 w-32 h-full pointer-events-none bg-gradient-to-l from-white/30 to-transparent"
-                    />
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-                      <span className="text-[8px] tracking-[2px] uppercase text-[var(--accent-text)]">ARIA · AI Summary</span>
-                      <span className="ml-auto text-[9px] text-[var(--text-3)] bg-white/[0.04] px-2 py-0.5 rounded-full">
-                        {analysis.priority} · Score {analysis.urgencyScore}/10
+                {/* Metadata grid */}
+                <div className="grid gap-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] w-6 shrink-0">From</span>
+                    <button
+                      onClick={() => setContactPanelEmail(selectedEmail.fromEmail)}
+                      className="flex items-center gap-1.5 group"
+                    >
+                      <span className="text-[12px] font-medium text-[var(--text-1)] group-hover:text-[var(--accent-text)] transition-colors">
+                        {selectedEmail.fromName || selectedEmail.fromEmail}
+                      </span>
+                      {selectedEmail.fromName && (
+                        <span className="text-[11px] text-[var(--text-3)]">&lt;{selectedEmail.fromEmail}&gt;</span>
+                      )}
+                    </button>
+                  </div>
+                  {selectedEmail.toEmails?.length > 0 && (
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] w-6 shrink-0">To</span>
+                      <span className="text-[11px] text-[var(--text-2)] truncate">{selectedEmail.toEmails.join(', ')}</span>
+                    </div>
+                  )}
+                  {selectedEmail.ccEmails?.length > 0 && (
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] w-6 shrink-0">Cc</span>
+                      <span className="text-[11px] text-[var(--text-2)] truncate">{selectedEmail.ccEmails.join(', ')}</span>
+                    </div>
+                  )}
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] w-6 shrink-0">Date</span>
+                    <span className="text-[11px] text-[var(--text-2)]">
+                      {format(new Date(selectedEmail.receivedAt), 'EEEE, d MMM yyyy · HH:mm')}
+                      <span className="text-[var(--text-3)] ml-2">({formatDistanceToNow(new Date(selectedEmail.receivedAt), { addSuffix: true })})</span>
+                    </span>
+                  </div>
+                  {selectedEmail.hasAttachments && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] w-6 shrink-0" />
+                      <span className="flex items-center gap-1 text-[10px] text-[var(--text-3)]">
+                        <Paperclip size={10} />
+                        Has attachments
                       </span>
                     </div>
-                    <p className="text-[12.5px] leading-relaxed text-[var(--text-1)]">
-                      {analysis.summary}
-                    </p>
-                    {analysis.suggestedAction && (
-                      <p className="text-[11px] text-[var(--accent-text)] mt-2.5">
-                        → {analysis.suggestedAction}
-                      </p>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Scrollable content ───────────────────────────── */}
+              <div className="flex-1 overflow-y-auto">
+
+                {/* Original email body — shown by default */}
+                <div className="mx-6 mt-5">
+                  <button
+                    onClick={() => setOriginalExpanded(!originalExpanded)}
+                    className="flex items-center gap-2 text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors mb-3 group w-full"
+                  >
+                    <ChevronDown
+                      size={11}
+                      className={cn('transition-transform duration-200', originalExpanded && 'rotate-180')}
+                    />
+                    <span>Message</span>
+                    <span className="flex-1 h-px bg-[var(--border)] ml-1" />
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {originalExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden">
+                          {selectedEmail.bodyHtml ? (
+                            <div
+                              className="px-5 py-4 text-[12.5px] text-[var(--text-1)] leading-relaxed prose prose-invert prose-sm max-w-none
+                                [&_a]:text-[var(--accent-text)] [&_a]:no-underline [&_a:hover]:underline
+                                [&_blockquote]:border-l-2 [&_blockquote]:border-[var(--border)] [&_blockquote]:pl-3 [&_blockquote]:text-[var(--text-3)]
+                                [&_p]:mb-3 [&_p:last-child]:mb-0"
+                              dangerouslySetInnerHTML={{ __html: selectedEmail.bodyHtml }}
+                            />
+                          ) : (
+                            <div className="px-5 py-4">
+                              <p className="text-[12.5px] text-[var(--text-1)] leading-[1.75] whitespace-pre-wrap break-words">
+                                {selectedEmail.bodyText?.slice(0, 4000)}
+                                {(selectedEmail.bodyText?.length || 0) > 4000 && (
+                                  <span className="text-[var(--text-3)] italic"> …[truncated]</span>
+                                )}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
                     )}
-                    {analysis.deadlineText && (
-                      <p className="text-[11px] text-[var(--red)] mt-1">⚠ Deadline: {analysis.deadlineText}</p>
-                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* AI Summary */}
+                {analysis && (
+                  <div className="mx-6 mt-5">
+                    <div className="rounded-2xl border border-[var(--accent)]/30 bg-gradient-to-br from-[var(--accent)]/[0.06] to-transparent p-4 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-48 h-full pointer-events-none bg-gradient-to-l from-[var(--accent)]/[0.03] to-transparent" />
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                        <span className="text-[8px] tracking-[2.5px] uppercase text-[var(--accent-text)] font-semibold">ARIA · Summary</span>
+                        <div className="ml-auto flex items-center gap-2">
+                          {analysis.category && (
+                            <span className="text-[9px] text-[var(--text-3)] bg-white/[0.04] px-2 py-0.5 rounded-full border border-[var(--border)]">
+                              {analysis.category}
+                            </span>
+                          )}
+                          <span className="text-[9px] text-[var(--text-3)] bg-white/[0.04] px-2 py-0.5 rounded-full border border-[var(--border)]">
+                            Urgency {analysis.urgencyScore}/10
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-[12.5px] leading-relaxed text-[var(--text-1)]">{analysis.summary}</p>
+                      {analysis.suggestedAction && (
+                        <p className="text-[11px] text-[var(--accent-text)] mt-2.5 flex items-center gap-1.5">
+                          <span className="text-[var(--accent)]">→</span>
+                          {analysis.suggestedAction}
+                        </p>
+                      )}
+                      {analysis.deadlineText && (
+                        <p className="text-[11px] text-[var(--red)] mt-1.5 flex items-center gap-1.5">
+                          <AlertTriangle size={10} />
+                          Deadline: {analysis.deadlineText}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -682,7 +772,7 @@ export default function InboxPage() {
                           <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="flex items-center gap-2 p-3 rounded-md bg-green-subtle border border-green/20"
+                            className="flex items-center gap-2 p-3 rounded-xl bg-green-subtle border border-green/20"
                           >
                             <CheckCircle size={14} className="text-[var(--green)]" />
                             <span className="text-[11px] text-[var(--green)]">Reply sent successfully</span>
@@ -697,13 +787,13 @@ export default function InboxPage() {
                               value={editedReply}
                               onChange={(e) => setEditedReply(e.target.value)}
                               rows={5}
-                              className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-3.5 text-[12px] leading-relaxed text-[var(--text-1)] outline-none focus:border-[var(--accent)] transition-colors resize-none"
+                              className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-[12px] leading-relaxed text-[var(--text-1)] outline-none focus:border-[var(--accent)] transition-colors resize-none"
                             />
                             <div className="flex gap-2 mt-2 flex-wrap">
                               <button
                                 onClick={() => sendMutation.mutate({ emailId: selectedEmail.id, replyText: editedReply, style: replyStyle })}
                                 disabled={sendMutation.isPending}
-                                className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white text-[11px] font-medium rounded-lg hover:bg-[var(--accent)] transition-colors disabled:opacity-60"
+                                className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white text-[11px] font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60"
                               >
                                 {sendMutation.isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
                                 {sendMutation.isPending ? 'Sending…' : 'Send Reply'}
@@ -789,7 +879,6 @@ export default function InboxPage() {
                       >
                         ✨ Smart Reply
                       </button>
-                      {/* The MeetingBooking banner is rendered below */}
                     </div>
 
                     {/* Follow-up picker */}
@@ -799,7 +888,7 @@ export default function InboxPage() {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="mt-2 p-3 rounded-md border border-amber/30 bg-amber-subtle overflow-hidden"
+                          className="mt-2 p-3 rounded-xl border border-amber/30 bg-amber-subtle overflow-hidden"
                         >
                           <p className="text-[10px] uppercase tracking-[1.5px] text-[var(--amber)] mb-2">Set reminder</p>
                           <input
@@ -851,41 +940,7 @@ export default function InboxPage() {
                 {/* Thread view */}
                 <ThreadView emailId={selectedEmail.id} />
 
-                {/* Original email — collapsed by default */}
-                <div className="mx-6 mt-4 mb-6">
-                  <button
-                    onClick={() => setOriginalExpanded(!originalExpanded)}
-                    className="flex items-center gap-2 text-[10px] text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors mb-2 group"
-                  >
-                    <ChevronDown
-                      size={12}
-                      className={cn('transition-transform', originalExpanded && 'rotate-180')}
-                    />
-                    {originalExpanded ? 'Hide' : 'View'} original email
-                    {selectedEmail.hasAttachments && (
-                      <span className="flex items-center gap-1 text-[9px]">
-                        <Paperclip size={9} />
-                        Attachments
-                      </span>
-                    )}
-                  </button>
-
-                  <AnimatePresence>
-                    {originalExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 overflow-hidden"
-                      >
-                        <pre className="text-[11.5px] text-[var(--text-2)] leading-relaxed whitespace-pre-wrap font-space">
-                          {selectedEmail.bodyText?.slice(0, 3000)}
-                          {(selectedEmail.bodyText?.length || 0) > 3000 && '\n\n[Email truncated…]'}
-                        </pre>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <div className="h-8" />
               </div>
             </motion.div>
           )}
