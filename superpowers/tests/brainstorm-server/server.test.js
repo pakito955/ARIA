@@ -118,7 +118,7 @@ async function runTests() {
     await test('serves waiting page when no screens exist', async () => {
       const res = await fetch(`http://localhost:${TEST_PORT}/`);
       assert.strictEqual(res.status, 200);
-      assert(res.body.includes('Waiting for Claude'), 'Should show waiting message');
+      assert(res.body.includes('Waiting for the agent to push a screen'), 'Should show waiting message');
     });
 
     await test('injects helper.js into waiting page', async () => {
@@ -158,9 +158,9 @@ async function runTests() {
 
     await test('serves newest file by mtime', async () => {
       fs.writeFileSync(path.join(TEST_DIR, 'older.html'), '<h2>Older</h2>');
-      await sleep(100);
+      await sleep(500);
       fs.writeFileSync(path.join(TEST_DIR, 'newer.html'), '<h2>Newer</h2>');
-      await sleep(300);
+      await sleep(500);
 
       const res = await fetch(`http://localhost:${TEST_PORT}/`);
       assert(res.body.includes('Newer'), 'Should serve newest file');
