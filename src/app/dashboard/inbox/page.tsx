@@ -620,25 +620,27 @@ export default function InboxPage() {
                       )}
                     </button>
                   </div>
-                  {selectedEmail.toEmails?.length > 0 && (
+                  {Array.isArray(selectedEmail.toEmails) && selectedEmail.toEmails.length > 0 && (
                     <div className="flex items-baseline gap-2">
                       <span className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] w-6 shrink-0">To</span>
                       <span className="text-[11px] text-[var(--text-2)] truncate">{selectedEmail.toEmails.join(', ')}</span>
                     </div>
                   )}
-                  {selectedEmail.ccEmails?.length > 0 && (
+                  {Array.isArray(selectedEmail.ccEmails) && selectedEmail.ccEmails.length > 0 && (
                     <div className="flex items-baseline gap-2">
                       <span className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] w-6 shrink-0">Cc</span>
                       <span className="text-[11px] text-[var(--text-2)] truncate">{selectedEmail.ccEmails.join(', ')}</span>
                     </div>
                   )}
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] w-6 shrink-0">Date</span>
-                    <span className="text-[11px] text-[var(--text-2)]">
-                      {format(new Date(selectedEmail.receivedAt), 'EEEE, d MMM yyyy · HH:mm')}
-                      <span className="text-[var(--text-3)] ml-2">({formatDistanceToNow(new Date(selectedEmail.receivedAt), { addSuffix: true })})</span>
-                    </span>
-                  </div>
+                  {selectedEmail.receivedAt && !isNaN(new Date(selectedEmail.receivedAt).getTime()) && (
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] w-6 shrink-0">Date</span>
+                      <span className="text-[11px] text-[var(--text-2)]">
+                        {format(new Date(selectedEmail.receivedAt), 'EEEE, d MMM yyyy · HH:mm')}
+                        <span className="text-[var(--text-3)] ml-2">({formatDistanceToNow(new Date(selectedEmail.receivedAt), { addSuffix: true })})</span>
+                      </span>
+                    </div>
+                  )}
                   {selectedEmail.hasAttachments && (
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[9px] uppercase tracking-[1.5px] text-[var(--text-3)] w-6 shrink-0" />
