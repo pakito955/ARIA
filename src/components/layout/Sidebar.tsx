@@ -109,11 +109,7 @@ export function Sidebar() {
         filter: focusMode ? 'grayscale(100%)' : 'none',
       }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className={cn('flex flex-col h-full shrink-0 z-40 overflow-hidden relative', focusMode && 'pointer-events-none')}
-      style={{
-        background: 'var(--bg-base)',
-        borderRight: '1px solid var(--border)',
-      }}
+      className={cn('flex flex-col h-full shrink-0 z-40 overflow-hidden relative sidebar-glass', focusMode && 'pointer-events-none')}
     >
       {/* ── Logo + Bell ─────────────────────────────────────────── */}
       <div

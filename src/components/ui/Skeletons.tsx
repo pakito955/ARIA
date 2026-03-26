@@ -1,3 +1,48 @@
+/**
+ * AiProcessingSkeleton — use instead of generic skeletons when Aria is
+ * actively generating (summarizing, drafting, briefing). The orange→purple
+ * shimmer communicates "AI at work" vs a generic loading state.
+ */
+export function AiProcessingSkeleton({ lines = 4 }: { lines?: number }) {
+  return (
+    <div className="space-y-3 p-1">
+      {/* Aria indicator row */}
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-5 h-5 rounded skeleton-ai shrink-0" />
+        <div className="h-2.5 w-24 rounded-full skeleton-ai" />
+      </div>
+      {/* Shimmer text lines */}
+      {Array.from({ length: lines }).map((_, i) => (
+        <div
+          key={i}
+          className="h-3 rounded-full skeleton-ai"
+          style={{ width: `${[100, 88, 92, 76, 84][i % 5]}%`, opacity: 1 - i * 0.06 }}
+        />
+      ))}
+      {/* Short closing line */}
+      <div className="h-3 w-2/5 rounded-full skeleton-ai mt-1" />
+    </div>
+  )
+}
+
+/**
+ * AiDraftSkeleton — compact variant for the reply/draft panel when generating.
+ */
+export function AiDraftSkeleton() {
+  return (
+    <div className="space-y-2.5 p-4 rounded-xl" style={{ border: '1px solid var(--border)', background: 'var(--bg-card)' }}>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-4 h-4 rounded skeleton-ai shrink-0" />
+        <div className="h-2 w-20 rounded-full skeleton-ai" />
+      </div>
+      {[100, 90, 95, 80].map((w, i) => (
+        <div key={i} className="h-2.5 rounded-full skeleton-ai" style={{ width: `${w}%` }} />
+      ))}
+      <div className="h-2.5 w-1/3 rounded-full skeleton-ai" />
+    </div>
+  )
+}
+
 export function EmailCardSkeleton({ count = 7 }: { count?: number }) {
   return (
     <>

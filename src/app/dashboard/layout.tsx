@@ -16,6 +16,10 @@ export default async function DashboardLayout({
 
   return (
     <div className="h-screen flex overflow-hidden">
+      {/* Ambient scene-lighting orbs — fixed, dark-mode only visible */}
+      <div className="ambient-orb ambient-orb-orange" aria-hidden="true" />
+      <div className="ambient-orb ambient-orb-purple" aria-hidden="true" />
+
       {/* Desktop sidebar — static, server-rendered */}
       <div className="hidden md:block shrink-0 relative z-10">
         <Sidebar />

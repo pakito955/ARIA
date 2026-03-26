@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { useWidgetConfig } from '@/hooks/useWidgetConfig'
 import { getWidgetDef } from '@/lib/widgets'
 import { WidgetGallery } from '@/components/dashboard/WidgetGallery'
+import { AnimatedCard } from '@/components/ui/AnimatedCard'
 
 // Widget components
 import { CriticalNowWidget } from '@/components/dashboard/widgets/CriticalNowWidget'
@@ -112,7 +113,6 @@ function DraggableWidget({
       }}
       className="group relative"
       style={{
-        gridColumn: `span ${colSpan}`,
         opacity: isDragOver ? 0.5 : 1,
         transition: 'opacity 150ms ease',
         outline: isDragOver ? '2px solid var(--accent)' : 'none',
@@ -414,24 +414,29 @@ export default function DashboardPage() {
                 gap: '16px',
               }}
             >
-              {config.order.map((id) => {
+              {config.order.map((id, widgetIndex) => {
                 const def       = getWidgetDef(id)
                 const Component = WIDGET_MAP[id]
                 if (!def || !Component) return null
                 const colSpan = SIZE_COLS[def.size] ?? 4
 
                 return (
-                  <DraggableWidget
+                  <AnimatedCard
                     key={id}
-                    id={id}
-                    colSpan={colSpan}
-                    isDragOver={dragOver === id}
-                    onDragStart={handleDragStart}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
+                    index={widgetIndex}
+                    style={{ gridColumn: `span ${colSpan}` }}
                   >
-                    <Component />
-                  </DraggableWidget>
+                    <DraggableWidget
+                      id={id}
+                      colSpan={colSpan}
+                      isDragOver={dragOver === id}
+                      onDragStart={handleDragStart}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                    >
+                      <Component />
+                    </DraggableWidget>
+                  </AnimatedCard>
                 )
               })}
             </div>

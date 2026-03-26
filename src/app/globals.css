@@ -57,6 +57,12 @@
   --glow-red:    0 0 20px rgba(224, 49, 49, 0.15);
   --glow-green:  0 0 20px rgba(47, 158, 68, 0.15);
 
+  /* ── Purple accent ───────────────────────────────────────── */
+  --purple:        #7C5CFF;
+  --purple-hover:  #9678FF;
+  --purple-subtle: rgba(124, 92, 255, 0.08);
+  --glow-purple:   0 0 20px rgba(124, 92, 255, 0.15);
+
   /* ── Glassmorphism ───────────────────────────────────────── */
   --glass-bg:     rgba(255, 255, 255, 0.72);
   --glass-border: rgba(0, 0, 0, 0.08);
@@ -135,8 +141,14 @@
   --glow-red:    0 0 24px rgba(255, 107, 107, 0.22);
   --glow-green:  0 0 24px rgba(81, 207, 102, 0.20);
 
+  /* ── Purple accent (dark) ─────────────────────────────────── */
+  --purple:        #7C5CFF;
+  --purple-hover:  #9678FF;
+  --purple-subtle: rgba(124, 92, 255, 0.12);
+  --glow-purple:   0 0 24px rgba(124, 92, 255, 0.25);
+
   /* ── Glassmorphism (dark) ─────────────────────────────────── */
-  --glass-bg:     rgba(22, 22, 28, 0.80);
+  --glass-bg:     rgba(14, 14, 18, 0.82);
   --glass-border: rgba(255, 255, 255, 0.06);
   --shadow-glow:  0 0 0 1px rgba(242, 78, 30, 0.14), 0 4px 24px rgba(242, 78, 30, 0.20);
 }
@@ -336,6 +348,7 @@
   .btn-accent:hover {
     background: var(--accent-hover);
     box-shadow: var(--glow-accent-strong);
+    transform: scale(1.02);
   }
   .btn-accent:active  { transform: scale(0.97); }
 
@@ -452,6 +465,110 @@
   /* ── Animation utilities ────────────────────────────────── */
   .animate-fade-in  { animation: fade-in 0.25s ease-out forwards; }
   .animate-slide-up { animation: slide-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+  /* ── Ambient scene-lighting orbs ────────────────────────── */
+  /* Add as fixed, pointer-events-none divs at root layout level */
+  .ambient-orb {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(80px);
+  }
+  .ambient-orb-orange {
+    top: -15vh;
+    left: -8vw;
+    width: 55vw;
+    height: 55vh;
+    background: radial-gradient(circle, rgba(242, 78, 30, 0.08) 0%, transparent 65%);
+  }
+  .ambient-orb-purple {
+    bottom: -15vh;
+    right: -8vw;
+    width: 55vw;
+    height: 55vh;
+    background: radial-gradient(circle, rgba(124, 92, 255, 0.08) 0%, transparent 65%);
+  }
+
+  /* ── Sidebar glass (dark-mode enhanced) ─────────────────── */
+  .sidebar-glass {
+    background: var(--bg-base);
+    border-right: 1px solid var(--border);
+  }
+  :global(.dark) .sidebar-glass,
+  .dark .sidebar-glass {
+    background: rgba(10, 10, 13, 0.88);
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* ── Active glow border — for selected emails, active AI cards ── */
+  .card-glow-active {
+    border-color: rgba(242, 78, 30, 0.30) !important;
+    box-shadow: 0 0 0 1px rgba(242, 78, 30, 0.12), 0 4px 24px rgba(242, 78, 30, 0.14) !important;
+  }
+  .card-glow-purple {
+    border-color: rgba(124, 92, 255, 0.30) !important;
+    box-shadow: 0 0 0 1px rgba(124, 92, 255, 0.12), 0 4px 24px rgba(124, 92, 255, 0.14) !important;
+  }
+
+  /* ── AI Processing skeleton — orange→purple shimmer ─────── */
+  /* Use instead of .skeleton when Aria is actively generating */
+  .skeleton-ai {
+    background: linear-gradient(
+      90deg,
+      var(--bg-hover) 0%,
+      rgba(242, 78, 30, 0.13) 25%,
+      rgba(124, 92, 255, 0.13) 55%,
+      var(--bg-hover) 80%
+    );
+    background-size: 300% 100%;
+    animation: ai-shimmer 2.2s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  /* ── Stagger entrance helpers (CSS-only, no Framer dep) ──── */
+  /* Apply .stagger-N to direct children in a list/grid */
+  .stagger-1  { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.00s both; }
+  .stagger-2  { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.06s both; }
+  .stagger-3  { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.12s both; }
+  .stagger-4  { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
+  .stagger-5  { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.24s both; }
+  .stagger-6  { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.30s both; }
+  .stagger-7  { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.35s both; }
+  .stagger-8  { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.40s both; }
+  .stagger-9  { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.45s both; }
+  .stagger-10 { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.50s both; }
+  .stagger-11 { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.54s both; }
+  .stagger-12 { animation: stagger-in 0.40s cubic-bezier(0.22,1,0.36,1) 0.58s both; }
+
+  /* ── Text gradient — purple-to-orange brand gradient ─────── */
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #F24E1E 0%, #7C5CFF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Card micro-interaction upgrade ─────────────────────── */
+  /* Drop this on any interactive card for full premium feel */
+  .card-cinematic {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+    transition: box-shadow 0.28s ease, border-color 0.28s ease, transform 0.24s cubic-bezier(0.22,1,0.36,1);
+    cursor: pointer;
+  }
+  .card-cinematic:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.40), 0 1px 0 rgba(255,255,255,0.05) inset;
+    border-color: var(--border-medium);
+    transform: translateY(-2px) scale(1.005);
+  }
+  .card-cinematic:active {
+    transform: translateY(0) scale(0.99);
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -460,6 +577,16 @@
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
+}
+
+@keyframes ai-shimmer {
+  0%   { background-position:  200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes stagger-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse-dot {
