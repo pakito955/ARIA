@@ -10,6 +10,8 @@ import { toast } from '@/lib/store'
 
 const CATEGORY_LABELS: Record<WidgetCategory, string> = {
   productivity: '⚡ Productivity',
+  email: '✉️ Email',
+  calendar: '🗓 Calendar',
   analytics: '📊 Analytics',
   ai: '🧠 AI',
   tools: '🛠 Tools',

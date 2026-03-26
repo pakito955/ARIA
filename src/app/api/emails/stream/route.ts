@@ -1,8 +1,22 @@
-﻿import { NextRequest } from 'next/server'
+import { NextRequest } from 'next/server'
 import { getAuthUser } from '@/lib/authOrToken'
 import { prisma } from '@/lib/prisma'
+import Redis from 'ioredis'
+import { connection } from '@/lib/queue'
 
-// Server-Sent Events — real-time email sync
+interface RealtimeEvent {
+  type: 'email:new' | 'email:updated' | 'email:deleted' | 'stats:update' | 'heartbeat' | 'reconnect' | 'sync:started'
+  data: unknown
+  timestamp: number
+}
+
+const CONNECTION_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes — EventSource auto-reconnects
+const HEARTBEAT_INTERVAL_MS = 25_000         // 25s — prevents proxy/Vercel timeout
+const POLL_INTERVAL_MS = 30_000              // 30s — fallback when Redis unavailable
+
+const hasRedis = !!process.env.REDIS_URL && process.env.REDIS_URL !== 'redis://localhost:6379'
+
+// Server-Sent Events — real-time email + stats sync
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user) {
@@ -10,67 +24,124 @@ export async function GET(req: NextRequest) {
   }
 
   const userId = user.id
-  let lastCount = 0
-
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
     async start(controller) {
-      const send = (data: object) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+      let closed = false
+      const cleanupFns: Array<() => void> = []
+
+      const enqueue = (raw: string) => {
+        if (closed) return
+        try { controller.enqueue(encoder.encode(raw)) } catch { /* stream closed */ }
       }
 
-      // Initial state
-      const initial = await prisma.email.count({ where: { userId, isRead: false } })
-      lastCount = initial
-      send({ type: 'init', unread: initial })
+      const sendEvent = (event: RealtimeEvent) => {
+        enqueue(`data: ${JSON.stringify(event)}\n\n`)
+      }
 
-      // Heartbeat keeps the SSE connection alive through proxies (Vercel, nginx, Cloudflare)
-      const heartbeat = setInterval(() => {
+      const cleanup = () => {
+        if (closed) return
+        closed = true
+        cleanupFns.forEach((fn) => { try { fn() } catch { /* ignore */ } })
+        try { controller.close() } catch { /* already closed */ }
+      }
+
+      // ── Initial snapshot (4 fields required by /api/stats contract) ───────
+      try {
+        const [unread, critical, tasks, waiting] = await Promise.all([
+          prisma.email.count({ where: { userId, isRead: false } }),
+          prisma.email.count({
+            where: { userId, isRead: false, analysis: { priority: 'CRITICAL' } },
+          }),
+          prisma.task.count({
+            where: { userId, status: { in: ['TODO', 'IN_PROGRESS'] } },
+          }),
+          prisma.email.count({
+            where: {
+              userId,
+              receivedAt: { lte: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
+              isRead: false,
+            },
+          }),
+        ])
+        sendEvent({ type: 'stats:update', data: { unread, critical, tasks, waiting }, timestamp: Date.now() })
+      } catch (err) {
+        console.error('[SSE] Failed initial snapshot:', err)
+      }
+
+      // ── Heartbeat every 25s (SSE comment — doesn't trigger onmessage) ──────
+      const heartbeatTimer = setInterval(() => enqueue(': ping\n\n'), HEARTBEAT_INTERVAL_MS)
+      cleanupFns.push(() => clearInterval(heartbeatTimer))
+
+      // ── Hard timeout after 5 min — client EventSource auto-reconnects ──────
+      const timeoutTimer = setTimeout(() => {
+        enqueue(`data: ${JSON.stringify({ type: 'reconnect', timestamp: Date.now() })}\n\n`)
+        cleanup()
+      }, CONNECTION_TIMEOUT_MS)
+      cleanupFns.push(() => clearTimeout(timeoutTimer))
+
+      // ── Redis Pub/Sub (event-driven, primary path when Redis available) ─────
+      if (hasRedis) {
+        let subscriber: Redis | null = null
         try {
-          controller.enqueue(encoder.encode(': ping\n\n'))
-        } catch {
-          clearInterval(heartbeat)
+          subscriber = new Redis(connection as any)
+          subscriber.on('error', (err) => {
+            console.error(`[SSE] Redis subscriber error (${userId}):`, err.message)
+          })
+
+          const channel = `user:${userId}:updates`
+          await subscriber.subscribe(channel)
+
+          subscriber.on('message', (_ch: string, message: string) => {
+            try {
+              const event: RealtimeEvent = JSON.parse(message)
+              sendEvent(event)
+            } catch { /* malformed — skip */ }
+          })
+
+          cleanupFns.push(() => {
+            subscriber?.unsubscribe().catch(() => {}).finally(() => subscriber?.disconnect())
+          })
+        } catch (err) {
+          console.error('[SSE] Failed to set up Redis subscriber:', err)
+          subscriber?.disconnect()
         }
-      }, 25_000)
+      }
 
-      // Poll every 30s for new emails
-      const interval = setInterval(async () => {
+      // ── DB polling every 30s (fallback without Redis; catch-all with Redis) ─
+      let lastUnread = -1
+      const pollTimer = setInterval(async () => {
         try {
-          const [unread, critical] = await Promise.all([
+          const [unread, critical, tasks, waiting] = await Promise.all([
             prisma.email.count({ where: { userId, isRead: false } }),
+            prisma.email.count({
+              where: { userId, isRead: false, analysis: { priority: 'CRITICAL' } },
+            }),
+            prisma.task.count({
+              where: { userId, status: { in: ['TODO', 'IN_PROGRESS'] } },
+            }),
             prisma.email.count({
               where: {
                 userId,
+                receivedAt: { lte: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
                 isRead: false,
-                analysis: { priority: 'CRITICAL' },
               },
             }),
           ])
 
-          if (unread !== lastCount) {
-            const newCount = unread - lastCount
-            lastCount = unread
-
-            send({
-              type: 'update',
-              unread,
-              critical,
-              newEmails: newCount > 0 ? newCount : 0,
-            })
+          if (unread !== lastUnread) {
+            lastUnread = unread
+            sendEvent({ type: 'stats:update', data: { unread, critical, tasks, waiting }, timestamp: Date.now() })
           }
         } catch {
-          clearInterval(interval)
-          controller.close()
+          cleanup()
         }
-      }, 30_000)
+      }, POLL_INTERVAL_MS)
+      cleanupFns.push(() => clearInterval(pollTimer))
 
-      // Cleanup on disconnect
-      req.signal.addEventListener('abort', () => {
-        clearInterval(heartbeat)
-        clearInterval(interval)
-        controller.close()
-      })
+      // ── Client disconnect cleanup ─────────────────────────────────────────
+      req.signal.addEventListener('abort', cleanup)
     },
   })
 
@@ -79,6 +150,7 @@ export async function GET(req: NextRequest) {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no', // Prevent nginx/Vercel proxy buffering
     },
   })
 }

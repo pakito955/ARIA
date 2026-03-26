@@ -246,6 +246,161 @@ const analysisWorker = new Worker<EmailAnalysisJob>(
   { connection: redisConnection, concurrency: 5 }
 )
 
+// ─── Gmail History Sync Worker ────────────────────────────────────────────────
+// Handles jobs queued by the Gmail push notification webhook (/api/webhooks/gmail)
+// Discriminated from regular sync jobs by data.type === 'gmail-sync'
+
+interface GmailSyncJobData {
+  type: 'gmail-sync'
+  userId: string
+  historyId: string
+}
+
+const gmailSyncWorker = new Worker<GmailSyncJobData>(
+  'email-sync',
+  async (job) => {
+    if ((job.data as any).type !== 'gmail-sync') return // other job types handled by syncWorker
+
+    const { userId, historyId } = job.data
+
+    const integration = await prisma.integration.findFirst({
+      where: { userId, provider: 'GMAIL', isActive: true },
+    })
+    if (!integration) {
+      console.warn(`[GmailSync] No active GMAIL integration for user ${userId}`)
+      return
+    }
+
+    const accessToken = decrypt(integration.accessToken)
+    const refreshToken = integration.refreshToken ? decrypt(integration.refreshToken) : undefined
+
+    // Fetch Gmail History delta since historyId
+    let newMessageIds: string[] = []
+    try {
+      const { google } = await import('googleapis')
+      const { OAuth2Client } = await import('google-auth-library')
+
+      const auth = new OAuth2Client(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET
+      )
+      auth.setCredentials({ access_token: accessToken, refresh_token: refreshToken })
+
+      const gmailApi = google.gmail({ version: 'v1', auth })
+      const historyRes = await gmailApi.users.history.list({
+        userId: 'me',
+        startHistoryId: historyId,
+        historyTypes: ['messageAdded'],
+      })
+
+      for (const record of historyRes.data.history ?? []) {
+        for (const added of record.messagesAdded ?? []) {
+          if (added.message?.id) newMessageIds.push(added.message.id)
+        }
+      }
+    } catch (err: any) {
+      console.error(`[GmailSync] History API error for user ${userId}:`, err.message)
+      throw err // BullMQ exponential backoff
+    }
+
+    if (!newMessageIds.length) {
+      console.log(`[GmailSync] No new messages in history delta for user ${userId}`)
+      return { synced: 0 }
+    }
+
+    const provider = new GmailProvider(accessToken, refreshToken)
+    let syncedCount = 0
+
+    for (const externalId of newMessageIds) {
+      try {
+        const email = await provider.fetchEmail(externalId)
+        if (!email) continue
+
+        // Deduplicate
+        const existing = await prisma.email.findUnique({
+          where: {
+            userId_provider_externalId: {
+              userId,
+              provider: 'GMAIL',
+              externalId: email.externalId,
+            },
+          },
+          select: { id: true },
+        }).catch(() => null)
+
+        if (existing) continue
+
+        const stored = await prisma.email.create({
+          data: {
+            userId,
+            provider: 'GMAIL',
+            externalId: email.externalId,
+            threadId: email.threadId ? await upsertThread(userId, { ...email, provider: 'GMAIL' }) : null,
+            subject: email.subject,
+            bodyText: email.bodyText,
+            bodyHtml: email.bodyHtml,
+            fromEmail: email.fromEmail,
+            fromName: email.fromName,
+            toEmails: JSON.stringify(email.toEmails ?? []),
+            ccEmails: JSON.stringify(email.ccEmails ?? []),
+            isRead: email.isRead,
+            isStarred: email.isStarred,
+            labels: JSON.stringify(email.labels ?? []),
+            hasAttachments: email.hasAttachments,
+            receivedAt: email.receivedAt,
+          },
+        })
+
+        syncedCount++
+
+        // Fire-and-forget: AI classification
+        const { scheduleEmailAnalysis } = await import('@/lib/queue')
+        scheduleEmailAnalysis(stored.id, userId).catch((err) =>
+          console.error(`[GmailSync] Analysis queue error for ${stored.id}:`, err.message)
+        )
+
+        // Broadcast email:new to SSE clients
+        const { broadcastToUser } = await import('@/lib/realtime')
+        broadcastToUser(userId, {
+          type: 'email:new',
+          data: {
+            id: stored.id,
+            subject: stored.subject,
+            fromEmail: stored.fromEmail,
+            fromName: stored.fromName,
+            receivedAt: stored.receivedAt,
+          },
+          timestamp: Date.now(),
+        }).catch(() => {})
+      } catch (err: any) {
+        console.error(`[GmailSync] Failed to process message ${externalId}:`, err.message)
+        // Continue — don't fail the whole job for one message
+      }
+    }
+
+    await prisma.integration.update({
+      where: { id: integration.id },
+      data: { lastSyncAt: new Date() },
+    }).catch(() => {})
+
+    // Broadcast updated stats to SSE clients
+    const { broadcastStatsUpdate } = await import('@/lib/realtime')
+    broadcastStatsUpdate(userId).catch(() => {})
+
+    console.log(`[GmailSync] Synced ${syncedCount} new emails for user ${userId}`)
+    return { synced: syncedCount }
+  },
+  { connection: redisConnection, concurrency: 3 }
+)
+
+gmailSyncWorker.on('completed', (job, result) => {
+  console.log(`✅ [GmailSync] Job ${job.id} done:`, result)
+})
+
+gmailSyncWorker.on('failed', (job, err) => {
+  console.error(`❌ [GmailSync] Job ${job?.id} failed:`, err.message)
+})
+
 // ─── Briefing Worker ──────────────────────────────────────────────────────────
 
 const briefingWorker = new Worker<BriefingJob>(
@@ -551,6 +706,7 @@ function buildWeeklyReportHtml(data: any) {
 
 process.on('SIGTERM', async () => {
   await syncWorker.close()
+  await gmailSyncWorker.close()
   await analysisWorker.close()
   await briefingWorker.close()
   await reportWorker.close()

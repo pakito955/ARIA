@@ -45,6 +45,8 @@ model User {
   knowledgeItems   KnowledgeItem[]
   contactNotes     ContactNote[]
   draftEmails      DraftEmail[]
+  dashboardLayout  DashboardLayout?
+  preferences      UserPreference[]
 
   @@map("users")
 }
@@ -533,4 +535,30 @@ model Webhook {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("webhooks")
+}
+
+// ─── DASHBOARD LAYOUT ─────────────────────────────────────────────────────────
+// Migration note: run `npm run db:push` after adding these models.
+
+model DashboardLayout {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  layout    Json     // Array of WidgetPosition: { widgetId, x, y, w, h }
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dashboard_layouts")
+}
+
+model UserPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String
+  value     Json
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@map("user_preferences")
 }

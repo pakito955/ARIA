@@ -1,366 +1,508 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import { cn } from '@/lib/utils'
-import { useEffect, useState } from 'react'
-import { TrendingUp, Clock, Mail, Zap, Flame, Star } from 'lucide-react'
+import { useMemo } from 'react'
+import { TrendingUp, TrendingDown, Clock, MailOpen, CheckCircle, Users } from 'lucide-react'
 
-function AnimatedNumber({ target, suffix = '', prefix = '' }: { target: number; suffix?: string; prefix?: string }) {
-  const [current, setCurrent] = useState(0)
-  useEffect(() => {
-    let start = 0
-    const duration = 1200
-    const step = 16
-    const increment = target / (duration / step)
-    const timer = setInterval(() => {
-      start += increment
-      if (start >= target) { setCurrent(target); clearInterval(timer) }
-      else setCurrent(Math.floor(start))
-    }, step)
-    return () => clearInterval(timer)
-  }, [target])
-  return <span>{prefix}{current}{suffix}</span>
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+interface AnalyticsData {
+  avgResponseTimeMinutes: number
+  avgResponseTimeTrend: number        // % change vs prev period
+  emailsPerDay7d: number
+  emailsPerDayTrend: number
+  inboxZeroDays: number
+  replyRate: number                   // 0-1
+  replyRateTrend: number
+  productivityScore: number           // 0-100
+  dailyVolume: { date: string; received: number; sent: number }[]
+  topSenders: { email: string; name: string; count: number; percent: number }[]
+  responseTimeSeries: { hour: number; avgMinutes: number }[]
+  heatmap: { day: number; hour: number; count: number }[]
 }
 
-function Sparkline({ data, color = '#7C5CFF' }: { data: number[]; color?: string }) {
-  const max = Math.max(...data)
-  const min = Math.min(...data)
-  const range = max - min || 1
-  const w = 120, h = 40
-  const points = data.map((v, i) => ({ x: (i / (data.length - 1)) * w, y: h - ((v - min) / range) * (h - 6) - 3 }))
-  const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
-  const fill = `${path} L ${w} ${h} L 0 ${h} Z`
+// ── Fetch ──────────────────────────────────────────────────────────────────────
+
+async function fetchAnalytics(): Promise<AnalyticsData> {
+  const res = await fetch('/api/analytics')
+  if (!res.ok) throw new Error('Failed to load analytics')
+  return res.json()
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+function MetricCard({
+  icon,
+  label,
+  value,
+  trend,
+  trendLabel,
+  color,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  trend?: number
+  trendLabel?: string
+  color: string
+}) {
+  const positive = trend !== undefined && trend >= 0
   return (
-    <svg width={w} height={h} className="overflow-visible">
-      <defs>
-        <linearGradient id={`grad-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={fill} fill={`url(#grad-${color.replace('#', '')})`} />
-      <path d={path} stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <div
+      className="rounded-2xl p-5 flex flex-col gap-3"
+      style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+    >
+      <div className="flex items-center justify-between">
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: color + '20', color }}
+        >
+          {icon}
+        </div>
+        {trend !== undefined && (
+          <div
+            className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+            style={
+              positive
+                ? { background: 'var(--green-subtle)', color: 'var(--green)' }
+                : { background: 'var(--red-subtle)', color: 'var(--red)' }
+            }
+          >
+            {positive ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+            {Math.abs(trend)}%
+          </div>
+        )}
+      </div>
+      <div>
+        <p className="text-[28px] font-bold leading-none mb-1" style={{ color: 'var(--text-1)' }}>
+          {value}
+        </p>
+        <p className="text-[12px]" style={{ color: 'var(--text-3)' }}>
+          {label}
+          {trendLabel && (
+            <span className="ml-1" style={{ color: 'var(--text-3)' }}>
+              {trendLabel}
+            </span>
+          )}
+        </p>
+      </div>
+    </div>
   )
 }
 
-function ScoreRing({ score }: { score: number }) {
-  const r = 36
-  const circ = 2 * Math.PI * r
-  const offset = circ - (score / 100) * circ
-  const color = score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444'
+function BarChart({ data }: { data: { date: string; received: number; sent: number }[] }) {
+  const max = Math.max(...data.flatMap((d) => [d.received, d.sent]), 1)
   return (
-    <svg width="96" height="96" className="rotate-[-90deg]">
-      <circle cx="48" cy="48" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
-      <circle
-        cx="48" cy="48" r={r} fill="none"
-        stroke={color} strokeWidth="8"
-        strokeDasharray={circ}
-        strokeDashoffset={offset}
+    <div className="flex items-end gap-1.5 h-32 w-full pt-2">
+      {data.map((d) => {
+        const recvH = Math.round((d.received / max) * 100)
+        const sentH = Math.round((d.sent / max) * 100)
+        const label = new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' })
+        return (
+          <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+            <div className="flex items-end gap-0.5 w-full" style={{ height: '100%' }}>
+              <div
+                className="flex-1 rounded-t-sm transition-all duration-500"
+                style={{ height: `${recvH}%`, minHeight: 2, background: 'var(--accent)', opacity: 0.7 }}
+                title={`Received: ${d.received}`}
+              />
+              <div
+                className="flex-1 rounded-t-sm transition-all duration-500"
+                style={{ height: `${sentH}%`, minHeight: 2, background: 'var(--green)' }}
+                title={`Sent: ${d.sent}`}
+              />
+            </div>
+            <span className="text-[9px]" style={{ color: 'var(--text-3)' }}>
+              {label}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function ProductivityRing({ score }: { score: number }) {
+  const r = 36
+  const circumference = 2 * Math.PI * r
+  const filled = (score / 100) * circumference
+  const color =
+    score >= 80 ? 'var(--green)' : score >= 60 ? 'var(--amber)' : 'var(--accent)'
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative w-24 h-24">
+        <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
+          <circle cx="48" cy="48" r={r} fill="none" stroke="var(--border)" strokeWidth="8" />
+          <circle
+            cx="48"
+            cy="48"
+            r={r}
+            fill="none"
+            stroke={color}
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={`${filled} ${circumference}`}
+            style={{ transition: 'stroke-dasharray 1s ease' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-[22px] font-bold" style={{ color: 'var(--text-1)' }}>
+            {score}
+          </span>
+          <span
+            className="text-[9px] font-semibold uppercase tracking-widest"
+            style={{ color: 'var(--text-3)' }}
+          >
+            Score
+          </span>
+        </div>
+      </div>
+      <p className="text-[12px] font-medium" style={{ color: 'var(--text-2)' }}>
+        Productivity Score
+      </p>
+    </div>
+  )
+}
+
+function ResponseTimeLine({ data }: { data: { hour: number; avgMinutes: number }[] }) {
+  if (!data.length) return null
+  const max = Math.max(...data.map((d) => d.avgMinutes), 60)
+  const W = 240
+  const H = 80
+  const pts = data.map((d, i) => {
+    const x = (i / (data.length - 1)) * W
+    const y = H - (d.avgMinutes / max) * H
+    return `${x},${y}`
+  })
+  const path = `M ${pts.join(' L ')}`
+  const fill = `M ${pts[0]} L ${pts.join(' L ')} L ${W},${H} L 0,${H} Z`
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 80, overflow: 'visible' }}>
+      <defs>
+        <linearGradient id="rtGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={fill} fill="url(#rtGradient)" />
+      <path
+        d={path}
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth="1.5"
         strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 1s ease' }}
+        strokeLinejoin="round"
       />
     </svg>
   )
 }
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const HOURS = Array.from({ length: 24 }, (_, i) => i)
-
-export default function AnalyticsPage() {
-  const { data } = useQuery({
-    queryKey: ['analytics'],
-    queryFn: async () => {
-      const res = await fetch('/api/analytics')
-      if (!res.ok) return {
-        emailsThisWeek: 247, timeSaved: 4.2, responseRate: 94, aiActions: 128,
-        weeklyVolume: [12, 8, 15, 7, 18, 9, 14],
-        categories: [
-          { label: 'Task', value: 38, color: '#10b981' },
-          { label: 'Meeting', value: 22, color: '#f59e0b' },
-          { label: 'Info', value: 28, color: '#7C5CFF' },
-          { label: 'Spam', value: 12, color: 'var(--text-3)' },
-        ],
-        topSenders: [],
-        heatmap: null,
-        avgResponseHours: 0,
-      }
-      return res.json()
-    },
-  })
-
-  const { data: scoreData } = useQuery({
-    queryKey: ['score'],
-    queryFn: async () => {
-      const res = await fetch('/api/score')
-      if (!res.ok) return { score: 72, streak: 3, breakdown: {} }
-      return res.json()
-    },
-  })
-
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
-  const METRICS = [
-    { label: 'Emails handled', value: data?.emailsThisWeek ?? 0, suffix: '', unit: 'this month', color: '#7C5CFF', icon: Mail, sparkData: [20, 35, 28, 42, 38, 51, 47] },
-    { label: 'Time saved', value: data?.timeSaved ?? 0, suffix: 'h', unit: 'this month', color: '#10b981', icon: Clock, sparkData: [0.8, 1.2, 2.1, 1.8, 3.2, 3.8, 4.2] },
-    { label: 'Response rate', value: data?.responseRate ?? 0, suffix: '%', unit: 'average', color: '#f59e0b', icon: TrendingUp, sparkData: [78, 82, 85, 88, 90, 92, 94] },
-    { label: 'AI actions taken', value: data?.aiActions ?? 0, suffix: '', unit: 'total', color: '#4fd1c5', icon: Zap, sparkData: [8, 14, 22, 31, 45, 67, 128] },
-  ]
-
-  const heatmapMax = data?.heatmap
-    ? Math.max(...data.heatmap.flat(), 1)
-    : 1
-
+function Heatmap({ data }: { data: { day: number; hour: number; count: number }[] }) {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const hours = Array.from({ length: 24 }, (_, i) => i)
+  const max = Math.max(...data.map((d) => d.count), 1)
+  const map = new Map(data.map((d) => [`${d.day}-${d.hour}`, d.count]))
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-6 py-5 border-b border-[var(--border)]">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] pulse-violet" />
-          <span className="text-[9px] tracking-[2.5px] uppercase text-[var(--accent-text)]">ARIA · Insights</span>
-        </div>
-        <h1 className="font-outfit text-3xl font-light tracking-tight">Intelligence Report</h1>
-        <p className="text-[11px] text-[var(--text-3)] mt-0.5">Your productivity amplified by AI</p>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-5 space-y-5">
-        {/* Hero: Time Saved + AI Score side by side */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:col-span-2 relative overflow-hidden rounded-2xl border border-[var(--accent)] p-6"
-            style={{ background: 'linear-gradient(135deg, rgba(124,92,255,0.08) 0%, rgba(11,11,15,0.95) 60%)' }}
+    <div className="overflow-x-auto">
+      <div style={{ display: 'grid', gridTemplateColumns: '28px repeat(24, 1fr)', gap: 2 }}>
+        <div />
+        {hours.map((h) => (
+          <div
+            key={h}
+            className="text-center"
+            style={{ fontSize: 8, color: 'var(--text-3)', paddingBottom: 2 }}
           >
-            <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(124,92,255,0.12), transparent 70%)' }} />
-            <p className="text-[9px] tracking-[2.5px] uppercase text-[var(--accent-text)] mb-2">This month, ARIA saved you</p>
-            <p className="font-outfit text-6xl font-light text-white mb-1">
-              <AnimatedNumber target={data?.timeSaved ? Math.round(data.timeSaved * 10) / 10 : 42} suffix="h" />
-            </p>
-            <p className="text-[12px] text-[var(--text-2)]">of email processing time</p>
-            <p className="text-[10.5px] text-[var(--text-3)] mt-3">
-              At €50/h → <span className="text-[var(--green)] font-medium">€{Math.round((data?.timeSaved ?? 4.2) * 50)} saved this month</span>
-            </p>
-          </motion.div>
-
-          {/* AI Score */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="card-premium p-5 flex flex-col items-center justify-center gap-2"
-          >
-            <p className="text-[9px] tracking-[2px] uppercase text-[var(--text-3)]">Daily Score</p>
-            <div className="relative flex items-center justify-center">
-              <ScoreRing score={scoreData?.score ?? 0} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-outfit text-3xl font-light text-white">{scoreData?.score ?? 0}</span>
-                <span className="text-[9px] text-[var(--text-3)]">/ 100</span>
-              </div>
-            </div>
-            {scoreData?.streak > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: 'color-mix(in srgb, var(--amber) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--amber) 25%, transparent)' }}>
-                <Flame size={10} style={{ color: 'var(--amber)' }} />
-                <span className="text-[10px] font-medium" style={{ color: 'var(--amber)' }}>{scoreData.streak} day streak</span>
-              </div>
-            )}
-          </motion.div>
-        </div>
-
-        {/* 4 Metric cards */}
-        <div className="grid grid-cols-2 gap-3">
-          {METRICS.map((m, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 + i * 0.07 }}
-              className="card-premium p-4 relative overflow-hidden"
+            {h % 4 === 0 ? `${h}h` : ''}
+          </div>
+        ))}
+        {days.map((day, di) => (
+          <>
+            <div
+              key={`day-${di}`}
+              className="text-right pr-1 flex items-center justify-end"
+              style={{ fontSize: 9, color: 'var(--text-3)' }}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${m.color}14` }}>
-                  <m.icon size={14} style={{ color: m.color }} />
-                </div>
-                <Sparkline data={m.sparkData} color={m.color} />
-              </div>
-              <p className="font-outfit text-4xl font-light mb-0.5" style={{ color: m.color }}>
-                <AnimatedNumber target={m.value} suffix={m.suffix} />
-              </p>
-              <p className="text-[11px] text-white">{m.label}</p>
-              <p className="text-[9px] text-[var(--text-3)] mt-0.5">{m.unit}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Weekly volume */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="card p-5">
-          <p className="text-[8px] tracking-[2px] uppercase text-[var(--text-3)] mb-5">Email Volume · This Week</p>
-          <div className="flex items-end gap-2">
-            {(data?.weeklyVolume || [12, 8, 15, 7, 18, 9, 14]).map((v: number, i: number) => {
-              const max = Math.max(...(data?.weeklyVolume || [18]))
-              const isToday = i === new Date().getDay() - 1
+              {day}
+            </div>
+            {hours.map((h) => {
+              const count = map.get(`${di}-${h}`) ?? 0
+              const opacity = count / max
               return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                  <span className="text-[9px] text-[var(--text-3)] font-mono">{v}</span>
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: `${Math.max((v / max) * 80, 4)}px` }}
-                    transition={{ delay: 0.3 + i * 0.06, ease: 'easeOut', duration: 0.5 }}
-                    className="w-full rounded-md"
-                    style={{
-                      background: isToday ? 'linear-gradient(180deg, #7C5CFF, #6D4EF0)' : 'rgba(255,255,255,0.06)',
-                      boxShadow: isToday ? '0 0 12px rgba(124,92,255,0.35)' : 'none',
-                    }}
-                  />
-                  <span className={cn('text-[9px]', isToday ? 'text-[var(--accent-text)]' : 'text-[var(--text-3)]')}>{days[i]}</span>
-                </div>
+                <div
+                  key={`${di}-${h}`}
+                  title={`${day} ${h}:00 — ${count} emails`}
+                  style={{
+                    height: 10,
+                    borderRadius: 2,
+                    background:
+                      count > 0
+                        ? `rgba(242,78,30,${0.15 + opacity * 0.75})`
+                        : 'var(--bg-hover)',
+                  }}
+                />
               )
             })}
+          </>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Skeleton ───────────────────────────────────────────────────────────────────
+
+function AnalyticsSkeleton() {
+  return (
+    <div className="p-6 space-y-6">
+      <div className="skeleton h-8 w-48 rounded-xl" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="skeleton rounded-2xl h-32" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="skeleton rounded-2xl h-64 lg:col-span-2" />
+        <div className="skeleton rounded-2xl h-64" />
+      </div>
+    </div>
+  )
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────────
+
+export default function AnalyticsPage() {
+  const { data, isLoading, error } = useQuery<AnalyticsData>({
+    queryKey: ['analytics'],
+    queryFn: fetchAnalytics,
+    staleTime: 5 * 60_000,
+  })
+
+  const fmtMinutes = (m: number) =>
+    m < 60 ? `${Math.round(m)}m` : `${(m / 60).toFixed(1)}h`
+
+  const topSendersMax = useMemo(
+    () => Math.max(...(data?.topSenders.map((s) => s.count) ?? [1])),
+    [data]
+  )
+
+  if (isLoading) return <AnalyticsSkeleton />
+  if (error || !data) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-[14px]" style={{ color: 'var(--text-3)' }}>
+          Could not load analytics. Try refreshing.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div>
+        <h1 className="text-[22px] font-bold" style={{ color: 'var(--text-1)' }}>
+          Analytics
+        </h1>
+        <p className="text-[13px] mt-0.5" style={{ color: 'var(--text-3)' }}>
+          Last 7 days · updates every 5 minutes
+        </p>
+      </div>
+
+      {/* Metric cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard
+          icon={<Clock size={16} />}
+          label="Avg response time"
+          value={fmtMinutes(data.avgResponseTimeMinutes)}
+          trend={data.avgResponseTimeTrend}
+          trendLabel="vs last week"
+          color="var(--accent)"
+        />
+        <MetricCard
+          icon={<MailOpen size={16} />}
+          label="Emails per day"
+          value={String(data.emailsPerDay7d)}
+          trend={data.emailsPerDayTrend}
+          trendLabel="vs last week"
+          color="var(--blue)"
+        />
+        <MetricCard
+          icon={<CheckCircle size={16} />}
+          label="Inbox zero days"
+          value={String(data.inboxZeroDays)}
+          color="var(--green)"
+        />
+        <MetricCard
+          icon={<Users size={16} />}
+          label="Reply rate"
+          value={`${Math.round(data.replyRate * 100)}%`}
+          trend={data.replyRateTrend}
+          trendLabel="vs last week"
+          color="var(--amber)"
+        />
+      </div>
+
+      {/* Volume chart + Productivity ring */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div
+          className="lg:col-span-2 rounded-2xl p-5"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[14px] font-semibold" style={{ color: 'var(--text-1)' }}>
+              Email Volume
+            </h2>
+            <div className="flex items-center gap-3 text-[11px]" style={{ color: 'var(--text-3)' }}>
+              <span className="flex items-center gap-1">
+                <span
+                  className="w-2 h-2 rounded-sm inline-block"
+                  style={{ background: 'var(--accent)', opacity: 0.7 }}
+                />
+                Received
+              </span>
+              <span className="flex items-center gap-1">
+                <span
+                  className="w-2 h-2 rounded-sm inline-block"
+                  style={{ background: 'var(--green)' }}
+                />
+                Sent
+              </span>
+            </div>
           </div>
-        </motion.div>
+          <BarChart data={data.dailyVolume} />
+        </div>
 
-        {/* Email Heatmap */}
-        {data?.heatmap && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="card p-5">
-            <p className="text-[8px] tracking-[2px] uppercase text-[var(--text-3)] mb-4">Email Activity Heatmap · Last 90 days</p>
-            <div className="overflow-x-auto">
-              <div className="min-w-[400px]">
-                {/* Hour labels */}
-                <div className="flex ml-8 mb-1 gap-px">
-                  {HOURS.filter((h) => h % 4 === 0).map((h) => (
-                    <div key={h} className="text-[8px] text-[var(--text-3)]" style={{ width: `${(4 / 24) * 100}%` }}>{h}:00</div>
-                  ))}
+        <div
+          className="rounded-2xl p-5 flex flex-col items-center justify-center gap-6"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        >
+          <ProductivityRing score={data.productivityScore} />
+          <div className="w-full space-y-2">
+            {[
+              {
+                label: 'Response speed',
+                val: Math.min(100, Math.round(100 - data.avgResponseTimeMinutes / 4)),
+              },
+              { label: 'Reply rate', val: Math.round(data.replyRate * 100) },
+              { label: 'Inbox control', val: Math.min(100, data.inboxZeroDays * 14) },
+            ].map(({ label, val }) => (
+              <div key={label}>
+                <div className="flex justify-between text-[11px] mb-0.5">
+                  <span style={{ color: 'var(--text-2)' }}>{label}</span>
+                  <span style={{ color: 'var(--text-3)' }}>{val}%</span>
                 </div>
-                {DAYS.map((day, d) => (
-                  <div key={day} className="flex items-center gap-px mb-px">
-                    <div className="text-[9px] text-[var(--text-3)] w-8 shrink-0">{day}</div>
-                    {HOURS.map((h) => {
-                      const val = data.heatmap[d]?.[h] || 0
-                      const intensity = val / heatmapMax
-                      return (
-                        <div
-                          key={h}
-                          title={`${day} ${h}:00 — ${val} emails`}
-                          className="flex-1 h-4 rounded-sm transition-all cursor-default"
-                          style={{
-                            background: intensity < 0.05
-                              ? 'rgba(255,255,255,0.04)'
-                              : `rgba(124,92,255,${0.08 + intensity * 0.82})`,
-                          }}
-                        />
-                      )
-                    })}
-                  </div>
-                ))}
+                <div
+                  className="h-1.5 rounded-full overflow-hidden"
+                  style={{ background: 'var(--bg-hover)' }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${val}%`, background: 'var(--accent)' }}
+                  />
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            ))}
+          </div>
+        </div>
+      </div>
 
-        {/* Top Senders */}
-        {data?.topSenders?.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="card p-5">
-            <p className="text-[8px] tracking-[2px] uppercase text-[var(--text-3)] mb-4">Top Senders · Last 30 days</p>
-            <div className="space-y-3">
-              {data.topSenders.map((s: any, i: number) => {
-                const max = data.topSenders[0].count
-                const hue = s.email.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) % 360
-                return (
-                  <div key={i} className="flex items-center gap-3">
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
-                      style={{ background: `hsl(${hue},50%,40%)` }}
+      {/* Response time trend + Top senders */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        >
+          <h2 className="text-[14px] font-semibold mb-3" style={{ color: 'var(--text-1)' }}>
+            Response Time Trend (24h)
+          </h2>
+          <ResponseTimeLine data={data.responseTimeSeries} />
+          <div
+            className="flex justify-between mt-2 text-[10px]"
+            style={{ color: 'var(--text-3)' }}
+          >
+            <span>12am</span>
+            <span>6am</span>
+            <span>12pm</span>
+            <span>6pm</span>
+            <span>12am</span>
+          </div>
+        </div>
+
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        >
+          <h2 className="text-[14px] font-semibold mb-3" style={{ color: 'var(--text-1)' }}>
+            Top Senders
+          </h2>
+          <div className="space-y-2.5">
+            {data.topSenders.slice(0, 6).map((s) => (
+              <div key={s.email} className="flex items-center gap-3">
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                  style={{ background: 'var(--accent)' }}
+                >
+                  {s.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between text-[12px] mb-0.5">
+                    <span
+                      className="truncate font-medium"
+                      style={{ color: 'var(--text-1)' }}
                     >
-                      {(s.name || s.email).slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between text-[11px] mb-1.5">
-                        <span className="text-[var(--text-2)] truncate">{s.name || s.email}</span>
-                        <span className="text-white font-mono shrink-0 ml-2">{s.count}</span>
-                      </div>
-                      <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(s.count / max) * 100}%` }}
-                          transition={{ duration: 0.7, ease: 'easeOut', delay: 0.4 + i * 0.05 }}
-                          className="h-full rounded-full bg-[var(--accent)]"
-                        />
-                      </div>
-                    </div>
+                      {s.name}
+                    </span>
+                    <span
+                      className="shrink-0 ml-2 tabular-nums"
+                      style={{ color: 'var(--text-3)' }}
+                    >
+                      {s.count}
+                    </span>
                   </div>
-                )
-              })}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Avg response time */}
-        {data?.avgResponseHours > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.42 }} className="card p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[8px] tracking-[2px] uppercase text-[var(--text-3)] mb-1">Avg. Response Time</p>
-                <p className="font-outfit text-3xl font-light text-white">{data.avgResponseHours}h</p>
-                <p className="text-[11px] text-[var(--text-3)] mt-1">From receipt to ARIA analysis</p>
-              </div>
-              <Clock size={32} style={{ color: 'var(--text-3)', opacity: 0.3 }} />
-            </div>
-          </motion.div>
-        )}
-
-        {/* Category breakdown */}
-        {data?.categories && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }} className="card p-5">
-            <p className="text-[8px] tracking-[2px] uppercase text-[var(--text-3)] mb-4">Email Categories</p>
-            <div className="space-y-3">
-              {data.categories.map((c: any) => (
-                <div key={c.label}>
-                  <div className="flex justify-between text-[11px] mb-1.5">
-                    <span className="text-[var(--text-2)]">{c.label}</span>
-                    <span className="text-white font-mono">{c.value}%</span>
-                  </div>
-                  <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${c.value}%` }}
-                      transition={{ duration: 0.7, ease: 'easeOut', delay: 0.45 }}
+                  <div
+                    className="h-1 rounded-full overflow-hidden"
+                    style={{ background: 'var(--bg-hover)' }}
+                  >
+                    <div
                       className="h-full rounded-full"
-                      style={{ background: c.color }}
+                      style={{
+                        width: `${(s.count / topSendersMax) * 100}%`,
+                        background: 'var(--accent)',
+                        opacity: 0.6,
+                      }}
                     />
                   </div>
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* ROI card */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="rounded-2xl p-5 border border-[#10b981]/20 relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(10,10,22,0.95))' }}
-        >
-          <div className="absolute right-0 bottom-0 w-32 h-32 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.08), transparent 70%)' }} />
-          <p className="text-[8px] tracking-[2.5px] uppercase text-[var(--green)] mb-4">ROI Calculator</p>
-          <div className="space-y-2.5">
-            {[
-              { label: 'ARIA Pro subscription', value: '€29/mo' },
-              { label: 'Time saved', value: `${data?.timeSaved ?? 4.2}h/week` },
-              { label: 'Value at €50/h', value: `€${Math.round((data?.timeSaved ?? 4.2) * 4 * 50)}/mo`, highlight: true },
-            ].map((row, i) => (
-              <div key={i} className="flex justify-between">
-                <span className="text-[11.5px] text-[var(--text-2)]">{row.label}</span>
-                <span className={cn('text-[11.5px] font-mono', row.highlight ? 'text-[var(--green)] font-medium' : 'text-white')}>{row.value}</span>
               </div>
             ))}
-            <div className="border-t border-[#10b981]/12 pt-2.5 flex justify-between">
-              <span className="text-[12px] text-white font-medium">Net gain</span>
-              <span className="text-[14px] font-mono text-[var(--green)] font-semibold">€{Math.round((data?.timeSaved ?? 4.2) * 4 * 50 - 29)}/mo</span>
-            </div>
           </div>
-        </motion.div>
+        </div>
+      </div>
+
+      {/* Heatmap */}
+      <div
+        className="rounded-2xl p-5"
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+      >
+        <h2 className="text-[14px] font-semibold mb-4" style={{ color: 'var(--text-1)' }}>
+          Email Activity Heatmap
+        </h2>
+        <Heatmap data={data.heatmap} />
+        <div className="flex items-center gap-2 mt-3 justify-end">
+          <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+            Less
+          </span>
+          {[0.15, 0.35, 0.55, 0.75, 0.9].map((o) => (
+            <div
+              key={o}
+              className="w-3 h-3 rounded-sm"
+              style={{ background: `rgba(242,78,30,${o})` }}
+            />
+          ))}
+          <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+            More
+          </span>
+        </div>
       </div>
     </div>
   )
