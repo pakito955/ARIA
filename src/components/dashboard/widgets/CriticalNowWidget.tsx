@@ -54,9 +54,8 @@ export function CriticalNowWidget() {
       </div>
 
       {critical === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8 gap-2">
-          <CheckCircle2 size={28} className="text-[var(--green)] opacity-60" />
-          <p className="text-[12px] text-[var(--text-3)]">No critical items · You're on top of things</p>
+        <div className="h-8 flex items-center justify-center bg-[var(--accent)] text-sm text-white">
+          All clear – You're on top of things
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -93,7 +92,7 @@ export function CriticalNowWidget() {
         {[
           { n: statsData?.unread ?? 0, label: 'Unread', color: '#7C5CFF' },
           { n: statsData?.tasks ?? 0, label: 'Tasks', color: '#10b981' },
-          { n: statsData?.critical ?? 0, label: 'Critical', color: '#ef4444' },
+          { n: statsData?.critical ?? 0, label: 'Critical', color: '#ef4444' }
         ].map((s, i) => (
           <div key={i} className="text-center">
             <p className="font-outfit text-4xl font-light tabular-nums" style={{ color: s.color, textShadow: `0 0 20px ${s.color}40` }}>

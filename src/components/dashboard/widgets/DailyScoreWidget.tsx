@@ -19,7 +19,7 @@ export function DailyScoreWidget() {
   const r = 32
   const circ = 2 * Math.PI * r
   const offset = circ - (score / 100) * circ
-  const color = score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444'
+  const color = score <= 30 ? '#a0d8f1' : score <= 70 ? '#ffa500' : '#00c851'
   const label = score >= 70 ? 'Excellent' : score >= 50 ? 'Good' : score >= 30 ? 'Fair' : 'Getting started'
 
   return (
