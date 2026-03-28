@@ -59,6 +59,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Add folder filter — default to INBOX (exclude SENT from main inbox)
+  const folder = searchParams.get('folder') || 'INBOX'
+  if (folder !== 'ALL') {
+    where.folder = folder
+  }
+
   const focusMode = searchParams.get('focusMode') === 'true'
 
   const andClauses: any[] = []

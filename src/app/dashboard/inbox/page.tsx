@@ -26,6 +26,7 @@ const FILTERS = [
   { key: 'meeting',  label: 'Meetings', Icon: CalendarDays },
   { key: 'task',     label: 'Tasks',    Icon: CheckSquare },
   { key: 'starred',  label: 'Starred',  Icon: Star },
+  { key: 'sent',     label: 'Sent',     Icon: Send },
 ] as const
 
 export default function InboxPage() {
@@ -76,13 +77,17 @@ export default function InboxPage() {
     queryKey: ['emails', emailFilter, debouncedSearch, sort, focusMode],
     queryFn: async () => {
       const params = new URLSearchParams({
-        filter: emailFilter,
         sort,
         limit: '50',
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(syncForced && { sync: 'true' }),
         ...(focusMode && { focusMode: 'true' }),
       })
+      if (emailFilter === 'sent') {
+        params.set('folder', 'SENT')
+      } else {
+        if (emailFilter !== 'all') params.set('filter', emailFilter)
+      }
       setSyncForced(false)
       const res = await fetch(`/api/emails?${params}`)
       if (!res.ok) throw new Error('Failed to fetch emails')

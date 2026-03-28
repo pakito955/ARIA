@@ -65,11 +65,50 @@ export async function POST(req: NextRequest) {
     })
   }
 
+  // Save sent email to database so it appears in Sent folder
+  try {
+    await prisma.email.create({
+      data: {
+        userId: user.id,
+        externalId: `sent_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        provider: email.provider,
+        threadId: email.threadId,
+        subject: `Re: ${email.subject}`,
+        bodyText: replyText,
+        bodyHtml: `<div>${replyText.replace(/\n/g, '<br>')}</div>`,
+        fromEmail: user.email || 'me',
+        fromName: user.name || 'Me',
+        toEmails: JSON.stringify([email.fromEmail]),
+        ccEmails: JSON.stringify([]),
+        isRead: true,
+        folder: 'SENT',
+        receivedAt: new Date(),
+      },
+    })
+  } catch (err) {
+    console.error('[Reply] Failed to save sent copy:', err)
+    // Non-critical — email was already sent
+  }
+
   // Mark original as read
   await prisma.email.update({
     where: { id: emailId },
     data: { isRead: true },
   })
+
+  // Fire-and-forget: ingest sent email into knowledge base
+  fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/knowledge/ingest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-internal-key': process.env.INTERNAL_API_KEY || 'aria-internal' },
+    body: JSON.stringify({
+      userId: user.id,
+      type: 'SENT',
+      subject: `Re: ${email.subject}`,
+      body: replyText,
+      fromEmail: user.email || 'me',
+      toEmail: email.fromEmail,
+    }),
+  }).catch(() => {})
 
   return NextResponse.json({ success: true })
 }

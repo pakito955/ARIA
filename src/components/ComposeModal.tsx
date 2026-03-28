@@ -91,16 +91,21 @@ export function ComposeModal() {
     }
     setSending(true)
     try {
-      const res = await fetch('/api/ai/reply', {
+      const res = await fetch('/api/emails/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ replyText: body, style: 'professional' }),
+        body: JSON.stringify({
+          to: recipient,
+          subject: subject || '(no subject)',
+          body: getBodyWithSignature(),
+        }),
       })
+      const data = await res.json()
       if (res.ok) {
         toast.success('Email sent successfully', 'Sent')
         setComposeOpen(false)
       } else {
-        toast.error('Failed to send — check your email integration')
+        toast.error(data.error || 'Failed to send — check your email integration')
       }
     } catch {
       toast.error('Send failed')
@@ -285,6 +290,15 @@ export function ComposeModal() {
                   </>
                 ) : (
                   <>
+                    {/* Recipient display */}
+                    {recipient && (
+                      <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px]"
+                        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        <span style={{ color: 'var(--text-3)' }}>To:</span>
+                        <span style={{ color: 'var(--text-1)' }}>{recipient}</span>
+                      </div>
+                    )}
+
                     {/* Generated result */}
                     <div>
                       <label className="text-[10px] uppercase tracking-[1.5px] text-[var(--text-3)] mb-1.5 block">

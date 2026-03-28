@@ -67,14 +67,18 @@ export async function POST(req: NextRequest) {
       // Knowledge retrieval is non-critical — continue without it
     }
 
-    const system = `You are ARIA, an expert AI email assistant. Generate 3 reply options based on the email content.${knowledgeContext ? '\n\nUse the provided knowledge base context to ensure accurate, relevant responses.' : ''}
-Return a JSON object with a "replies" array, each item having "style" and "content" fields.
-The 3 styles are:
-1. "short" - 2-3 sentences, direct and concise
-2. "medium" - one paragraph, balanced and clear
-3. "formal" - professional and polished, 2-3 paragraphs
+    const system = `You are ARIA, an expert AI email assistant. Generate 3 reply options.${knowledgeContext ? '\n\nKnowledge Base Context:\n' + knowledgeContext : ''}
 
-Always return valid JSON only, no markdown.${knowledgeContext}`
+Return JSON: {"replies": [{"style": "short|medium|formal", "content": "...", "language": "en"}], "detectedLanguage": "en"}
+
+Rules:
+- Reply in the SAME LANGUAGE as the original email
+- "short": 2-3 sentences, direct
+- "medium": 1 paragraph, professional
+- "formal": 2-3 paragraphs, highly professional
+- Start replies naturally (avoid "I hope this email finds you well")
+- Be specific to the email content
+- Return valid JSON only`
 
     const prompt = `Email from: ${email.fromName || email.fromEmail}
 Subject: ${email.subject}
@@ -88,9 +92,10 @@ Generate 3 reply options.`
     const { text } = await complete(system, prompt, 1200, HAIKU)
 
     let replies: ReplyOption[]
+    let parsed: any = null
     try {
       const clean = text.replace(/```json\n?|\n?```/g, '').trim()
-      const parsed = JSON.parse(clean)
+      parsed = JSON.parse(clean)
       replies = parsed.replies
     } catch {
       // Fallback replies
@@ -101,7 +106,11 @@ Generate 3 reply options.`
       ]
     }
 
-    return NextResponse.json({ replies, knowledgeUsed: !!knowledgeContext })
+    return NextResponse.json({
+      replies,
+      knowledgeUsed: !!knowledgeContext,
+      detectedLanguage: parsed?.detectedLanguage || 'en',
+    })
   } catch (err) {
     console.error('[SmartReply] Error:', err)
     return NextResponse.json({ error: 'Failed to generate replies' }, { status: 500 })

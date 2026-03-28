@@ -93,3 +93,149 @@ export async function summarizeKnowledge(title: string, content: string): Promis
   )
   return text.trim()
 }
+
+// ── Auto-learning: extract insights from an email and store in KB ──────────────
+
+import { prisma } from '@/lib/prisma'
+
+/**
+ * Extract key insights from an email and save to knowledge base.
+ * Called after every email is processed/classified.
+ */
+export async function ingestEmailIntoKnowledge(params: {
+  userId: string
+  emailId?: string
+  subject: string
+  body: string
+  fromEmail: string
+  toEmail?: string
+  type: 'INBOX' | 'SENT' | 'REPLY'
+}): Promise<void> {
+  const { userId, subject, body, fromEmail, toEmail, type } = params
+
+  // Skip very short or trivial emails
+  const textLength = body.trim().length
+  if (textLength < 50) return
+
+  // Extract key facts using AI
+  const prompt = `Analyze this email and extract key knowledge items that would be useful for future AI-assisted replies.
+
+Email type: ${type}
+Subject: ${subject}
+From: ${fromEmail}
+${toEmail ? `To: ${toEmail}` : ''}
+
+Body:
+${body.slice(0, 2000)}
+
+Return a JSON object:
+{
+  "shouldStore": true/false,
+  "items": [
+    {
+      "title": "Brief descriptive title",
+      "content": "The key information/fact extracted",
+      "tags": ["tag1", "tag2"],
+      "category": "preference|contact_info|project|process|fact|other"
+    }
+  ]
+}
+
+Only extract genuinely useful knowledge. Skip newsletters, spam, auto-replies.
+Return at most 2 items. Return valid JSON only.`
+
+  try {
+    const { text } = await complete(
+      'You are a knowledge extraction expert. Extract key facts and information from emails that will help generate better AI replies in the future. Be selective — only extract genuinely useful knowledge.',
+      prompt,
+      800,
+      'claude-haiku-4-5-20251001'
+    )
+
+    const clean = text.replace(/```json\n?|\n?```/g, '').trim()
+    const result = JSON.parse(clean)
+
+    if (!result.shouldStore || !result.items?.length) return
+
+    // Store each extracted item
+    for (const item of result.items.slice(0, 2)) {
+      // Check for near-duplicates by title
+      const existing = await (prisma as any).knowledgeItem.findFirst({
+        where: {
+          userId,
+          title: { contains: item.title.slice(0, 30) },
+        },
+      })
+
+      if (existing) {
+        // Update with new info if content differs
+        if (!existing.content.includes(item.content.slice(0, 50))) {
+          await (prisma as any).knowledgeItem.update({
+            where: { id: existing.id },
+            data: {
+              content: `${existing.content}\n\n[Updated ${new Date().toLocaleDateString()}]: ${item.content}`,
+              updatedAt: new Date(),
+            },
+          })
+        }
+      } else {
+        await (prisma as any).knowledgeItem.create({
+          data: {
+            userId,
+            title: item.title,
+            content: item.content,
+            source: 'AI_EXTRACTED',
+            tags: JSON.stringify(item.tags || []),
+          },
+        })
+      }
+    }
+  } catch (err) {
+    // Non-critical — silently fail
+    console.error('[KnowledgeIngest] Error:', err)
+  }
+}
+
+/**
+ * Extract text from attachment content and store in knowledge base.
+ */
+export async function ingestAttachmentIntoKnowledge(params: {
+  userId: string
+  filename: string
+  textContent: string
+  emailSubject?: string
+}): Promise<void> {
+  const { userId, filename, textContent, emailSubject } = params
+
+  if (textContent.trim().length < 100) return
+
+  try {
+    const { text } = await complete(
+      'Extract the most important knowledge from this document attachment for future AI email assistance.',
+      `Filename: ${filename}
+${emailSubject ? `From email: ${emailSubject}` : ''}
+
+Content:
+${textContent.slice(0, 3000)}
+
+Return JSON: { "title": "...", "content": "key facts in 2-3 sentences", "tags": ["tag1","tag2"] }`,
+      400,
+      'claude-haiku-4-5-20251001'
+    )
+
+    const clean = text.replace(/```json\n?|\n?```/g, '').trim()
+    const item = JSON.parse(clean)
+
+    await (prisma as any).knowledgeItem.create({
+      data: {
+        userId,
+        title: item.title || filename,
+        content: item.content,
+        source: 'ATTACHMENT',
+        tags: JSON.stringify(item.tags || ['attachment', filename.split('.').pop() || 'file']),
+      },
+    })
+  } catch (err) {
+    console.error('[AttachmentIngest] Error:', err)
+  }
+}

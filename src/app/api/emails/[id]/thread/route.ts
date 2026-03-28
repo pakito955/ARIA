@@ -9,32 +9,61 @@ export async function GET(
   const user = await getAuthUser(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const userId = user.id
   const { id } = await params
 
   const email = await prisma.email.findFirst({
-    where: { id, userId },
-    select: { threadId: true },
+    where: { id, userId: user.id },
+    select: { threadId: true, subject: true },
   })
 
-  if (!email?.threadId) {
-    return NextResponse.json({ data: [] })
+  if (!email) {
+    return NextResponse.json({ error: 'Email not found' }, { status: 404 })
   }
 
-  const thread = await prisma.email.findMany({
-    where: { userId, threadId: email.threadId },
-    orderBy: { receivedAt: 'asc' },
-    select: {
-      id: true,
-      subject: true,
-      bodyText: true,
-      fromEmail: true,
-      fromName: true,
-      receivedAt: true,
-      isRead: true,
-      analysis: { select: { summary: true, category: true, priority: true } },
-    },
-  })
+  // Find all emails in the same thread
+  const threadEmails = email.threadId
+    ? await prisma.email.findMany({
+        where: {
+          userId: user.id,
+          threadId: email.threadId,
+        },
+        include: {
+          analysis: {
+            select: { summary: true, priority: true },
+          },
+        },
+        orderBy: { receivedAt: 'asc' },
+      })
+    : // No threadId — return just this email
+      await prisma.email.findMany({
+        where: { id, userId: user.id },
+        include: {
+          analysis: {
+            select: { summary: true, priority: true },
+          },
+        },
+      })
 
-  return NextResponse.json({ data: thread })
+  const messages = threadEmails.map((msg) => ({
+    id: msg.id,
+    fromEmail: msg.fromEmail,
+    fromName: msg.fromName || msg.fromEmail.split('@')[0],
+    toEmails: msg.toEmails,
+    subject: msg.subject,
+    bodyText: msg.bodyText,
+    bodyHtml: msg.bodyHtml,
+    receivedAt: msg.receivedAt,
+    isRead: msg.isRead,
+    folder: (msg as any).folder || 'INBOX',
+    summary: msg.analysis?.summary || null,
+  }))
+
+  return NextResponse.json(
+    { messages, count: messages.length },
+    {
+      headers: {
+        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+      },
+    }
+  )
 }

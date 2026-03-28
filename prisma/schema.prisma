@@ -159,6 +159,8 @@ model Email {
   ccEmails         String    @default("[]")
   labels           String    @default("[]") // JSON array
   isRead           Boolean   @default(false)
+  isArchived       Boolean   @default(false)
+  folder           String    @default("INBOX")
   isStarred        Boolean   @default(false)
   isSnoozed        Boolean   @default(false)
   snoozeUntil      DateTime?
@@ -181,6 +183,7 @@ model Email {
   @@unique([userId, provider, externalId])
   @@index([userId, receivedAt])
   @@index([userId, isRead])
+  @@index([userId, folder])
   @@map("emails")
 }
 
