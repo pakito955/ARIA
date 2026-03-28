@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, startTransition } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { Zap, Loader2, LayoutDashboard, GripVertical } from 'lucide-react'
+import { Zap, Loader2, LayoutDashboard, GripVertical, Sparkles, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useWidgetConfig } from '@/hooks/useWidgetConfig'
 import { getWidgetDef } from '@/lib/widgets'
@@ -40,7 +40,6 @@ const WIDGET_MAP: Record<string, React.ComponentType> = {
   'response-time':  ResponseTimeWidget,
 }
 
-// Map widget size to 12-col span
 const SIZE_COLS: Record<string, number> = {
   '1/3': 4,
   '2/3': 8,
@@ -95,7 +94,6 @@ function DraggableWidget({
     <div
       draggable
       onDragStart={(e) => {
-        // Suppress ghost image — use invisible element
         const ghost = document.createElement('div')
         ghost.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px'
         document.body.appendChild(ghost)
@@ -115,18 +113,21 @@ function DraggableWidget({
       style={{
         opacity: isDragOver ? 0.5 : 1,
         transition: 'opacity 150ms ease',
-        outline: isDragOver ? '2px solid var(--accent)' : 'none',
-        borderRadius: 16,
+        outline: isDragOver ? '2px solid rgba(124,58,237,0.50)' : 'none',
+        outlineOffset: isDragOver ? '3px' : '0',
+        borderRadius: 24,
       }}
     >
-      {/* Drag handle — visible on hover */}
+      {/* Drag handle */}
       <div
-        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity duration-150 p-1 rounded-lg"
-        style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}
+        className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity duration-150 p-1.5 rounded-xl"
+        style={{
+          background: 'rgba(124,58,237,0.12)',
+          border: '1px solid rgba(124,58,237,0.22)',
+        }}
       >
-        <GripVertical size={12} style={{ color: 'var(--text-3)' }} />
+        <GripVertical size={11} style={{ color: 'var(--text-3)' }} />
       </div>
-
       {children}
     </div>
   )
@@ -140,9 +141,8 @@ export default function DashboardPage() {
   const [galleryOpen, setGalleryOpen] = useState(false)
   const { config, reorder } = useWidgetConfig()
 
-  // Drag state
   const dragIdRef   = useRef<string | null>(null)
-  const [dragOver, setDragOver]   = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState<string | null>(null)
 
   const { data: statsData } = useQuery({
     queryKey: ['sidebar-stats'],
@@ -171,7 +171,6 @@ export default function DashboardPage() {
     onSuccess: () => refetchBriefing(),
   })
 
-  // WOW splash — only on first visit per session
   useEffect(() => {
     const shown = sessionStorage.getItem('aria-wow-shown')
     if (shown) { setWowDone(true); return }
@@ -208,17 +207,10 @@ export default function DashboardPage() {
   const { displayed: commandDisplayed, done: commandDone } = useTypewriter(wowDone ? commandMsg : '', 30)
   const today = format(new Date(), "EEEE, d. MMMM")
 
-  // Drag handlers
-  const handleDragStart = (id: string) => {
-    dragIdRef.current = id
-  }
-
+  const handleDragStart = (id: string) => { dragIdRef.current = id }
   const handleDragOver = (_e: React.DragEvent, id: string) => {
-    if (dragIdRef.current && dragIdRef.current !== id) {
-      setDragOver(id)
-    }
+    if (dragIdRef.current && dragIdRef.current !== id) setDragOver(id)
   }
-
   const handleDrop = (targetId: string) => {
     const sourceId = dragIdRef.current
     if (!sourceId || sourceId === targetId) {
@@ -227,9 +219,9 @@ export default function DashboardPage() {
       return
     }
     startTransition(() => {
-      const order    = [...config.order]
-      const fromIdx  = order.indexOf(sourceId)
-      const toIdx    = order.indexOf(targetId)
+      const order   = [...config.order]
+      const fromIdx = order.indexOf(sourceId)
+      const toIdx   = order.indexOf(targetId)
       if (fromIdx === -1 || toIdx === -1) return
       order.splice(fromIdx, 1)
       order.splice(toIdx, 0, sourceId)
@@ -241,39 +233,66 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* WOW Moment Overlay — Framer Motion on layout elements is allowed */}
+      {/* ── WOW Moment Overlay ─────────────────────────────────── */}
       <AnimatePresence>
         {!wowDone && (
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[var(--bg-base)]"
+            transition={{ duration: 0.7 }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
+            style={{ background: 'var(--bg-base)' }}
           >
-            <div className="relative">
-              <div
-                className="absolute inset-0 rounded-full blur-[80px] orb-float"
-                style={{
-                  background: 'radial-gradient(circle, var(--accent-subtle), transparent 70%)',
-                  width: 400,
-                  height: 400,
-                  top: -180,
-                  left: -190,
-                }}
-              />
-              <div className="flex items-center gap-3 mb-8">
+            {/* Ambient orbs in overlay */}
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                top: '-20%', left: '-10%',
+                width: '60vw', height: '60vh',
+                background: 'radial-gradient(circle, rgba(255,106,61,0.14) 0%, transparent 65%)',
+                filter: 'blur(80px)',
+                borderRadius: '50%',
+              }}
+            />
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                bottom: '-20%', right: '-10%',
+                width: '60vw', height: '60vh',
+                background: 'radial-gradient(circle, rgba(124,58,237,0.14) 0%, transparent 65%)',
+                filter: 'blur(80px)',
+                borderRadius: '50%',
+              }}
+            />
+            <div className="relative z-10 flex flex-col items-center">
+              {/* Logo */}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="flex items-center gap-3 mb-8"
+              >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: 'var(--accent)' }}
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(135deg, #ff6a3d 0%, #7c3aed 100%)',
+                    boxShadow: '0 0 32px rgba(124,58,237,0.50), 0 4px 16px rgba(0,0,0,0.4)',
+                  }}
                 >
-                  <Zap size={18} className="text-white" />
+                  <Zap size={22} className="text-white" strokeWidth={2.5} />
                 </div>
-                <span className="font-cormorant text-4xl font-light tracking-widest">ARIA</span>
-              </div>
+                <span className="font-inter text-4xl font-bold tracking-tight text-gradient-vivid">
+                  ARIA
+                </span>
+              </motion.div>
               <WowTypewriter text={wowText} />
               <div className="mt-8 flex gap-2 justify-center">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] typing-dot" />
+                  <div
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full typing-dot"
+                    style={{ background: 'var(--accent-orange, var(--accent))' }}
+                  />
                 ))}
               </div>
             </div>
@@ -281,94 +300,158 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* Main Dashboard */}
+      {/* ── Main Dashboard ─────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: wowDone ? 1 : 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
         className="flex flex-col h-full"
       >
-        {/* AI Command Strip */}
-        <div className="relative px-6 py-5 border-b border-[var(--border)] overflow-hidden shrink-0">
+        {/* ── AI Command Strip ─────────────────────────────────── */}
+        <div className="relative px-6 py-5 overflow-hidden shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          {/* Gradient ambient behind header */}
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: 'linear-gradient(135deg, rgba(242,78,30,0.055) 0%, transparent 50%)' }}
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,106,61,0.06) 0%, rgba(124,58,237,0.04) 40%, transparent 70%)',
+            }}
           />
+          {/* Bottom gradient line */}
           <div
             className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-            style={{ background: 'linear-gradient(90deg, var(--accent-subtle), transparent 60%)' }}
+            style={{
+              background: 'linear-gradient(90deg, rgba(255,106,61,0.40), rgba(124,58,237,0.30), transparent 70%)',
+            }}
           />
+
           <div className="flex items-center justify-between relative">
+            {/* Left: ARIA command message */}
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] pulse-violet" />
-                <span className="text-[9px] tracking-[2.5px] uppercase text-[var(--accent-text)]">
+              <div className="flex items-center gap-2 mb-1.5">
+                {/* Pulsing gradient dot */}
+                <span
+                  className="w-1.5 h-1.5 rounded-full pulse-violet shrink-0"
+                  style={{
+                    background: 'linear-gradient(135deg, #ff6a3d, #7c3aed)',
+                    boxShadow: '0 0 8px rgba(124,58,237,0.60)',
+                  }}
+                />
+                <span
+                  className="text-[9px] tracking-[2.5px] uppercase font-semibold"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--accent-orange, #ff6a3d), var(--accent-purple, #7c3aed))',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
                   ARIA · Command
                 </span>
               </div>
               <div className="flex items-start gap-1">
-                <p className="text-[15px] text-[var(--text-1)] max-w-lg leading-snug">
+                <p className="text-[15px] font-medium max-w-lg leading-snug" style={{ color: 'var(--text-1)' }}>
                   {commandDisplayed}
                   {!commandDone && (
-                    <span className="inline-block w-0.5 h-4 bg-[var(--accent)] ml-0.5 animate-pulse align-middle" />
+                    <span
+                      className="inline-block w-0.5 h-4 ml-0.5 animate-pulse align-middle rounded-full"
+                      style={{ background: 'var(--accent-orange, var(--accent))' }}
+                    />
                   )}
                 </p>
               </div>
-              <p className="text-[11px] text-[var(--text-3)] mt-1">{today}</p>
+              <p className="text-[11px] mt-1.5 font-medium" style={{ color: 'var(--text-3)' }}>{today}</p>
             </div>
 
+            {/* Right: Action buttons */}
             <div className="flex items-center gap-2">
+              {/* Customize button */}
               <button
                 onClick={() => setGalleryOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border text-[11px] transition-colors duration-150"
-                style={{ borderColor: 'var(--border)', color: 'var(--text-2)' }}
+                className="flex items-center gap-2 px-3.5 py-2 text-[11px] font-medium transition-all duration-150"
+                style={{
+                  borderRadius: 9999,
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-2)',
+                  background: 'transparent',
+                }}
                 onMouseEnter={(e) => {
                   const el = e.currentTarget as HTMLElement
-                  el.style.borderColor = 'var(--accent)'
+                  el.style.borderColor = 'rgba(124,58,237,0.40)'
                   el.style.color = 'var(--text-1)'
+                  el.style.background = 'rgba(124,58,237,0.07)'
+                  el.style.boxShadow = '0 0 12px rgba(124,58,237,0.15)'
                 }}
                 onMouseLeave={(e) => {
                   const el = e.currentTarget as HTMLElement
                   el.style.borderColor = 'var(--border)'
                   el.style.color = 'var(--text-2)'
+                  el.style.background = 'transparent'
+                  el.style.boxShadow = ''
                 }}
               >
-                <LayoutDashboard size={12} style={{ color: 'var(--accent-text)' }} />
+                <LayoutDashboard size={12} />
                 Customize
               </button>
 
+              {/* Focus Now CTA — only when critical */}
               {critical > 0 && (
                 <Link href="/dashboard/inbox?filter=critical">
                   <button
-                    className="flex items-center gap-2 px-4 py-2 text-[12px] rounded-lg font-semibold text-white transition-opacity duration-150 hover:opacity-90"
-                    style={{ background: 'var(--accent)' }}
+                    className="flex items-center gap-2 px-4 py-2 text-[12px] font-semibold text-white transition-all duration-150"
+                    style={{
+                      borderRadius: 9999,
+                      background: 'linear-gradient(135deg, #ff6a3d 0%, #7c3aed 100%)',
+                      boxShadow: '0 0 20px rgba(124,58,237,0.35), 0 4px 12px rgba(255,106,61,0.25)',
+                    }}
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget as HTMLElement
+                      el.style.boxShadow = '0 0 28px rgba(124,58,237,0.50), 0 4px 16px rgba(255,106,61,0.35)'
+                      el.style.transform = 'translateY(-1px) scale(1.02)'
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget as HTMLElement
+                      el.style.boxShadow = '0 0 20px rgba(124,58,237,0.35), 0 4px 12px rgba(255,106,61,0.25)'
+                      el.style.transform = ''
+                    }}
                   >
+                    <Sparkles size={12} />
                     Focus now
+                    <ArrowRight size={11} />
                   </button>
                 </Link>
               )}
 
+              {/* AI Briefing button */}
               <button
                 onClick={() => briefingMutation.mutate()}
                 disabled={briefingMutation.isPending}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border text-[11px] transition-colors duration-150 disabled:opacity-50"
-                style={{ borderColor: 'var(--border)', color: 'var(--text-2)' }}
+                className="flex items-center gap-2 px-3.5 py-2 text-[11px] font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{
+                  borderRadius: 9999,
+                  border: '1px solid rgba(124,58,237,0.28)',
+                  color: 'var(--text-2)',
+                  background: 'rgba(124,58,237,0.07)',
+                }}
                 onMouseEnter={(e) => {
                   if (briefingMutation.isPending) return
                   const el = e.currentTarget as HTMLElement
-                  el.style.borderColor = 'var(--accent)'
+                  el.style.borderColor = 'rgba(124,58,237,0.50)'
                   el.style.color = 'var(--text-1)'
+                  el.style.background = 'rgba(124,58,237,0.12)'
+                  el.style.boxShadow = '0 0 14px rgba(124,58,237,0.20)'
                 }}
                 onMouseLeave={(e) => {
                   const el = e.currentTarget as HTMLElement
-                  el.style.borderColor = 'var(--border)'
+                  el.style.borderColor = 'rgba(124,58,237,0.28)'
                   el.style.color = 'var(--text-2)'
+                  el.style.background = 'rgba(124,58,237,0.07)'
+                  el.style.boxShadow = ''
                 }}
               >
                 {briefingMutation.isPending ? (
-                  <Loader2 size={12} className="animate-spin" style={{ color: 'var(--accent-text)' }} />
+                  <Loader2 size={12} className="animate-spin" style={{ color: 'var(--accent-purple, #7c3aed)' }} />
                 ) : (
-                  <Zap size={12} style={{ color: 'var(--accent-text)' }} />
+                  <Zap size={12} style={{ color: 'var(--accent-purple, #7c3aed)' }} />
                 )}
                 AI Briefing
               </button>
@@ -376,34 +459,42 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 12-column Widget Grid */}
+        {/* ── 12-column Widget Grid ─────────────────────────────── */}
         <div
-          className="flex-1 overflow-y-auto p-3 md:p-5"
+          className="flex-1 overflow-y-auto p-4 md:p-6"
           onDragEnd={() => { dragIdRef.current = null; setDragOver(null) }}
         >
           {config.order.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
+            /* Empty state */
+            <div className="flex flex-col items-center justify-center py-24 gap-5">
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                className="w-20 h-20 rounded-3xl flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,106,61,0.10), rgba(124,58,237,0.12))',
+                  border: '1px solid rgba(124,58,237,0.20)',
+                  boxShadow: '0 0 32px rgba(124,58,237,0.12)',
+                }}
               >
-                <LayoutDashboard size={24} style={{ color: 'var(--text-3)' }} />
+                <LayoutDashboard size={28} style={{ color: 'var(--accent-purple, #7c3aed)' }} />
               </div>
               <div className="text-center">
-                <p className="text-[14px] font-medium mb-1" style={{ color: 'var(--text-2)' }}>
-                  No widgets active
+                <p className="text-[15px] font-semibold mb-1.5" style={{ color: 'var(--text-1)' }}>
+                  Your dashboard is empty
                 </p>
                 <p className="text-[12px]" style={{ color: 'var(--text-3)' }}>
-                  Click Customize to add widgets to your dashboard
+                  Add widgets to build your perfect AI command center
                 </p>
               </div>
               <button
                 onClick={() => setGalleryOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-[12px] font-medium"
-                style={{ background: 'var(--accent)' }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-[13px] font-semibold transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, #ff6a3d, #7c3aed)',
+                  boxShadow: '0 0 20px rgba(124,58,237,0.35)',
+                }}
               >
-                <LayoutDashboard size={13} />
-                Open Widget Gallery
+                <Sparkles size={14} />
+                Add Widgets
               </button>
             </div>
           ) : (
@@ -411,7 +502,7 @@ export default function DashboardPage() {
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(12, 1fr)',
-                gap: '16px',
+                gap: '18px',
               }}
             >
               {config.order.map((id, widgetIndex) => {
@@ -453,10 +544,13 @@ export default function DashboardPage() {
 function WowTypewriter({ text }: { text: string }) {
   const { displayed } = useTypewriter(text, 35)
   return (
-    <p className="text-[15px] text-[var(--text-1)] text-center max-w-sm leading-relaxed">
+    <p className="text-[15px] text-center max-w-sm leading-relaxed" style={{ color: 'var(--text-1)' }}>
       {displayed}
       {displayed.length < text.length && (
-        <span className="inline-block w-0.5 h-4 bg-[var(--accent)] ml-0.5 animate-pulse align-middle" />
+        <span
+          className="inline-block w-0.5 h-4 ml-0.5 animate-pulse align-middle rounded-full"
+          style={{ background: 'var(--accent-orange, var(--accent))' }}
+        />
       )}
     </p>
   )

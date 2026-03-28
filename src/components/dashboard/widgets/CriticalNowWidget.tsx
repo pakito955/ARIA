@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 
@@ -15,12 +15,12 @@ export function CriticalNowWidget() {
         fetch('/api/tasks?status=TODO'),
       ])
       const emails = await emailsRes.json()
-      const tasks = await tasksRes.json()
+      const tasks  = await tasksRes.json()
       return {
-        unread: emails.data?.filter((e: any) => !e.isRead).length ?? 0,
-        total: emails.total ?? 0,
-        critical: emails.data?.filter((e: any) => e.analysis?.priority === 'CRITICAL').length ?? 0,
-        tasks: tasks.data?.length ?? 0,
+        unread:         emails.data?.filter((e: any) => !e.isRead).length ?? 0,
+        total:          emails.total ?? 0,
+        critical:       emails.data?.filter((e: any) => e.analysis?.priority === 'CRITICAL').length ?? 0,
+        tasks:          tasks.data?.length ?? 0,
         criticalEmails: emails.data?.filter((e: any) => e.analysis?.priority === 'CRITICAL').slice(0, 3) ?? [],
       }
     },
@@ -30,78 +30,139 @@ export function CriticalNowWidget() {
   const critical = statsData?.critical ?? 0
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4, scale: 1.01 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="card-premium shimmer-highlight p-5 relative overflow-hidden h-full"
-    >
+    <div className="card-premium p-5 relative overflow-hidden h-full">
+      {/* Gradient ambient glow */}
       <div
-        className="absolute top-0 right-0 w-48 h-full pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at top right, rgba(239,68,68,0.05), transparent 70%)' }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: critical > 0
+            ? 'radial-gradient(ellipse at top right, rgba(255,107,107,0.08) 0%, transparent 60%)'
+            : 'radial-gradient(ellipse at top right, rgba(81,207,102,0.06) 0%, transparent 60%)',
+        }}
       />
-      <div className="flex items-center justify-between mb-4">
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 relative z-10">
         <div className="flex items-center gap-2">
-          <AlertCircle size={14} className="text-[var(--red)]" />
-          <span className="text-[9px] tracking-[2px] uppercase text-[var(--red)]">Critical Now</span>
+          <div
+            className="w-6 h-6 rounded-lg flex items-center justify-center"
+            style={{
+              background: critical > 0 ? 'rgba(255,107,107,0.15)' : 'rgba(81,207,102,0.12)',
+              border: critical > 0 ? '1px solid rgba(255,107,107,0.28)' : '1px solid rgba(81,207,102,0.22)',
+            }}
+          >
+            {critical > 0
+              ? <AlertTriangle size={12} style={{ color: 'var(--red)' }} />
+              : <CheckCircle2 size={12} style={{ color: 'var(--green)' }} />
+            }
+          </div>
+          <span
+            className="text-[9px] tracking-[2.5px] uppercase font-semibold"
+            style={{ color: critical > 0 ? 'var(--red)' : 'var(--green)' }}
+          >
+            Critical Now
+          </span>
         </div>
         {critical > 0 && (
-          <span className="text-[9px] text-[var(--red)] px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,0.12)' }}>
+          <span
+            className="text-[10px] px-2.5 py-1 rounded-full font-bold"
+            style={{
+              background: 'rgba(255,107,107,0.12)',
+              color: 'var(--red)',
+              border: '1px solid rgba(255,107,107,0.25)',
+              boxShadow: '0 0 10px rgba(255,107,107,0.15)',
+            }}
+          >
             {critical} item{critical > 1 ? 's' : ''}
           </span>
         )}
       </div>
 
-      {critical === 0 ? (
-        <div className="h-8 flex items-center justify-center bg-[var(--accent)] text-sm text-white">
-          All clear – You're on top of things
-        </div>
-      ) : (
-        <div className="space-y-2.5">
-          {(statsData?.criticalEmails ?? []).map((email: any, i: number) => (
-            <motion.div
-              key={email.id}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.06 }}
-              className="flex items-center gap-3 p-3 rounded-lg cursor-pointer"
-              style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.15)' }}
-            >
-              <div className="w-1 h-8 rounded-full shrink-0" style={{ background: 'var(--red)' }} />
-              <div className="flex-1 min-w-0">
-                <p className="text-[12.5px] font-medium text-[var(--text-1)] truncate">
-                  {email.fromName || email.fromEmail?.split('@')[0]}
-                </p>
-                <p className="text-[11px] text-[var(--text-2)] truncate">
-                  {email.analysis?.summary || email.subject}
-                </p>
-              </div>
-              <Link href="/dashboard/inbox">
-                <button className="px-2.5 py-1 rounded bg-[var(--accent)] text-white text-[10px] font-medium opacity-0 hover:opacity-100 group-hover:opacity-100 transition-opacity">
-                  Reply
-                </button>
+      {/* Content */}
+      <div className="relative z-10">
+        {critical === 0 ? (
+          <div
+            className="flex items-center gap-3 p-3 rounded-2xl"
+            style={{
+              background: 'rgba(81,207,102,0.07)',
+              border: '1px solid rgba(81,207,102,0.18)',
+            }}
+          >
+            <CheckCircle2 size={16} style={{ color: 'var(--green)' }} />
+            <p className="text-[12px] font-medium" style={{ color: 'var(--text-1)' }}>
+              All clear — you're on top of things
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {(statsData?.criticalEmails ?? []).map((email: any, i: number) => (
+              <Link href="/dashboard/inbox" key={email.id}>
+                <div
+                  className="flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-150"
+                  style={{
+                    background: 'rgba(255,107,107,0.05)',
+                    border: '1px solid rgba(255,107,107,0.14)',
+                  }}
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget as HTMLElement
+                    el.style.background = 'rgba(255,107,107,0.09)'
+                    el.style.borderColor = 'rgba(255,107,107,0.25)'
+                    el.style.boxShadow = '0 0 12px rgba(255,107,107,0.12)'
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget as HTMLElement
+                    el.style.background = 'rgba(255,107,107,0.05)'
+                    el.style.borderColor = 'rgba(255,107,107,0.14)'
+                    el.style.boxShadow = ''
+                  }}
+                >
+                  {/* Priority bar */}
+                  <div
+                    className="w-1 h-9 rounded-full shrink-0"
+                    style={{
+                      background: 'linear-gradient(180deg, #ff6b6b, #ff4444)',
+                      boxShadow: '0 0 6px rgba(255,107,107,0.50)',
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-semibold truncate" style={{ color: 'var(--text-1)' }}>
+                      {email.fromName || email.fromEmail?.split('@')[0]}
+                    </p>
+                    <p className="text-[11px] truncate" style={{ color: 'var(--text-2)' }}>
+                      {email.analysis?.summary || email.subject}
+                    </p>
+                  </div>
+                  <ArrowRight size={13} style={{ color: 'var(--red)', opacity: 0.7 }} className="shrink-0" />
+                </div>
               </Link>
-            </motion.div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Stats row */}
-      <div className="flex items-center gap-5 mt-5 pt-4 border-t border-[var(--border)]">
+      <div
+        className="flex items-center gap-5 mt-4 pt-4 relative z-10"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+      >
         {[
-          { n: statsData?.unread ?? 0, label: 'Unread', color: '#7C5CFF' },
-          { n: statsData?.tasks ?? 0, label: 'Tasks', color: '#10b981' },
-          { n: statsData?.critical ?? 0, label: 'Critical', color: '#ef4444' }
+          { n: statsData?.unread   ?? 0, label: 'Unread',   color: 'var(--accent-purple, #7c3aed)', glow: 'rgba(124,58,237,0.35)' },
+          { n: statsData?.tasks    ?? 0, label: 'Tasks',    color: '#10b981',                         glow: 'rgba(16,185,129,0.30)' },
+          { n: statsData?.critical ?? 0, label: 'Critical', color: 'var(--red)',                      glow: 'rgba(255,107,107,0.35)' },
         ].map((s, i) => (
           <div key={i} className="text-center">
-            <p className="font-outfit text-4xl font-light tabular-nums" style={{ color: s.color, textShadow: `0 0 20px ${s.color}40` }}>
+            <p
+              className="font-inter text-3xl font-bold tabular-nums leading-none"
+              style={{ color: s.color, textShadow: `0 0 20px ${s.glow}` }}
+            >
               <AnimatedNumber value={s.n} duration={900} />
             </p>
-            <p className="text-[9px] uppercase tracking-[1.5px] mt-0.5" style={{ color: 'var(--text-3)' }}>{s.label}</p>
+            <p className="text-[9px] uppercase tracking-[1.5px] mt-1 font-medium" style={{ color: 'var(--text-3)' }}>
+              {s.label}
+            </p>
           </div>
         ))}
       </div>
-    </motion.div>
+    </div>
   )
 }

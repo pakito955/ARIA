@@ -119,11 +119,15 @@ export function Sidebar() {
         )}
       >
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          {/* Gradient logo mark */}
           <div
-            className="w-8 h-8 rounded shrink-0 flex items-center justify-center"
-            style={{ background: 'var(--logo-bg)', color: 'var(--logo-bg-text)' }}
+            className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, var(--accent-orange, #ff6a3d) 0%, var(--accent-purple, #7c3aed) 100%)',
+              boxShadow: '0 0 16px rgba(124, 58, 237, 0.40), 0 2px 8px rgba(0,0,0,0.3)',
+            }}
           >
-            <Zap size={14} strokeWidth={2.5} />
+            <Zap size={14} strokeWidth={2.5} className="text-white" />
           </div>
           <AnimatePresence>
             {!sidebarCollapsed && (
@@ -132,10 +136,9 @@ export function Sidebar() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -6 }}
                 transition={{ duration: 0.15 }}
-                className="font-inter text-lg font-bold tracking-tight whitespace-nowrap"
-                style={{ color: 'var(--text-1)' }}
+                className="font-inter text-lg font-bold tracking-tight whitespace-nowrap text-gradient-vivid"
               >
-                Aria<span style={{ color: 'var(--accent)' }}>.</span>
+                Aria
               </motion.span>
             )}
           </AnimatePresence>
@@ -179,21 +182,27 @@ export function Sidebar() {
                     <div
                       title={sidebarCollapsed ? item.label : undefined}
                       className={cn(
-                        'relative flex items-center rounded-md cursor-pointer',
+                        'relative flex items-center cursor-pointer',
                         'transition-all duration-150',
-                        sidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-1.5 min-h-[32px]',
+                        sidebarCollapsed ? 'justify-center p-2.5 rounded-xl' : 'gap-3 px-3 py-1.5 min-h-[32px] rounded-full',
                         active && 'nav-item-active-glow font-medium'
                       )}
                       style={
                         active
-                          ? { background: 'var(--accent-subtle)', color: 'var(--accent-text)' }
+                          ? {
+                              background: 'linear-gradient(135deg, rgba(255,106,61,0.12) 0%, rgba(124,58,237,0.16) 100%)',
+                              color: 'var(--text-1)',
+                              border: '1px solid rgba(124,58,237,0.22)',
+                              boxShadow: '0 0 14px rgba(124,58,237,0.10)',
+                            }
                           : { color: 'var(--text-3)' }
                       }
                       onMouseEnter={(e) => {
                         if (!active) {
                           const el = e.currentTarget as HTMLDivElement
-                          el.style.background = 'var(--bg-hover)'
+                          el.style.background = 'rgba(124,58,237,0.07)'
                           el.style.color = 'var(--text-1)'
+                          el.style.border = '1px solid rgba(124,58,237,0.14)'
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -201,6 +210,7 @@ export function Sidebar() {
                           const el = e.currentTarget as HTMLDivElement
                           el.style.background = ''
                           el.style.color = 'var(--text-3)'
+                          el.style.border = ''
                         }
                       }}
                     >
@@ -208,14 +218,21 @@ export function Sidebar() {
                         <item.icon
                           size={15}
                           strokeWidth={active ? 2.5 : 2}
-                          style={{ color: active ? 'var(--accent)' : 'currentColor' }}
+                          style={{
+                            color: active
+                              ? 'var(--accent-orange, var(--accent))'
+                              : 'currentColor',
+                          }}
                         />
                         {badgeCount > 0 && sidebarCollapsed && (
                           <span
                             className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
                             style={{
-                              background: isCritical ? 'var(--accent)' : 'var(--text-3)',
+                              background: isCritical
+                                ? 'var(--accent-orange, var(--accent))'
+                                : 'var(--text-3)',
                               border: '1.5px solid var(--bg-base)',
+                              boxShadow: isCritical ? '0 0 6px rgba(255,106,61,0.5)' : 'none',
                             }}
                           />
                         )}
@@ -232,11 +249,20 @@ export function Sidebar() {
                             <span className="text-[13px] truncate">{item.label}</span>
                             {badgeCount > 0 && (
                               <span
-                                className="text-[10px] px-1.5 py-0.5 rounded font-bold ml-2 shrink-0"
+                                className="text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-2 shrink-0"
                                 style={
                                   isCritical
-                                    ? { background: 'var(--accent-subtle)', color: 'var(--accent-text)', border: '1px solid rgba(242,78,30,0.20)' }
-                                    : { background: 'var(--bg-surface)', color: 'var(--text-3)', border: '1px solid var(--border)' }
+                                    ? {
+                                        background: 'rgba(255,106,61,0.15)',
+                                        color: 'var(--accent-orange, var(--accent))',
+                                        border: '1px solid rgba(255,106,61,0.25)',
+                                        boxShadow: '0 0 8px rgba(255,106,61,0.20)',
+                                      }
+                                    : {
+                                        background: 'var(--bg-surface)',
+                                        color: 'var(--text-3)',
+                                        border: '1px solid var(--border)',
+                                      }
                                 }
                               >
                                 {badgeCount}
@@ -257,26 +283,28 @@ export function Sidebar() {
       {/* ── Footer ──────────────────────────────────────────────── */}
       <div
         className="px-3 py-3 space-y-1 shrink-0"
-        style={{ borderTop: '1px solid var(--border)' }}
+        style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
       >
         {/* Command palette hint */}
         <button
           onClick={() => setCommandOpen(true)}
           title={sidebarCollapsed ? 'Search (⌘K)' : undefined}
           className={cn(
-            'flex items-center w-full rounded-md transition-colors duration-150',
-            sidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2'
+            'flex items-center w-full rounded-full transition-all duration-150',
+            sidebarCollapsed ? 'justify-center p-2.5 rounded-xl' : 'gap-3 px-3 py-2'
           )}
           style={{ color: 'var(--text-3)' }}
           onMouseEnter={(e) => {
             const el = e.currentTarget as HTMLButtonElement
-            el.style.background = 'var(--bg-hover)'
+            el.style.background = 'rgba(124,58,237,0.07)'
             el.style.color = 'var(--text-1)'
+            el.style.border = '1px solid rgba(124,58,237,0.14)'
           }}
           onMouseLeave={(e) => {
             const el = e.currentTarget as HTMLButtonElement
             el.style.background = ''
             el.style.color = 'var(--text-3)'
+            el.style.border = ''
           }}
         >
           <Command size={15} strokeWidth={2} className="shrink-0" />
@@ -290,8 +318,12 @@ export function Sidebar() {
               >
                 <span className="text-[13px] font-medium">Search</span>
                 <kbd
-                  className="text-[10px] px-1.5 rounded font-mono font-medium"
-                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-3)' }}
+                  className="text-[10px] px-1.5 rounded-md font-mono font-medium"
+                  style={{
+                    background: 'rgba(124,58,237,0.10)',
+                    border: '1px solid rgba(124,58,237,0.22)',
+                    color: 'var(--text-2)',
+                  }}
                 >
                   ⌘K
                 </kbd>
@@ -305,13 +337,13 @@ export function Sidebar() {
           onClick={toggleTheme}
           title={sidebarCollapsed ? `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode` : undefined}
           className={cn(
-            'flex items-center w-full rounded-md transition-colors duration-150',
-            sidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2'
+            'flex items-center w-full rounded-full transition-all duration-150',
+            sidebarCollapsed ? 'justify-center p-2.5 rounded-xl' : 'gap-3 px-3 py-2'
           )}
           style={{ color: 'var(--text-3)' }}
           onMouseEnter={(e) => {
             const el = e.currentTarget as HTMLButtonElement
-            el.style.background = 'var(--bg-hover)'
+            el.style.background = 'rgba(124,58,237,0.07)'
             el.style.color = 'var(--text-1)'
           }}
           onMouseLeave={(e) => {
@@ -338,23 +370,32 @@ export function Sidebar() {
           </AnimatePresence>
         </button>
 
-        {/* User row + online status dot */}
+        {/* User row */}
         <div
           className={cn(
-            'flex items-center rounded-md transition-colors group cursor-default',
+            'flex items-center rounded-2xl transition-all group cursor-default',
             sidebarCollapsed ? 'justify-center p-2' : 'gap-3 px-2 py-2'
           )}
+          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
         >
           <div className="relative shrink-0">
+            {/* Avatar with gradient ring */}
             <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-              style={{ background: 'var(--logo-bg)', color: 'var(--logo-bg-text)' }}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
+              style={{
+                background: 'linear-gradient(135deg, var(--accent-orange, #ff6a3d) 0%, var(--accent-purple, #7c3aed) 100%)',
+                boxShadow: '0 0 10px rgba(124,58,237,0.35)',
+              }}
             >
               {initials}
             </div>
             <span
               className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border"
-              style={{ background: 'var(--green)', borderColor: 'var(--bg-base)', boxShadow: '0 0 4px var(--green)' }}
+              style={{
+                background: 'var(--green)',
+                borderColor: 'var(--bg-base)',
+                boxShadow: '0 0 5px var(--green)',
+              }}
             />
           </div>
 
@@ -370,25 +411,15 @@ export function Sidebar() {
                   <p className="text-[13px] font-medium truncate" style={{ color: 'var(--text-1)' }}>
                     {session?.user?.name || 'User'}
                   </p>
-                  <p className="text-[10px]" style={{ color: 'var(--green)' }}>Online</p>
+                  <p className="text-[10px] font-medium" style={{ color: 'var(--green)' }}>● Online</p>
                 </div>
                 <button
                   onClick={() => signOut({ callbackUrl: '/login' })}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded"
-                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-3)' }}
-                  onMouseEnter={(e) => {
-                    const el = e.currentTarget as HTMLButtonElement
-                    el.style.color = 'var(--red)'
-                    el.style.borderColor = 'var(--red)'
-                  }}
-                  onMouseLeave={(e) => {
-                    const el = e.currentTarget as HTMLButtonElement
-                    el.style.color = 'var(--text-3)'
-                    el.style.borderColor = 'var(--border)'
-                  }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg"
+                  style={{ background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.18)', color: 'var(--red)' }}
                   title="Sign out"
                 >
-                  <LogOut size={13} strokeWidth={2} />
+                  <LogOut size={12} strokeWidth={2} />
                 </button>
               </motion.div>
             )}
@@ -398,15 +429,25 @@ export function Sidebar() {
         {/* Collapse toggle */}
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full flex items-center justify-center z-50 transition-colors duration-150"
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full flex items-center justify-center z-50 transition-all duration-150"
           style={{
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border)',
+            background: 'var(--bg-card)',
+            border: '1px solid rgba(124,58,237,0.25)',
             color: 'var(--text-3)',
-            boxShadow: 'var(--shadow-sm)',
+            boxShadow: '0 0 10px rgba(124,58,237,0.15)',
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-1)' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-3)' }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget as HTMLButtonElement
+            el.style.color = 'var(--text-1)'
+            el.style.boxShadow = '0 0 16px rgba(124,58,237,0.30)'
+            el.style.borderColor = 'rgba(124,58,237,0.45)'
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget as HTMLButtonElement
+            el.style.color = 'var(--text-3)'
+            el.style.boxShadow = '0 0 10px rgba(124,58,237,0.15)'
+            el.style.borderColor = 'rgba(124,58,237,0.25)'
+          }}
         >
           <ChevronLeft
             size={12}
