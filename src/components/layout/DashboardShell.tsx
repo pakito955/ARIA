@@ -11,6 +11,7 @@ const ComposeModal      = dynamic(() => import('@/components/ComposeModal').then
 const OnboardingFlow    = dynamic(() => import('@/components/OnboardingFlow').then(m => ({ default: m.OnboardingFlow })), { ssr: false })
 const KeyboardShortcuts = dynamic(() => import('@/components/KeyboardShortcuts').then(m => ({ default: m.KeyboardShortcuts })), { ssr: false })
 const VoiceCommand      = dynamic(() => import('@/components/VoiceCommand').then(m => ({ default: m.VoiceCommand })), { ssr: false })
+const AiSearchBar       = dynamic(() => import('@/components/AiSearchBar').then(m => ({ default: m.AiSearchBar })), { ssr: false })
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
@@ -26,6 +27,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <CommandPalette />
+      <AiSearchBar />
       <NotificationManager />
       <ComposeModal />
       <OnboardingFlow />

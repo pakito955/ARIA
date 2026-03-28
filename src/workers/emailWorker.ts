@@ -12,6 +12,7 @@ import { OutlookProvider } from '@/lib/providers/outlook'
 import { IMAPProvider } from '@/lib/providers/imap'
 import { classifyEmail } from '@/agents/classificationAgent'
 import { generateBriefing } from '@/agents/briefingAgent'
+import { evaluateRulesForEmail } from '@/lib/workflowEngine'
 import type { EmailSyncJob, EmailAnalysisJob, BriefingJob, WeeklyReportJob } from '@/types'
 
 console.log('🤖 ARIA Worker starting...')
@@ -195,6 +196,9 @@ const analysisWorker = new Worker<EmailAnalysisJob>(
         processingMs: Date.now() - start,
       },
     })
+
+    // Fire-and-forget: evaluate automation rules
+    evaluateRulesForEmail(emailId, userId).catch(console.error)
 
     // CRM & Invoice Automation -> Webhooks
     if (analysis.category === 'INVOICE' || analysis.category === 'LEAD') {
